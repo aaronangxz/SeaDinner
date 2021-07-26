@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/aaronangxz/SeaDinner/auth"
+	"github.com/aaronangxz/SeaDinner/AuthToken"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -51,10 +51,8 @@ func GetCurrent(client resty.Client) {
 	var currentmenu Current
 
 	_, err := client.R().
-		SetHeader("Authorization", auth.Tokenauth()).
-		SetResult(&currentmenu). // or SetResult(AuthSuccess{}).
-		//SetAuthToken("Token e8c2f78d9a09bd8b59f83ef2ab6c0b22649798a9").
-		//ForceContentType("application/json").
+		SetHeader("Authorization", AuthToken.GetToken()).
+		SetResult(&currentmenu).
 		Get("https://dinner.sea.com/api/current")
 
 	if err != nil {
