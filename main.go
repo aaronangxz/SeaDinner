@@ -11,6 +11,11 @@ type DinnerMenu struct {
 	dishes Food
 }
 
+type Current struct {
+	Status  string `json:"status"`
+	Details Menu   `json:"menu"`
+}
+
 type Food struct {
 	code        string
 	id          string
@@ -23,55 +28,44 @@ type Food struct {
 }
 
 type Menu struct {
-	id          string
-	name        string
-	comment     string
-	pollStart   string
-	pollEnd     string
-	servingTime string
-	active      bool
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Comment     string `json:"comment"`
+	PollStart   string `json:"pollstart"`
+	PollEnd     string `json:"pollend"`
+	ServingTime string `json:"servingtime"`
+	Active      bool   `json:"active"`
 }
 
 func main() {
-	fmt.Println("Hello, world.")
-
 	// Create a Resty Client
 	client := resty.New()
-	//var AuthSuccess Menu
-	resp, err := client.R().
-		//SetQueryParams(map[string]string{
-		//	"page_no": "1",
-		//	"limit": "20",
-		//	"sort":"name",
-		//	"order": "asc",
-		//	"random":strconv.FormatInt(time.Now().Unix(), 10),
-		//}).
+
+	//get today's dinner info
+	GetCurrent(*client)
+
+}
+
+func GetCurrent(client resty.Client) {
+	var currentmenu Current
+
+	_, err := client.R().
 		SetHeader("Authorization", "Token e8c2f78d9a09bd8b59f83ef2ab6c0b22649798a9").
 		SetHeader("Content-Type", "application/json").
-		SetResult(). // or SetResult(AuthSuccess{}).
+		SetResult(&currentmenu). // or SetResult(AuthSuccess{}).
 		//SetAuthToken("Token e8c2f78d9a09bd8b59f83ef2ab6c0b22649798a9").
-		ForceContentType("application/json").
+		//ForceContentType("application/json").
 		Get("https://dinner.sea.com/api/current")
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	//json.Unmarshal([]byte(resp), &bird)
-
-	fmt.Println(resp.Result())
-
-	//
-	//// Sample of using Request.SetQueryString method
-	//resp, err := client.R().
-	//	SetQueryString("productId=232&template=fresh-sample&cat=resty&source=google&kw=buy a lot more").
-	//	SetHeader("Accept", "application/json").
-	//	SetAuthToken("BC594900518B4F7EAC75BD37F019E08FBC594900518B4F7EAC75BD37F019E08F").
-	//	Get("/show_product")
-
-	// If necessary, you can force response content type to tell Resty to parse a JSON response into your struct
-	//resp, err := client.R().
-	//	SetResult(result).
-
-	//	Get("v2/alpine/manifests/latest")
+	fmt.Printf("Query status of today's menu: %v\n\n", currentmenu.Status)
+	fmt.Printf("ID: %v\n", currentmenu.Details.Id)
+	fmt.Printf("%v\n", currentmenu.Details.Name)
+	//fmt.Printf("%v\n", currentmenu.Details.Comment)
+	fmt.Printf("Start: %v\n", currentmenu.Details.PollStart)
+	fmt.Printf("End: %v\n", currentmenu.Details.PollEnd)
+	fmt.Printf("Serving Time: %v\n", currentmenu.Details.ServingTime)
 }
