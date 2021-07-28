@@ -7,7 +7,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-func GetCurrent(client resty.Client) {
+func GetCurrent(client resty.Client) (ID int) {
 	var currentmenu Current
 
 	_, err := client.R().
@@ -26,4 +26,5 @@ func GetCurrent(client resty.Client) {
 	fmt.Printf("Start: %v\n", currentmenu.Details.PollStart)
 	fmt.Printf("End: %v\n", currentmenu.Details.PollEnd)
 	fmt.Printf("Serving Time: %v\n", currentmenu.Details.ServingTime)
+	return currentmenu.Details.Id
 }

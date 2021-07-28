@@ -10,6 +10,17 @@ type Current struct {
 	Details Menu   `json:"menu"`
 }
 
+type OrderRequest struct {
+	FoodID string `json:"food_id"`
+}
+
+type OrderResponse struct {
+	Status     string `json:"status"`
+	Selected   int    `json:"selected"`
+	StatusCode string `json:"status_code"`
+	Error      string `json:"error"`
+}
+
 type Food struct {
 	Code        string `json:"code"`
 	Id          string `json:"id"`
