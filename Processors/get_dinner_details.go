@@ -20,11 +20,11 @@ func GetCurrent(client resty.Client) (ID int) {
 	}
 
 	fmt.Printf("Query status of today's menu: %v\n\n", currentmenu.Status)
-	fmt.Printf("ID: %v\n", currentmenu.Details.Id)
+	fmt.Printf("Day ID: %v\n", currentmenu.Details.Id)
 	fmt.Printf("%v\n", currentmenu.Details.Name)
 	//fmt.Printf("%v\n", currentmenu.Details.Comment)
-	fmt.Printf("Start: %v\n", currentmenu.Details.PollStart)
-	fmt.Printf("End: %v\n", currentmenu.Details.PollEnd)
-	fmt.Printf("Serving Time: %v\n", currentmenu.Details.ServingTime)
+	//fmt.Printf("Start: %v\n", currentmenu.Details.PollStart)
+	//fmt.Printf("End: %v\n", currentmenu.Details.PollEnd)
+	//fmt.Printf("Serving Time: %v\n", currentmenu.Details.ServingTime)
 	return currentmenu.Details.Id
 }

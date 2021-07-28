@@ -9,25 +9,25 @@ import (
 )
 
 func GetMenu(client resty.Client, ID int) {
-	var currentmenu DinnerMenu
 	IDstr := strconv.Itoa(ID)
-	//var currentarr []DinnerMenu
+	var currentarr DinnerMenuArr
 
 	_, err := client.R().
 		SetHeader("Authorization", AuthToken.GetToken()).
-		SetResult(&currentmenu).
+		SetResult(&currentarr).
 		Get("https://dinner.sea.com/api/menu/" + IDstr)
-	//currentarr = append(currentarr, currentmenu)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Printf("Query status of today's menu: %v\n\n", currentmenu.Status)
-	fmt.Printf("ID: %v\n", currentmenu.Dishes.Code)
-	// fmt.Printf("%v\n", currentmenu.Details.Name)
-	// //fmt.Printf("%v\n", currentmenu.Details.Comment)
-	// fmt.Printf("Start: %v\n", currentmenu.Details.PollStart)
-	// fmt.Printf("End: %v\n", currentmenu.Details.PollEnd)
-	// fmt.Printf("Serving Time: %v\n", currentmenu.Details.ServingTime)
+	fmt.Printf("Query status of today's menu: %v\n\n", currentarr.Status)
+
+	for i := range currentarr.DinnerArr {
+		fmt.Printf("Food ID: %v\n", currentarr.DinnerArr[i].Id)
+		fmt.Printf("Name: %v\n", currentarr.DinnerArr[i].Name)
+		fmt.Printf("Ordered: %v\n", currentarr.DinnerArr[i].Ordered)
+		fmt.Printf("Quota: %v\n", currentarr.DinnerArr[i].Quota)
+		fmt.Printf("\n")
+	}
 }
