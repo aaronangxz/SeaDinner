@@ -1,1 +1,2 @@
 .AuthToken/
+AuthToken/auth.go
