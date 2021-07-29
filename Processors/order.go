@@ -1,9 +1,7 @@
 package Processors
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/aaronangxz/SeaDinner/AuthToken"
@@ -13,36 +11,44 @@ import (
 func OrderDinnerQuery(client resty.Client, ID int) {
 	var req OrderRequest
 
-	reader := bufio.NewReader(os.Stdin)
+	//reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter Selection: ")
-	req.FoodID, _ = reader.ReadString('\n')
+	//selection, _ := reader.ReadString('\n')
+	_, err := fmt.Scanf("%d", &req.FoodID)
 
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("Chosen: %d\n", req.FoodID)
 	//Call orderdinner with request struct
 	OrderDinner(client, ID, req)
 }
 
-func OrderDinner(client resty.Client, ID int, choice OrderRequest) {
+func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 	//convert ID to string
-	IDstr := strconv.Itoa(ID)
+	menuIDstr := strconv.Itoa(menuID)
+	//url := "https://dinner.sea.com/menu/" + menuIDstr + "/make_order"
+	url := "https://dinner.sea.com/api/order/" + menuIDstr
 
 	var resp OrderResponse
+
+	fmt.Println("link:", url)
 
 	_, err := client.R().
 		SetHeader("Authorization", AuthToken.GetToken()).
 		SetBody(OrderRequest{FoodID: choice.FoodID}).
+		//SetBody({"food_id":1374}).
 		SetResult(&resp).
-		Get("https://dinner.sea.com/api/order/" + IDstr)
+		Post(url)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	fmt.Println(OrderRequest{FoodID: choice.FoodID})
+
 	fmt.Printf("Status: %s\n", resp.Status)
-
-	if resp.Error != "" {
-		fmt.Printf("Error: %s\n", resp.Error)
-
-	}
-
+	fmt.Printf("Code: %s\n", resp.StatusCode)
+	fmt.Printf("Error: %s\n", resp.Error)
 	fmt.Printf("Selected: %d\n", resp.Selected)
 }
