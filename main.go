@@ -16,6 +16,6 @@ func main() {
 	Processors.GetMenu(*client, ID)
 
 	//order using todays ID
-	//Processors.OrderDinnerQuery(*client, ID)
+	Processors.OrderDinnerQuery(*client, ID)
 
 }
