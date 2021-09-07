@@ -32,7 +32,7 @@ func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 
 	var resp OrderResponse
 
-	fmt.Println("link:", url)
+	//fmt.Println("link:", url)
 
 	_, err := client.R().
 		SetHeader("Authorization", AuthToken.GetToken()).
@@ -45,10 +45,13 @@ func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 		fmt.Println(err)
 	}
 
-	fmt.Println(OrderRequest{FoodID: choice.FoodID})
+	//fmt.Println(OrderRequest{FoodID: choice.FoodID})
 
-	fmt.Printf("Status: %s\n", resp.Status)
-	fmt.Printf("Code: %s\n", resp.StatusCode)
-	fmt.Printf("Error: %s\n", resp.Error)
-	fmt.Printf("Selected: %d\n", resp.Selected)
+	if resp.Error != "" {
+		fmt.Printf("%s: %s\n", resp.Status, resp.Error)
+	} else {
+		fmt.Printf("Code: %s\n", resp.StatusCode)
+		fmt.Printf("Selected: %d\n", resp.Selected)
+	}
+
 }
