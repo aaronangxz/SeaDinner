@@ -41,4 +41,12 @@ func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 	}
 
 	fmt.Printf("Error: %s\n", resp.Error)
+	//fmt.Println(OrderRequest{FoodID: choice.FoodID})
+
+	if resp.Error != "" {
+		fmt.Printf("%s: %s\n", resp.Status, resp.Error)
+	} else {
+		fmt.Printf("Code: %s\n", resp.StatusCode)
+		fmt.Printf("Selected: %d\n", resp.Selected)
+	}
 }
