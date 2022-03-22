@@ -2,8 +2,8 @@ package Processors
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/aaronangxz/SeaDinner/AuthToken"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -11,7 +11,7 @@ func GetCurrent(client resty.Client) (ID int) {
 	var currentmenu Current
 
 	_, err := client.R().
-		SetHeader("Authorization", AuthToken.GetToken()).
+		SetHeader("Authorization", "Token "+os.Getenv("Token")).
 		SetResult(&currentmenu).
 		Get("https://dinner.sea.com/api/current")
 
