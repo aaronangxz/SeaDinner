@@ -2,9 +2,9 @@ package Processors
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
-	"github.com/aaronangxz/SeaDinner/AuthToken"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -13,7 +13,7 @@ func GetMenu(client resty.Client, ID int) {
 	var currentarr DinnerMenuArr
 
 	_, err := client.R().
-		SetHeader("Authorization", AuthToken.GetToken()).
+		SetHeader("Authorization", "Token "+os.Getenv("Token")).
 		SetResult(&currentarr).
 		Get("https://dinner.sea.com/api/menu/" + IDstr)
 

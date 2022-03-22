@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	Processors.LoadEnv()
 	// Create a Resty Client
 	client := resty.New()
 
@@ -17,5 +18,4 @@ func main() {
 
 	//order using todays ID
 	Processors.OrderDinnerQuery(*client, ID)
-
 }

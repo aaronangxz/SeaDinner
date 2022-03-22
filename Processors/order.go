@@ -2,9 +2,9 @@ package Processors
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
-	"github.com/aaronangxz/SeaDinner/AuthToken"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -19,7 +19,6 @@ func OrderDinnerQuery(client resty.Client, ID int) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("Chosen: %d\n", req.FoodID)
 	//Call orderdinner with request struct
 	OrderDinner(client, ID, req)
 }
@@ -27,17 +26,13 @@ func OrderDinnerQuery(client resty.Client, ID int) {
 func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 	//convert ID to string
 	menuIDstr := strconv.Itoa(menuID)
-	//url := "https://dinner.sea.com/menu/" + menuIDstr + "/make_order"
 	url := "https://dinner.sea.com/api/order/" + menuIDstr
 
 	var resp OrderResponse
 
-	fmt.Println("link:", url)
-
 	_, err := client.R().
-		SetHeader("Authorization", AuthToken.GetToken()).
+		SetHeader("Authorization", "Token "+os.Getenv("Token")).
 		SetBody(OrderRequest{FoodID: choice.FoodID}).
-		//SetBody({"food_id":1374}).
 		SetResult(&resp).
 		Post(url)
 
@@ -45,10 +40,5 @@ func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 		fmt.Println(err)
 	}
 
-	fmt.Println(OrderRequest{FoodID: choice.FoodID})
-
-	fmt.Printf("Status: %s\n", resp.Status)
-	fmt.Printf("Code: %s\n", resp.StatusCode)
 	fmt.Printf("Error: %s\n", resp.Error)
-	fmt.Printf("Selected: %d\n", resp.Selected)
 }
