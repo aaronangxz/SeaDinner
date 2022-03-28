@@ -26,13 +26,20 @@ func OrderDinnerQuery(client resty.Client, ID int) {
 func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 	//convert ID to string
 	menuIDstr := strconv.Itoa(menuID)
-	url := "https://dinner.sea.com/api/order/" + menuIDstr
+	//url := "https://dinner.sea.com/api/order/" + menuIDstr
+	url := "https://dinner.sea.com/menu/" + menuIDstr + "/make_order"
+	fmt.Println("url:", url)
+	fmt.Println("choice:", choice.FoodID)
 
+	var req OrderRequest
 	var resp OrderResponse
+
+	req.FoodID = choice.FoodID
+	fmt.Println(req)
 
 	_, err := client.R().
 		SetHeader("Authorization", "Token "+os.Getenv("Token")).
-		SetBody(OrderRequest{FoodID: choice.FoodID}).
+		SetBody(fmt.Sprintf("food_id=%s", choice.FoodID)).
 		SetResult(&resp).
 		Post(url)
 

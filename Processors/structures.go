@@ -16,7 +16,7 @@ type Current struct {
 }
 
 type OrderRequest struct {
-	FoodID int `json:"food_id"`
+	FoodID string `json:"food_id"`
 }
 
 type OrderResponse struct {
