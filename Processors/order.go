@@ -26,8 +26,9 @@ func OrderDinnerQuery(client resty.Client, ID int) {
 func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 	//convert ID to string
 	menuIDstr := strconv.Itoa(menuID)
-	//url := "https://dinner.sea.com/api/order/" + menuIDstr
-	url := "https://dinner.sea.com/menu/" + menuIDstr + "/make_order"
+	url := "https://dinner.sea.com/api/order/" + menuIDstr
+	//url := "https://dinner.sea.com/menu/" + menuIDstr + "/make_order"
+
 	fmt.Println("url:", url)
 	fmt.Println("choice:", choice.FoodID)
 
@@ -35,25 +36,26 @@ func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 	var resp OrderResponse
 
 	req.FoodID = choice.FoodID
-	fmt.Println(req)
+	fData := make(map[string]string)
+	fData["food_id"] = fmt.Sprint(req.FoodID)
 
 	_, err := client.R().
 		SetHeader("Authorization", "Token "+os.Getenv("Token")).
-		SetBody(fmt.Sprintf("food_id=%s", choice.FoodID)).
+		//SetBody(req).
+		SetFormData(fData).
+		//SetBody(fmt.Sprintf("food_id=%d", choice.FoodID)).
 		SetResult(&resp).
 		Post(url)
 
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
-
-	fmt.Printf("Error: %s\n", resp.Error)
-	//fmt.Println(OrderRequest{FoodID: choice.FoodID})
 
 	if resp.Error != "" {
 		fmt.Printf("%s: %s\n", resp.Status, resp.Error)
 	} else {
-		fmt.Printf("Code: %s\n", resp.StatusCode)
-		fmt.Printf("Selected: %d\n", resp.Selected)
+		fmt.Printf("Dinner Selected: %d\n", resp.Selected)
+		return
 	}
 }
