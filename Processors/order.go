@@ -23,14 +23,14 @@ func OrderDinnerQuery(client resty.Client, ID int) {
 	OrderDinner(client, ID, req)
 }
 
-func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
+func OrderDinner(client resty.Client, menuID int, choice OrderRequest) error {
 	//convert ID to string
 	menuIDstr := strconv.Itoa(menuID)
 	url := "https://dinner.sea.com/api/order/" + menuIDstr
 	//url := "https://dinner.sea.com/menu/" + menuIDstr + "/make_order"
 
-	fmt.Println("url:", url)
-	fmt.Println("choice:", choice.FoodID)
+	//fmt.Println("url:", url)
+	//fmt.Println("choice:", choice.FoodID)
 
 	var req OrderRequest
 	var resp OrderResponse
@@ -49,13 +49,14 @@ func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
 
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
 
 	if resp.Error != "" {
 		fmt.Printf("%s: %s\n", resp.Status, resp.Error)
 	} else {
 		fmt.Printf("Dinner Selected: %d\n", resp.Selected)
-		return
+		return nil
 	}
+	return nil
 }

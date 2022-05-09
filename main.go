@@ -20,17 +20,25 @@ func main() {
 	Processors.GetMenu(*client, ID)
 	lunchTime := Processors.GetLunchTime()
 	var req Processors.OrderRequest
-	req.FoodID = 1194
+	req.FoodID = 1272
 
 	fmt.Println("Waiting..")
 
+	ok := false
 	// Processors.OrderDinner(*client, ID, req)
 	for {
 		if time.Now().Unix() == lunchTime.Unix() {
-			for i := 0; i < 1; i++ {
+			for i := 0; i < 5; i++ {
 				fmt.Println("Attempt ", i)
-				Processors.OrderDinner(*client, ID, req)
+				if err := Processors.OrderDinner(*client, ID, req); err == nil {
+					ok = true
+					break
+				}
 			}
+		}
+
+		if ok {
+			break
 		}
 	}
 }
