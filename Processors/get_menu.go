@@ -2,19 +2,17 @@ package Processors
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/go-resty/resty/v2"
 )
 
 func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
-	IDstr := strconv.Itoa(ID)
 	var currentarr DinnerMenuArr
 
 	_, err := client.R().
-		SetHeader("Authorization", "Token "+key).
+		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentarr).
-		Get(UrlPrefix + "/api/menu/" + IDstr)
+		Get(MakeURL(URL_CURRENT, &ID))
 
 	if err != nil {
 		fmt.Println(err)
@@ -26,7 +24,7 @@ func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 }
 
 func OutputMenu(key string) string {
-	menu := GetMenu(Client, GetDayId(Client), key)
+	menu := GetMenu(Client, GetDayId(key), key)
 	output := ""
 
 	for i := range menu.DinnerArr {

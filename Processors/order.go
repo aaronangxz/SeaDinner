@@ -2,7 +2,6 @@ package Processors
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -24,24 +23,16 @@ func OrderDinnerQuery(client resty.Client, ID int) {
 }
 
 func OrderDinner(client resty.Client, menuID int, choice int, key string) bool {
-	//convert ID to string
-	menuIDstr := strconv.Itoa(menuID)
-	url := "https://dinner.sea.com/api/order/" + menuIDstr
-	//url := "https://dinner.sea.com/menu/" + menuIDstr + "/make_order"
-
-	fmt.Println("url:", url)
-	fmt.Println("choice:", choice)
-
 	var resp OrderResponse
 
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(choice)
 
 	_, err := client.R().
-		SetHeader("Authorization", "Token "+key).
+		SetHeader("Authorization", MakeToken(key)).
 		SetFormData(fData).
 		SetResult(&resp).
-		Post(url)
+		Post(MakeURL(URL_CURRENT, &menuID))
 
 	if err != nil {
 		fmt.Println(err)
@@ -63,6 +54,6 @@ func BatchOrderDinner(u []UserRecords) {
 	)
 
 	for _, r := range u {
-		m[r.UserID] = OrderDinner(Client, GetDayId(Client), r.Choice, r.Key)
+		m[r.UserID] = OrderDinner(Client, GetDayId(r.Key), r.Choice, r.Key)
 	}
 }

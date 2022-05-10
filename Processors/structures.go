@@ -1,5 +1,14 @@
 package Processors
 
+const (
+	UrlPrefix   = "https://dinner.sea.com"
+	TokenPrefix = "Token "
+
+	URL_CURRENT = 0
+	URL_MENU    = 1
+	URL_ORDER   = 2
+)
+
 type DinnerMenu struct {
 	Status string `json:"status"`
 	Dishes Food   `json:"food"`
