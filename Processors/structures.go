@@ -31,7 +31,7 @@ type Food struct {
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Image       string `json:"image"`
+	ImageURL    string `json:"image_url"`
 	Ordered     int    `json:"ordered"`
 	Quota       int    `json:"quota"`
 	Disabled    bool   `json:"disabled"`
@@ -45,4 +45,10 @@ type Menu struct {
 	PollEnd     string `json:"pollend"`
 	ServingTime string `json:"servingtime"`
 	Active      bool   `json:"active"`
+}
+
+type UserRecords struct {
+	UserID int64  `json:"user_id"`
+	Choice int    `json:"choice"`
+	Key    string `json:"key"`
 }

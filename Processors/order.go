@@ -2,12 +2,12 @@ package Processors
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/go-resty/resty/v2"
 )
 
+//Deprecated
 func OrderDinnerQuery(client resty.Client, ID int) {
 	var req OrderRequest
 
@@ -20,42 +20,49 @@ func OrderDinnerQuery(client resty.Client, ID int) {
 		fmt.Println(err)
 	}
 	//Call orderdinner with request struct
-	OrderDinner(client, ID, req)
+	OrderDinner(client, ID, req.FoodID, "")
 }
 
-func OrderDinner(client resty.Client, menuID int, choice OrderRequest) {
+func OrderDinner(client resty.Client, menuID int, choice int, key string) bool {
 	//convert ID to string
 	menuIDstr := strconv.Itoa(menuID)
 	url := "https://dinner.sea.com/api/order/" + menuIDstr
 	//url := "https://dinner.sea.com/menu/" + menuIDstr + "/make_order"
 
 	fmt.Println("url:", url)
-	fmt.Println("choice:", choice.FoodID)
+	fmt.Println("choice:", choice)
 
-	var req OrderRequest
 	var resp OrderResponse
 
-	req.FoodID = choice.FoodID
 	fData := make(map[string]string)
-	fData["food_id"] = fmt.Sprint(req.FoodID)
+	fData["food_id"] = fmt.Sprint(choice)
 
 	_, err := client.R().
-		SetHeader("Authorization", "Token "+os.Getenv("Token")).
-		//SetBody(req).
+		SetHeader("Authorization", "Token "+key).
 		SetFormData(fData).
-		//SetBody(fmt.Sprintf("food_id=%d", choice.FoodID)).
 		SetResult(&resp).
 		Post(url)
 
 	if err != nil {
 		fmt.Println(err)
-		return
+		return false
 	}
 
 	if resp.Error != "" {
 		fmt.Printf("%s: %s\n", resp.Status, resp.Error)
-	} else {
-		fmt.Printf("Dinner Selected: %d\n", resp.Selected)
-		return
+		return false
+	}
+	fmt.Printf("Dinner Selected: %d\n", resp.Selected)
+	return true
+
+}
+
+func BatchOrderDinner(u []UserRecords) {
+	var (
+		m = make(map[int64]bool)
+	)
+
+	for _, r := range u {
+		m[r.UserID] = OrderDinner(Client, GetDayId(Client), r.Choice, r.Key)
 	}
 }
