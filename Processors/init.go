@@ -14,9 +14,7 @@ var (
 	DB     *gorm.DB
 )
 
-const (
-	UrlPrefix = "https://dinner.sea.com"
-)
+const ()
 
 func LoadEnv() {
 	err := godotenv.Load(".env")

@@ -2,18 +2,15 @@ package Processors
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/go-resty/resty/v2"
 )
 
-func GetDayId(client resty.Client) (ID int) {
+func GetDayId(key string) (ID int) {
 	var currentmenu Current
 
-	_, err := client.R().
-		SetHeader("Authorization", "Token "+os.Getenv("Token")).
+	_, err := Client.R().
+		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentmenu).
-		Get(UrlPrefix + "/api/current")
+		Get(MakeURL(URL_CURRENT, nil))
 
 	if err != nil {
 		fmt.Println(err)
