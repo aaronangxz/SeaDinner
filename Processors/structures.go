@@ -9,6 +9,14 @@ const (
 	URL_ORDER   = 2
 )
 
+var Constant_URL_type = map[int32]string{
+	0: "URL_CURRENT",
+	1: "URL_MENU",
+	2: "URL_ORDER",
+}
+
+func Int(v int) *int { return &v }
+
 type DinnerMenu struct {
 	Status string `json:"status"`
 	Dishes Food   `json:"food"`
@@ -29,10 +37,10 @@ type OrderRequest struct {
 }
 
 type OrderResponse struct {
-	Status     string `json:"status"`
-	Selected   int    `json:"selected"`
-	StatusCode string `json:"status_code"`
-	Error      string `json:"error"`
+	Status     string  `json:"status"`
+	Selected   int     `json:"selected"`
+	StatusCode string  `json:"status_code"`
+	Error      *string `json:"error"`
 }
 
 type Food struct {

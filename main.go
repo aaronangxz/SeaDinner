@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aaronangxz/SeaDinner/Bot"
 	"github.com/aaronangxz/SeaDinner/Processors"
 )
 
 var (
 	execPrep = false
+	donePrep = false
 	r        []Processors.UserRecords
 )
 
@@ -20,23 +20,22 @@ func main() {
 
 	for {
 		if !execPrep && (time.Now().Unix() < Processors.GetLunchTime().Unix()-300 || time.Now().Unix() > Processors.GetLunchTime().Unix()+300) {
-			Bot.InitBot()
+			//Bot.InitBot()
 			fmt.Println("exited")
 			execPrep = true
 		}
 
-		if execPrep {
+		if execPrep && !donePrep {
 			//get key and choice
 			r = Processors.PrepOrder()
 			execPrep = false
+			donePrep = true
 		}
 
 		if time.Now().Unix() == Processors.GetLunchTime().Unix() {
-			for i := 0; i < 1; i++ {
-				fmt.Println("Attempt ", i)
-				Processors.BatchOrderDinner(r)
-			}
+			Processors.BatchOrderDinner(r)
+			return
 		}
-		fmt.Println("looping")
+		//fmt.Println("looping")
 	}
 }

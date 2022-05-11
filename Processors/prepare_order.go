@@ -1,6 +1,9 @@
 package Processors
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func PrepOrder() []UserRecords {
 	var (
@@ -11,10 +14,6 @@ func PrepOrder() []UserRecords {
 		fmt.Println(err.Error())
 		return nil
 	}
-
-	for _, r := range record {
-		fmt.Printf("%v:%v:%v\n", r.UserID, r.Key, r.Choice)
-	}
-
+	log.Println("Fetched user_records:", len(record))
 	return record
 }
