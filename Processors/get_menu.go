@@ -2,6 +2,7 @@ package Processors
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -9,10 +10,14 @@ import (
 func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 	var currentarr DinnerMenuArr
 
+	log.Println("key:", key)
+	log.Println("header:", MakeToken(key))
+	log.Println("url:", MakeURL(URL_MENU, &ID))
+
 	_, err := client.R().
 		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentarr).
-		Get(MakeURL(URL_CURRENT, &ID))
+		Get(MakeURL(URL_MENU, &ID))
 
 	if err != nil {
 		fmt.Println(err)

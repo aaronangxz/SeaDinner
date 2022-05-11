@@ -2,6 +2,7 @@ package Processors
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -28,24 +29,32 @@ func OrderDinner(client resty.Client, menuID int, choice int, key string) bool {
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(choice)
 
-	_, err := client.R().
-		SetHeader("Authorization", MakeToken(key)).
-		SetFormData(fData).
-		SetResult(&resp).
-		Post(MakeURL(URL_CURRENT, &menuID))
+	for i := 0; i < 3; i++ {
+		log.Println("Attempt", i)
 
-	if err != nil {
-		fmt.Println(err)
-		return false
+		_, err := client.R().
+			SetHeader("Authorization", MakeToken(key)).
+			SetFormData(fData).
+			SetResult(&resp).
+			Post(MakeURL(URL_CURRENT, &menuID))
+
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		if resp.Status != "" {
+			log.Printf("%s: %v\n", resp.Status, resp.Error)
+			continue
+		}
+
+		if resp.Selected != 0 {
+			log.Printf("Dinner Selected: %d\n", resp.Selected)
+			break
+		}
+		log.Printf("Dinner Not Selected. Retrying.\n")
 	}
-
-	if resp.Error != "" {
-		fmt.Printf("%s: %s\n", resp.Status, resp.Error)
-		return false
-	}
-	fmt.Printf("Dinner Selected: %d\n", resp.Selected)
-	return true
-
+	return resp.Selected != 0
 }
 
 func BatchOrderDinner(u []UserRecords) {
@@ -54,6 +63,9 @@ func BatchOrderDinner(u []UserRecords) {
 	)
 
 	for _, r := range u {
+		log.Println("Ordering for user_id:", r.UserID)
 		m[r.UserID] = OrderDinner(Client, GetDayId(r.Key), r.Choice, r.Key)
 	}
+
+	OutputResults(m)
 }
