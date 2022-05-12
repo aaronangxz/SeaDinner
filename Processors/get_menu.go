@@ -32,9 +32,9 @@ func OutputMenu(key string) string {
 	menu := GetMenu(Client, GetDayId(key), key)
 	output := ""
 
-	for i := range menu.DinnerArr {
-		output += fmt.Sprintf(UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
-			menu.DinnerArr[i].ImageURL, menu.DinnerArr[i].Id, menu.DinnerArr[i].Name, menu.DinnerArr[i].Quota)
+	for _, d := range menu.DinnerArr {
+		output += fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
+			d.ImageURL, d.Id, d.Name, d.Quota)
 	}
 	return output
 }
