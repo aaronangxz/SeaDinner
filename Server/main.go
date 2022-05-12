@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"sync"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
@@ -10,10 +8,9 @@ import (
 )
 
 var (
-	execPrep = false
 	donePrep = false
 	r        []Processors.UserChoiceWithKey
-	jobMutex sync.Mutex
+	// jobMutex sync.Mutex
 )
 
 func main() {
@@ -22,11 +19,11 @@ func main() {
 	Processors.ConnectDataBase()
 
 	for {
-		fmt.Println("wait")
-		if execPrep && !donePrep {
+		if (time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
+			time.Now().Unix() <= Processors.GetLunchTime().Unix()-15) &&
+			!donePrep {
 			//get key and choice
 			r, donePrep = Processors.PrepOrder()
-			execPrep = !donePrep
 		}
 
 		if time.Now().Unix() == Processors.GetLunchTime().Unix() {
@@ -36,14 +33,14 @@ func main() {
 			Bot.SendNotifications()
 		}
 
-		if !execPrep && (time.Now().Unix() < Processors.GetLunchTime().Unix()-30 || time.Now().Unix() > Processors.GetLunchTime().Unix()+30) {
-			fmt.Println("starting")
-			jobMutex.Lock()
-			Bot.InitBot()
-			fmt.Println("exited")
-			jobMutex.Unlock()
-			execPrep = true
-		}
-		time.Sleep(1 * time.Second)
+		// if !execPrep && (time.Now().Unix() < Processors.GetLunchTime().Unix()-30 || time.Now().Unix() > Processors.GetLunchTime().Unix()+30) {
+		// 	fmt.Println("starting")
+		// 	jobMutex.Lock()
+		// 	Bot.InitBot()
+		// 	fmt.Println("exited")
+		// 	jobMutex.Unlock()
+		// 	execPrep = true
+		// }
+		// time.Sleep(1 * time.Second)
 	}
 }
