@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
@@ -12,6 +13,7 @@ var (
 	execPrep = false
 	donePrep = false
 	r        []Processors.UserChoiceWithKey
+	jobMutex sync.Mutex
 )
 
 func main() {
@@ -20,12 +22,7 @@ func main() {
 	Processors.ConnectDataBase()
 
 	for {
-		if !execPrep && (time.Now().Unix() < Processors.GetLunchTime().Unix()-300 || time.Now().Unix() > Processors.GetLunchTime().Unix()+300) {
-			Bot.InitBot()
-			fmt.Println("exited")
-			execPrep = true
-		}
-
+		fmt.Println("wait")
 		if execPrep && !donePrep {
 			//get key and choice
 			r, donePrep = Processors.PrepOrder()
@@ -34,8 +31,19 @@ func main() {
 
 		if time.Now().Unix() == Processors.GetLunchTime().Unix() {
 			Processors.BatchOrderDinner(r)
-			continue
+			time.Sleep(1 * time.Second)
+			//send notifications
+			Bot.SendNotifications()
 		}
-		fmt.Println("looping")
+
+		if !execPrep && (time.Now().Unix() < Processors.GetLunchTime().Unix()-30 || time.Now().Unix() > Processors.GetLunchTime().Unix()+30) {
+			fmt.Println("starting")
+			jobMutex.Lock()
+			Bot.InitBot()
+			fmt.Println("exited")
+			jobMutex.Unlock()
+			execPrep = true
+		}
+		time.Sleep(1 * time.Second)
 	}
 }
