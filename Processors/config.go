@@ -11,6 +11,11 @@ var (
 	ConfigPath string
 )
 
+type OrderTimeConfig struct {
+	Hour    int `toml:"hour"`
+	Minutes int `toml:"minutes"`
+	Seconds int `toml:"seconds"`
+}
 type runtimeConfig struct {
 	RetryTimes int `toml:"retry_times"`
 }
@@ -21,8 +26,9 @@ type prefixConfig struct {
 }
 
 type tomlConfig struct {
-	Prefix  prefixConfig  `toml:"prefix"`
-	Runtime runtimeConfig `toml:"runtime"`
+	Prefix    prefixConfig    `toml:"prefix"`
+	Runtime   runtimeConfig   `toml:"runtime"`
+	OrderTime OrderTimeConfig `toml:"order_time"`
 }
 
 func loadConfig() {

@@ -4,3 +4,8 @@ token_prefix = "Token "
 
 [runtime]
 retry_times = 5
+
+[order_time]
+hour = 12
+minutes = 30
+seconds = 0
