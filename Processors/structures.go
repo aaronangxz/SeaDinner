@@ -1,8 +1,8 @@
 package Processors
 
 const (
-	UrlPrefix   = "https://dinner.sea.com"
-	TokenPrefix = "Token "
+	// UrlPrefix   = "https://dinner.sea.com"
+	// TokenPrefix = "Token "
 
 	URL_CURRENT = 0
 	URL_MENU    = 1
@@ -37,10 +37,30 @@ type OrderRequest struct {
 }
 
 type OrderResponse struct {
-	Status     string  `json:"status"`
-	Selected   int     `json:"selected"`
-	StatusCode string  `json:"status_code"`
-	Error      *string `json:"error"`
+	Status   *string `json:"status"`
+	Selected *int    `json:"selected"`
+	Error    *string `json:"error"`
+}
+
+func (o *OrderResponse) GetStatus() string {
+	if o != nil && o.Status != nil {
+		return *o.Status
+	}
+	return ""
+}
+
+func (o *OrderResponse) GetSelected() int {
+	if o != nil && o.Selected != nil {
+		return *o.Selected
+	}
+	return 0
+}
+
+func (o *OrderResponse) GetError() string {
+	if o != nil && o.Error != nil {
+		return *o.Error
+	}
+	return ""
 }
 
 type Food struct {
@@ -64,8 +84,17 @@ type Menu struct {
 	Active      bool   `json:"active"`
 }
 
-type UserRecords struct {
+type UserChoice struct {
+	UserID int64 `json:"user_id"`
+	Choice int64 `json:"choice"`
+	Ctime  int64 `json:"ctime"`
+	Mtime  int64 `json:"mtime"`
+}
+
+type UserChoiceWithKey struct {
 	UserID int64  `json:"user_id"`
-	Choice int    `json:"choice"`
-	Key    string `json:"key"`
+	Key    string `json:"string"`
+	Choice int64  `json:"choice"`
+	Ctime  int64  `json:"ctime"`
+	Mtime  int64  `json:"mtime"`
 }

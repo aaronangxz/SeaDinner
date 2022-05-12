@@ -5,15 +5,15 @@ import (
 	"log"
 )
 
-func PrepOrder() []UserRecords {
+func PrepOrder() ([]UserChoiceWithKey, bool) {
 	var (
-		record []UserRecords
+		record []UserChoiceWithKey
 	)
 	//check whole db
-	if err := DB.Raw("SELECT * FROM user_records").Scan(&record).Error; err != nil {
+	if err := DB.Raw("SELECT c.*, k.key FROM user_choice c, user_key k WHERE c.user_id = k.user_id").Scan(&record).Error; err != nil {
 		fmt.Println(err.Error())
-		return nil
+		return nil, false
 	}
 	log.Println("Fetched user_records:", len(record))
-	return record
+	return record, true
 }

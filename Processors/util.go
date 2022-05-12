@@ -10,23 +10,24 @@ func MakeToken(key string) string {
 		log.Println("Key is invalid:", key)
 		return ""
 	}
-	return fmt.Sprint(TokenPrefix, key)
+	return fmt.Sprint(Config.Prefix.TokenPrefix, key)
 }
 
 func MakeURL(opt int, id *int) string {
+	prefix := Config.Prefix.UrlPrefix
 	switch opt {
 	case URL_CURRENT:
-		return fmt.Sprint(UrlPrefix, "/api/current")
+		return fmt.Sprint(prefix, "/api/current")
 	case URL_MENU:
 		if id == nil {
 			return ""
 		}
-		return fmt.Sprint(UrlPrefix, "/api/menu/", *id)
+		return fmt.Sprint(prefix, "/api/menu/", *id)
 	case URL_ORDER:
 		if id == nil {
 			return ""
 		}
-		return fmt.Sprint(UrlPrefix, "/api/order/", *id)
+		return fmt.Sprint(prefix, "/api/order/", *id)
 	}
 	return ""
 }

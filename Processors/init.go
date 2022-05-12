@@ -22,6 +22,9 @@ func LoadEnv() {
 }
 
 func Init() resty.Client {
+	// Path to config file can be passed in.
+	loadConfig()
+
 	Client = *resty.New()
 	return Client
 }

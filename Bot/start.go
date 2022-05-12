@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Processors"
@@ -103,16 +104,16 @@ func InitBot() {
 				msg.Text = Processors.OutputMenu(Key)
 			}
 		case "help":
-			msg.Text = "I understand /sayhi and /status."
+			msg.Text = "Check the commands."
 		case "key":
 			msg.Text, _ = checkKey(update.Message.Chat.ID)
 		case "newkey":
-			msg.Text = "What's your key?"
+			msg.Text = "What's your key? \nGo to https://dinner.sea.com/accounts/token, copy the Key under Generate Auth Token and paste it here:"
 			startListenKey = true
 		case "status":
 			msg.Text = "I'm ok."
 		case "chope":
-			msg.Text = "What do you want to order? Tell me the Food ID"
+			msg.Text = "What do you want to order? Tell me the Food ID 😋"
 			startListenChope = true
 		case "choice":
 			msg.Text, _ = checkChope(Id)
@@ -131,38 +132,41 @@ func InitBot() {
 
 func checkKey(id int64) (string, bool) {
 	var (
-		existingRecord UserRecord
+		existingRecord UserKey
 	)
 
-	if err := Processors.DB.Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Table("user_key").Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return "I don't have your key, let me know in /newkey 😊", false
 	} else {
 		Key = existingRecord.Key
-		return "I have your key! But I won't leak it 😀", true
+		t := time.Unix(int64(existingRecord.Mtime), 0).UTC()
+		return fmt.Sprintf("I have your key that you told me on %v! But I won't leak it 😀", t.Format("2006-01-02")), true
 	}
 }
 
 func updateKey(id int64, s string) string {
 	var (
-		existingRecord UserRecord
-		r              = UserRecord{
+		existingRecord UserKey
+		r              = UserKey{
 			UserID: id,
 			Key:    s,
+			Ctime:  time.Now().Unix(),
+			Mtime:  time.Now().Unix(),
 		}
 	)
 
 	Key = s
 
-	if err := Processors.DB.Where("user_id = ?", id).Where("key = ?", s).First(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT * FROM user_key WHERE user_id = ? AND key = ?", id, s).Scan(&existingRecord).Error; err != nil {
 		//Insert new row
-		if err := Processors.DB.Create(&r).Error; err != nil {
+		if err := Processors.DB.Table("user_key").Create(&r).Error; err != nil {
 			log.Println("Failed to insert DB")
 			return err.Error()
 		}
 		return "Okay got it. I remember your key now! 😙"
 	} else {
 		//Update key if user_id exists
-		if err := Processors.DB.Exec("UPDATE user_records SET key = ? WHERE user_id = ?", s, id).Error; err != nil {
+		if err := Processors.DB.Exec("UPDATE user_key SET key = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
 			return err.Error()
 		}
@@ -172,10 +176,10 @@ func updateKey(id int64, s string) string {
 
 func checkChope(id int64) (string, bool) {
 	var (
-		existingRecord UserRecord
+		existingRecord UserChoice
 	)
 
-	if err := Processors.DB.Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT * FROM user_choice WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		return "I have yet to receive your order 🥲 Tell me at /chope", false
 	} else {
 		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? Tell me at /chope", existingRecord.Choice), true
@@ -183,9 +187,30 @@ func checkChope(id int64) (string, bool) {
 }
 
 func getChope(id int64, s string) string {
-	if err := Processors.DB.Exec("UPDATE user_records SET choice = ? WHERE user_id = ?", s, id).Error; err != nil {
-		log.Println("Failed to update DB")
-		return err.Error()
+	n, _ := strconv.ParseInt(s, 10, 64)
+	var (
+		existingRecord UserChoice
+		r              = UserChoice{
+			UserID: id,
+			Choice: n,
+			Ctime:  time.Now().Unix(),
+			Mtime:  time.Now().Unix(),
+		}
+	)
+
+	if err := Processors.DB.Raw("SELECT * FROM user_choice WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
+		//Insert new row
+		if err := Processors.DB.Table("user_choice").Create(&r).Error; err != nil {
+			log.Println("Failed to insert DB")
+			return err.Error()
+		}
+		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s)
+	} else {
+		//Update key if user_id exists
+		if err := Processors.DB.Exec("UPDATE user_choice SET choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
+			log.Println("Failed to update DB")
+			return err.Error()
+		}
+		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s)
 	}
-	return fmt.Sprintf("Okay got it. I will order %v for you 😙", s)
 }

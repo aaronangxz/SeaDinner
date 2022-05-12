@@ -1,0 +1,6 @@
+[prefix]
+url_prefix = "https://dinner.sea.com"
+token_prefix = "Token "
+
+[runtime]
+retry_times = 5
