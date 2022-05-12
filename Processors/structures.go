@@ -18,8 +18,9 @@ var Constant_URL_type = map[int32]string{
 	2: "URL_ORDER",
 }
 
-func Int(v int) *int       { return &v }
-func Int64(v int64) *int64 { return &v }
+func Int(v int) *int          { return &v }
+func Int64(v int64) *int64    { return &v }
+func String(s string) *string { return &s }
 
 type DinnerMenu struct {
 	Status string `json:"status"`
@@ -32,8 +33,15 @@ type DinnerMenuArr struct {
 }
 
 type Current struct {
-	Status  string `json:"status"`
-	Details Menu   `json:"menu"`
+	Status  *string `json:"status"`
+	Details Menu    `json:"menu"`
+}
+
+func (c *Current) GetDetails() Menu {
+	if c != nil && c.Status != nil {
+		return c.Details
+	}
+	return Menu{}
 }
 
 type OrderRequest struct {
@@ -79,13 +87,20 @@ type Food struct {
 }
 
 type Menu struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Comment     string `json:"comment"`
-	PollStart   string `json:"pollstart"`
-	PollEnd     string `json:"pollend"`
-	ServingTime string `json:"servingtime"`
-	Active      bool   `json:"active"`
+	Id          *int    `json:"id"`
+	Name        *string `json:"name"`
+	Comment     *string `json:"comment"`
+	PollStart   *string `json:"pollstart"`
+	PollEnd     *string `json:"pollend"`
+	ServingTime *string `json:"servingtime"`
+	Active      *bool   `json:"active"`
+}
+
+func (m *Menu) GetId() int {
+	if m != nil && m.Id != nil {
+		return *m.Id
+	}
+	return 0
 }
 
 type UserChoice struct {

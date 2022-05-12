@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	timeZone = "Asia/Singapore"
+	TimeZone = "Asia/Singapore"
 )
 
 func GetLunchTime() time.Time {
-	tz, err := time.LoadLocation(timeZone)
+	tz, err := time.LoadLocation(TimeZone)
 	if err != nil {
 		fmt.Println(err)
 	}

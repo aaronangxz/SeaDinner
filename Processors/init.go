@@ -23,14 +23,14 @@ func LoadEnv() {
 
 func Init() resty.Client {
 	// Path to config file can be passed in.
-	loadConfig()
+	LoadConfig()
 
 	Client = *resty.New()
 	return Client
 }
 
 func ConnectDataBase() {
-	database, err := gorm.Open("sqlite3", "store.db")
+	database, err := gorm.Open("sqlite3", "../store.db")
 
 	if err != nil {
 		panic("Failed to connect to database!")

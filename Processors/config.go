@@ -31,8 +31,8 @@ type tomlConfig struct {
 	OrderTime OrderTimeConfig `toml:"order_time"`
 }
 
-func loadConfig() {
-	ConfigPath = "./config.toml"
+func LoadConfig() {
+	ConfigPath = "../config.toml"
 	if _, err := toml.DecodeFile(ConfigPath, &Config); err != nil {
 		log.Fatalln("Reading config failed", err)
 	}
