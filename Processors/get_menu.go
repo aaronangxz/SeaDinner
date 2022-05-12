@@ -29,10 +29,11 @@ func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 }
 
 func OutputMenu(key string) string {
-	menu := GetMenu(Client, GetDayId(key), key)
-	output := ""
+	var (
+		output string
+	)
 
-	for _, d := range menu.DinnerArr {
+	for _, d := range GetMenu(Client, GetDayId(key), key).DinnerArr {
 		output += fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
 			d.ImageURL, d.Id, d.Name, d.Quota)
 	}

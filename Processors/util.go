@@ -32,12 +32,12 @@ func MakeURL(opt int, id *int) string {
 	return ""
 }
 
-func OutputResults(resultMap map[int64]bool) {
+func OutputResults(resultMap map[int64]int) {
 	var (
 		passed int
 	)
 	for _, m := range resultMap {
-		if m {
+		if m == ORDER_STATUS_OK {
 			passed++
 		}
 	}

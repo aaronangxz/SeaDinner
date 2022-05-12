@@ -3,11 +3,12 @@ package Processors
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 )
 
-func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) bool {
+func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResponse {
 	var resp OrderResponse
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.Choice)
@@ -37,18 +38,43 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) bool {
 		}
 		log.Printf("id: %v | Dinner Not Selected. Retrying.\n", u.UserID)
 	}
-	return resp.GetSelected() != 0
+	return resp
 }
 
 func BatchOrderDinner(u []UserChoiceWithKey) {
 	var (
-		m = make(map[int64]bool)
+		records []OrderRecord
+		m       = make(map[int64]int)
 	)
 
 	for _, r := range u {
 		log.Printf("id: %v | Ordering\n", r.UserID)
-		m[r.UserID] = OrderDinner(Client, GetDayId(r.Key), r)
+		resp := OrderDinner(Client, GetDayId(r.Key), r)
+
+		if resp.GetSelected() == 0 {
+			m[r.UserID] = ORDER_STATUS_FAIL
+		} else {
+			m[r.UserID] = ORDER_STATUS_OK
+		}
+
+		record := OrderRecord{
+			UserID:    Int64(r.UserID),
+			FoodID:    Int64(r.Choice),
+			OrderTime: Int64(time.Now().Unix()),
+			Status:    Int64(int64(m[r.UserID])),
+		}
+		records = append(records, record)
 	}
 
+	UpdateOrderLog(records)
 	OutputResults(m)
+}
+
+func UpdateOrderLog(records []OrderRecord) {
+	for _, r := range records {
+		if err := DB.Exec("INSERT INTO order_log (user_id, food_id, order_time, status) VALUES (?,?,?,?)",
+			r.GetUserID(), r.GetFoodID(), r.GetOrderTime(), r.GetStatus()).Error; err != nil {
+			log.Printf("id : %v | Failed to update record.", r.GetUserID())
+		}
+	}
 }

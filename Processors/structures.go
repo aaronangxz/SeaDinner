@@ -7,6 +7,9 @@ const (
 	URL_CURRENT = 0
 	URL_MENU    = 1
 	URL_ORDER   = 2
+
+	ORDER_STATUS_OK   = 0
+	ORDER_STATUS_FAIL = 1
 )
 
 var Constant_URL_type = map[int32]string{
@@ -15,7 +18,8 @@ var Constant_URL_type = map[int32]string{
 	2: "URL_ORDER",
 }
 
-func Int(v int) *int { return &v }
+func Int(v int) *int       { return &v }
+func Int64(v int64) *int64 { return &v }
 
 type DinnerMenu struct {
 	Status string `json:"status"`
@@ -97,4 +101,40 @@ type UserChoiceWithKey struct {
 	Choice int64  `json:"choice"`
 	Ctime  int64  `json:"ctime"`
 	Mtime  int64  `json:"mtime"`
+}
+
+type OrderRecord struct {
+	ID        *int64 `json:"id"`
+	UserID    *int64 `json:"user_id"`
+	FoodID    *int64 `json:"food_id"`
+	OrderTime *int64 `json:"order_time"`
+	Status    *int64 `json:"status"`
+}
+
+func (o *OrderRecord) GetUserID() int64 {
+	if o != nil && o.UserID != nil {
+		return *o.UserID
+	}
+	return 0
+}
+
+func (o *OrderRecord) GetFoodID() int64 {
+	if o != nil && o.FoodID != nil {
+		return *o.FoodID
+	}
+	return 0
+}
+
+func (o *OrderRecord) GetOrderTime() int64 {
+	if o != nil && o.OrderTime != nil {
+		return *o.OrderTime
+	}
+	return 0
+}
+
+func (o *OrderRecord) GetStatus() int64 {
+	if o != nil && o.Status != nil {
+		return *o.Status
+	}
+	return 0
 }

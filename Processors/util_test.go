@@ -5,6 +5,7 @@ import (
 )
 
 func TestMakeToken(t *testing.T) {
+	Config.Prefix.TokenPrefix = "Token "
 	type args struct {
 		key string
 	}
@@ -33,6 +34,7 @@ func TestMakeToken(t *testing.T) {
 }
 
 func TestMakeURL(t *testing.T) {
+	Config.Prefix.UrlPrefix = "https://dinner.sea.com"
 	type args struct {
 		opt int
 		id  *int

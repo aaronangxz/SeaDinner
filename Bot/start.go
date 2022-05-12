@@ -30,27 +30,19 @@ func InitBot() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 5
-
+	u.Timeout = 1
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
-		go func() {
-			fmt.Println("time: ", time.Now().Unix())
-			if time.Now().Unix() >= Processors.GetLunchTime().Unix()-300 && time.Now().Unix() <= Processors.GetLunchTime().Unix()+300 {
-				block = true
-				return
-			} else {
-				block = false
-			}
-		}()
-
-		if block {
-			if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Omw to order, wait for my good news!")); err != nil {
+		if time.Now().Unix() > Processors.GetLunchTime().Unix()-30 && time.Now().Unix() < Processors.GetLunchTime().Unix()+30 {
+			block = true
+			if _, err := bot.Send(tgbotapi.NewMessage(Id, "Omw to order, wait for my good news!")); err != nil {
 				log.Println(err)
 			}
-			bot.StopReceivingUpdates()
 			return
+		} else {
+			//check result
+			block = false
 		}
 
 		if update.Message.Chat.ID != 0 {
@@ -111,7 +103,7 @@ func InitBot() {
 			msg.Text = "What's your key? \nGo to https://dinner.sea.com/accounts/token, copy the Key under Generate Auth Token and paste it here:"
 			startListenKey = true
 		case "status":
-			msg.Text = "I'm ok."
+			msg.Text = getLatestResultByUserId(update.Message.Chat.ID)
 		case "chope":
 			msg.Text = "What do you want to order? Tell me the Food ID 😋"
 			startListenChope = true
@@ -212,5 +204,57 @@ func getChope(id int64, s string) string {
 			return err.Error()
 		}
 		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s)
+	}
+}
+
+func getLatestResultByUserId(id int64) string {
+	var (
+		res Processors.OrderRecord
+	)
+	if err := Processors.DB.Raw("SELECT * FROM order_log WHERE user_id = ? AND order_time BETWEEN ? AND ? ORDER BY order_time DESC LIMIT 1", id, Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
+		log.Printf("id : %v | Failed to retrieve record.", id)
+		return "Unable to find record for today."
+	}
+
+	if res.GetStatus() == Processors.ORDER_STATUS_OK {
+		return fmt.Sprintf("Successfully ordered %v!", res.GetFoodID())
+	}
+	return fmt.Sprintf("Failed to order %v today.", res.GetFoodID())
+}
+
+func batchGetLatestResult() []Processors.OrderRecord {
+	var (
+		res []Processors.OrderRecord
+	)
+	if err := Processors.DB.Raw("SELECT * FROM order_log WHERE order_time BETWEEN ? AND ? ORDER BY order_time DESC LIMIT 1", Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
+		log.Println("Failed to retrieve record.")
+		return nil
+	}
+	return res
+}
+
+func SendNotifications() {
+	var (
+		msg string
+	)
+	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	if err != nil {
+		log.Panic(err)
+	}
+	bot.Debug = true
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+
+	res := batchGetLatestResult()
+
+	for _, r := range res {
+		if r.GetStatus() == Processors.ORDER_STATUS_OK {
+			msg = fmt.Sprintf("Successfully ordered %v!", r.GetFoodID())
+		} else {
+			msg = fmt.Sprintf("Failed to order %v today.", r.GetFoodID())
+		}
+
+		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
+			log.Println(err)
+		}
 	}
 }
