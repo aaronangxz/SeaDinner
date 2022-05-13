@@ -1,8 +1,11 @@
 package Processors
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestGetDayId(t *testing.T) {
+	Init()
 	Config.Prefix.TokenPrefix = "Token "
 	Config.Prefix.UrlPrefix = "https://dinner.sea.com"
 	type args struct {
@@ -16,7 +19,7 @@ func TestGetDayId(t *testing.T) {
 		{
 			name:   "HappyCase",
 			args:   args{key: "8f983bf2f8dfb706713896c8aa9174646e3e37c2"},
-			wantID: 1,
+			wantID: 3521,
 		},
 	}
 	for _, tt := range tests {
