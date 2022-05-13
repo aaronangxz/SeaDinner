@@ -33,7 +33,7 @@ type tomlConfig struct {
 }
 
 func LoadConfig() {
-	ConfigPath = "../config.toml"
+	ConfigPath = "config.toml"
 	if _, err := toml.DecodeFile(ConfigPath, &Config); err != nil {
 		log.Fatalln("Reading config failed", err)
 	}
