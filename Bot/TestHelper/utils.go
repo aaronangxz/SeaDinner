@@ -2,10 +2,12 @@ package TestHelper
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/jinzhu/gorm"
 )
 
 func RandomString(length int) string {
@@ -21,5 +23,16 @@ func RandomInt(max int) int64 {
 }
 
 func InitTest() {
-	Processors.ConnectTestDataBase()
+	ConnectTestDataBase()
+}
+
+func ConnectTestDataBase() {
+	database, err := gorm.Open("sqlite3", "../test.db")
+
+	if err != nil {
+		panic("Failed to connect to test database!")
+	}
+
+	log.Println("Connected to Test DB")
+	Processors.DB = database
 }

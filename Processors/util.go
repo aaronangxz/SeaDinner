@@ -7,6 +7,10 @@ import (
 )
 
 func MakeToken(key string) string {
+	if len(key) != 40 {
+		log.Printf("Key length invalid | length: %v", len(key))
+		return ""
+	}
 	if key == "" {
 		log.Println("Key is invalid:", key)
 		return ""
@@ -51,6 +55,10 @@ func OutputResults(resultMap map[int64]int) {
 }
 
 func IsNotNumber(a string) bool {
+	if a == "" {
+		return true
+	}
+
 	for _, char := range a {
 		if unicode.IsSymbol(char) {
 			return true
