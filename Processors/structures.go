@@ -1,5 +1,27 @@
 package Processors
 
+const (
+	// UrlPrefix   = "https://dinner.sea.com"
+	// TokenPrefix = "Token "
+
+	URL_CURRENT = 0
+	URL_MENU    = 1
+	URL_ORDER   = 2
+
+	ORDER_STATUS_OK   = 0
+	ORDER_STATUS_FAIL = 1
+)
+
+var Constant_URL_type = map[int32]string{
+	0: "URL_CURRENT",
+	1: "URL_MENU",
+	2: "URL_ORDER",
+}
+
+func Int(v int) *int          { return &v }
+func Int64(v int64) *int64    { return &v }
+func String(s string) *string { return &s }
+
 type DinnerMenu struct {
 	Status string `json:"status"`
 	Dishes Food   `json:"food"`
@@ -11,19 +33,46 @@ type DinnerMenuArr struct {
 }
 
 type Current struct {
-	Status  string `json:"status"`
-	Details Menu   `json:"menu"`
+	Status *string `json:"status"`
+	Menu   Details `json:"menu"`
 }
-
 type OrderRequest struct {
 	FoodID int `json:"food_id"`
 }
 
 type OrderResponse struct {
-	Status     string `json:"status"`
-	Selected   int    `json:"selected"`
-	StatusCode string `json:"status_code"`
-	Error      string `json:"error"`
+	Status     *string `json:"status"`
+	StatusCode *int    `json:"status_code"`
+	Selected   *int    `json:"selected"`
+	Error      *string `json:"error"`
+}
+
+func (o *OrderResponse) GetStatus() string {
+	if o != nil && o.Status != nil {
+		return *o.Status
+	}
+	return ""
+}
+
+func (o *OrderResponse) GetStatusCode() int {
+	if o != nil && o.StatusCode != nil {
+		return *o.StatusCode
+	}
+	return 0
+}
+
+func (o *OrderResponse) GetSelected() int {
+	if o != nil && o.Selected != nil {
+		return *o.Selected
+	}
+	return 0
+}
+
+func (o *OrderResponse) GetError() string {
+	if o != nil && o.Error != nil {
+		return *o.Error
+	}
+	return ""
 }
 
 type Food struct {
@@ -31,18 +80,85 @@ type Food struct {
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Image       string `json:"image"`
+	ImageURL    string `json:"image_url"`
 	Ordered     int    `json:"ordered"`
 	Quota       int    `json:"quota"`
 	Disabled    bool   `json:"disabled"`
 }
 
-type Menu struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Comment     string `json:"comment"`
-	PollStart   string `json:"pollstart"`
-	PollEnd     string `json:"pollend"`
-	ServingTime string `json:"servingtime"`
-	Active      bool   `json:"active"`
+type Details struct {
+	Id          *int    `json:"id"`
+	Name        *string `json:"name"`
+	Comment     *string `json:"comment"`
+	PollStart   *string `json:"poll_start"`
+	PollEnd     *string `json:"poll_end"`
+	ServingTime *string `json:"serving_time"`
+	Active      *bool   `json:"active"`
+	VenueId     *int    `json:"venue_id"`
+}
+
+func (m *Details) GetId() int {
+	if m != nil && m.Id != nil {
+		return *m.Id
+	}
+	return 0
+}
+
+type UserChoice struct {
+	UserID int64 `json:"user_id"`
+	Choice int64 `json:"choice"`
+	Ctime  int64 `json:"ctime"`
+	Mtime  int64 `json:"mtime"`
+}
+
+type UserChoiceWithKey struct {
+	UserID int64  `json:"user_id"`
+	Key    string `json:"string"`
+	Choice int64  `json:"choice"`
+	Ctime  int64  `json:"ctime"`
+	Mtime  int64  `json:"mtime"`
+}
+
+type OrderRecord struct {
+	ID        *int64  `json:"id"`
+	UserID    *int64  `json:"user_id"`
+	FoodID    *int64  `json:"food_id"`
+	OrderTime *int64  `json:"order_time"`
+	Status    *int64  `json:"status"`
+	ErrorMsg  *string `json:"error_msg"`
+}
+
+func (o *OrderRecord) GetUserID() int64 {
+	if o != nil && o.UserID != nil {
+		return *o.UserID
+	}
+	return 0
+}
+
+func (o *OrderRecord) GetFoodID() int64 {
+	if o != nil && o.FoodID != nil {
+		return *o.FoodID
+	}
+	return 0
+}
+
+func (o *OrderRecord) GetOrderTime() int64 {
+	if o != nil && o.OrderTime != nil {
+		return *o.OrderTime
+	}
+	return 0
+}
+
+func (o *OrderRecord) GetStatus() int64 {
+	if o != nil && o.Status != nil {
+		return *o.Status
+	}
+	return 0
+}
+
+func (o *OrderRecord) GetErrorMsg() string {
+	if o != nil && o.ErrorMsg != nil {
+		return *o.ErrorMsg
+	}
+	return ""
 }

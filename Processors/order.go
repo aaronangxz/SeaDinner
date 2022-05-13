@@ -2,61 +2,85 @@ package Processors
 
 import (
 	"fmt"
-	"os"
-	"strconv"
+	"log"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 )
 
-func OrderDinnerQuery(client resty.Client, ID int) {
-	var req OrderRequest
+func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResponse {
+	var resp OrderResponse
+	fData := make(map[string]string)
+	fData["food_id"] = fmt.Sprint(u.Choice)
 
-	//reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter Selection: ")
-	//selection, _ := reader.ReadString('\n')
-	_, err := fmt.Scanf("%d", &req.FoodID)
+	log.Println(u)
+	for i := 1; i < Config.Runtime.RetryTimes; i++ {
+		log.Printf("id: %v | Attempt %v", u.UserID, i)
 
-	if err != nil {
-		fmt.Println(err)
+		start := time.Now().UnixMilli()
+
+		_, err := client.R().
+			SetHeader("Authorization", MakeToken(u.Key)).
+			SetFormData(fData).
+			SetResult(&resp).
+			Post(MakeURL(URL_ORDER, &menuID))
+
+		elapsed := time.Now().UnixMilli() - start
+
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		if resp.Status != nil && resp.GetStatus() == "error" {
+			log.Printf("id: %v | %v : %v : %v : %v", u.UserID, resp.GetError(), resp.GetStatus(), resp.GetStatusCode(), resp.GetSelected())
+		}
+
+		if resp.GetSelected() != 0 {
+			log.Printf("id: %v | Dinner Selected: %d. Successful in %v try. Time: %vms\n", u.UserID, resp.GetSelected(), i, elapsed)
+			break
+		}
+		log.Printf("id: %v | Dinner Not Selected. Retrying.\n", u.UserID)
 	}
-	//Call orderdinner with request struct
-	OrderDinner(client, ID, req)
+	return resp
 }
 
-func OrderDinner(client resty.Client, menuID int, choice OrderRequest) error {
-	//convert ID to string
-	menuIDstr := strconv.Itoa(menuID)
-	url := "https://dinner.sea.com/api/order/" + menuIDstr
-	//url := "https://dinner.sea.com/menu/" + menuIDstr + "/make_order"
+func BatchOrderDinner(u []UserChoiceWithKey) {
+	var (
+		records []OrderRecord
+		m       = make(map[int64]int)
+	)
 
-	//fmt.Println("url:", url)
-	//fmt.Println("choice:", choice.FoodID)
+	for _, r := range u {
+		log.Printf("id: %v | Ordering\n", r.UserID)
+		resp := OrderDinner(Client, GetDayId(r.Key), r)
 
-	var req OrderRequest
-	var resp OrderResponse
+		if resp.GetSelected() == 0 {
+			m[r.UserID] = ORDER_STATUS_FAIL
+		} else {
+			m[r.UserID] = ORDER_STATUS_OK
+		}
 
-	req.FoodID = choice.FoodID
-	fData := make(map[string]string)
-	fData["food_id"] = fmt.Sprint(req.FoodID)
-
-	_, err := client.R().
-		SetHeader("Authorization", "Token "+os.Getenv("Token")).
-		//SetBody(req).
-		SetFormData(fData).
-		//SetBody(fmt.Sprintf("food_id=%d", choice.FoodID)).
-		SetResult(&resp).
-		Post(url)
-
-	if err != nil {
-		fmt.Println(err)
-		return err
+		record := OrderRecord{
+			UserID:    Int64(r.UserID),
+			FoodID:    Int64(r.Choice),
+			OrderTime: Int64(time.Now().Unix()),
+			Status:    Int64(int64(m[r.UserID])),
+			ErrorMsg:  String(resp.GetError()),
+		}
+		records = append(records, record)
 	}
+	log.Println("records:", len(records))
 
-	if resp.Error != "" {
-		fmt.Printf("%s: %s\n", resp.Status, resp.Error)
-	} else {
-		fmt.Printf("Dinner Selected: %d\n", resp.Selected)
-		return nil
+	UpdateOrderLog(records)
+	OutputResults(m)
+}
+
+func UpdateOrderLog(records []OrderRecord) {
+	for _, r := range records {
+		if err := DB.Exec("INSERT INTO order_log (user_id, food_id, order_time, status, error_msg) VALUES (?,?,?,?,?)",
+			r.GetUserID(), r.GetFoodID(), r.GetOrderTime(), r.GetStatus(), r.GetErrorMsg()).Error; err != nil {
+			log.Printf("id : %v | Failed to update record.", r.GetUserID())
+		}
 	}
-	return nil
 }

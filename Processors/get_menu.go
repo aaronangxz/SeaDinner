@@ -2,20 +2,22 @@ package Processors
 
 import (
 	"fmt"
-	"os"
-	"strconv"
+	"log"
 
 	"github.com/go-resty/resty/v2"
 )
 
-func GetMenu(client resty.Client, ID int) {
-	IDstr := strconv.Itoa(ID)
+func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 	var currentarr DinnerMenuArr
 
+	log.Println("key:", key)
+	log.Println("header:", MakeToken(key))
+	log.Println("url:", MakeURL(URL_MENU, &ID))
+
 	_, err := client.R().
-		SetHeader("Authorization", "Token "+os.Getenv("Token")).
+		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentarr).
-		Get("https://dinner.sea.com/api/menu/" + IDstr)
+		Get(MakeURL(URL_MENU, &ID))
 
 	if err != nil {
 		fmt.Println(err)
@@ -23,11 +25,17 @@ func GetMenu(client resty.Client, ID int) {
 
 	fmt.Printf("Query status of today's menu: %v\n\n", currentarr.Status)
 
-	for i := range currentarr.DinnerArr {
-		fmt.Printf("Food ID: %v\n", currentarr.DinnerArr[i].Id)
-		fmt.Printf("Name: %v\n", currentarr.DinnerArr[i].Name)
-		fmt.Printf("Ordered: %v\n", currentarr.DinnerArr[i].Ordered)
-		fmt.Printf("Quota: %v\n", currentarr.DinnerArr[i].Quota)
-		fmt.Printf("\n")
+	return currentarr
+}
+
+func OutputMenu(key string) string {
+	var (
+		output string
+	)
+
+	for _, d := range GetMenu(Client, GetDayId(key), key).DinnerArr {
+		output += fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
+			d.ImageURL, d.Id, d.Name, d.Quota)
 	}
+	return output
 }
