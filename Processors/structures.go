@@ -41,9 +41,10 @@ type OrderRequest struct {
 }
 
 type OrderResponse struct {
-	Status   *string `json:"status"`
-	Selected *int    `json:"selected"`
-	Error    *string `json:"error"`
+	Status     *string `json:"status"`
+	StatusCode *int    `json:"status_code"`
+	Selected   *int    `json:"selected"`
+	Error      *string `json:"error"`
 }
 
 func (o *OrderResponse) GetStatus() string {
@@ -51,6 +52,13 @@ func (o *OrderResponse) GetStatus() string {
 		return *o.Status
 	}
 	return ""
+}
+
+func (o *OrderResponse) GetStatusCode() int {
+	if o != nil && o.StatusCode != nil {
+		return *o.StatusCode
+	}
+	return 0
 }
 
 func (o *OrderResponse) GetSelected() int {
@@ -112,11 +120,12 @@ type UserChoiceWithKey struct {
 }
 
 type OrderRecord struct {
-	ID        *int64 `json:"id"`
-	UserID    *int64 `json:"user_id"`
-	FoodID    *int64 `json:"food_id"`
-	OrderTime *int64 `json:"order_time"`
-	Status    *int64 `json:"status"`
+	ID        *int64  `json:"id"`
+	UserID    *int64  `json:"user_id"`
+	FoodID    *int64  `json:"food_id"`
+	OrderTime *int64  `json:"order_time"`
+	Status    *int64  `json:"status"`
+	ErrorMsg  *string `json:"error_msg"`
 }
 
 func (o *OrderRecord) GetUserID() int64 {
@@ -145,4 +154,11 @@ func (o *OrderRecord) GetStatus() int64 {
 		return *o.Status
 	}
 	return 0
+}
+
+func (o *OrderRecord) GetErrorMsg() string {
+	if o != nil && o.ErrorMsg != nil {
+		return *o.ErrorMsg
+	}
+	return ""
 }

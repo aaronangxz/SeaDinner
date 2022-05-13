@@ -13,8 +13,11 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResp
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.Choice)
 
+	log.Println(u)
 	for i := 1; i < Config.Runtime.RetryTimes; i++ {
 		log.Printf("id: %v | Attempt %v", u.UserID, i)
+
+		start := time.Now().UnixMilli()
 
 		_, err := client.R().
 			SetHeader("Authorization", MakeToken(u.Key)).
@@ -22,18 +25,19 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResp
 			SetResult(&resp).
 			Post(MakeURL(URL_ORDER, &menuID))
 
+		elapsed := time.Now().UnixMilli() - start
+
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 
-		if resp.Error != nil && resp.GetError() != "success" {
-			log.Printf("id: %v : | %v: %v\n", u.UserID, resp.GetStatus(), resp.GetError())
-			continue
+		if resp.Status != nil && resp.GetStatus() == "error" {
+			log.Printf("id: %v | %v : %v : %v : %v", u.UserID, resp.GetError(), resp.GetStatus(), resp.GetStatusCode(), resp.GetSelected())
 		}
 
 		if resp.GetSelected() != 0 {
-			log.Printf("id: %v | Dinner Selected: %d. Successful in %v try.\n", u.UserID, i, resp.GetSelected())
+			log.Printf("id: %v | Dinner Selected: %d. Successful in %v try. Time: %vms\n", u.UserID, resp.GetSelected(), i, elapsed)
 			break
 		}
 		log.Printf("id: %v | Dinner Not Selected. Retrying.\n", u.UserID)
@@ -62,9 +66,11 @@ func BatchOrderDinner(u []UserChoiceWithKey) {
 			FoodID:    Int64(r.Choice),
 			OrderTime: Int64(time.Now().Unix()),
 			Status:    Int64(int64(m[r.UserID])),
+			ErrorMsg:  String(resp.GetError()),
 		}
 		records = append(records, record)
 	}
+	log.Println("records:", len(records))
 
 	UpdateOrderLog(records)
 	OutputResults(m)
@@ -72,8 +78,8 @@ func BatchOrderDinner(u []UserChoiceWithKey) {
 
 func UpdateOrderLog(records []OrderRecord) {
 	for _, r := range records {
-		if err := DB.Exec("INSERT INTO order_log (user_id, food_id, order_time, status) VALUES (?,?,?,?)",
-			r.GetUserID(), r.GetFoodID(), r.GetOrderTime(), r.GetStatus()).Error; err != nil {
+		if err := DB.Exec("INSERT INTO order_log (user_id, food_id, order_time, status, error_msg) VALUES (?,?,?,?,?)",
+			r.GetUserID(), r.GetFoodID(), r.GetOrderTime(), r.GetStatus(), r.GetErrorMsg()).Error; err != nil {
 			log.Printf("id : %v | Failed to update record.", r.GetUserID())
 		}
 	}

@@ -30,9 +30,7 @@ func CheckKey(id int64) (string, bool) {
 	if err := Processors.DB.Table("user_key").Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return "I don't have your key, let me know in /newkey 😊", false
 	} else {
-		t := time.Unix(int64(existingRecord.GetMtime()), 0).Local().UTC()
-		tz, _ := time.LoadLocation(Processors.TimeZone)
-		return fmt.Sprintf("I have your key that you told me on %v! But I won't leak it 😀", t.In(tz).Format("2006-01-02")), true
+		return fmt.Sprintf("I have your key that you told me on %v! But I won't leak it 😀", Processors.ConvertTimeStamp(existingRecord.GetMtime())), true
 	}
 }
 
@@ -114,23 +112,24 @@ func GetLatestResultByUserId(id int64) string {
 	)
 	if err := Processors.DB.Raw("SELECT * FROM order_log WHERE user_id = ? AND order_time BETWEEN ? AND ? ORDER BY order_time DESC LIMIT 1", id, Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
 		log.Printf("id : %v | Failed to retrieve record.", id)
-		return "Unable to find record for today."
+		return "I have yet to order anything today 😕"
 	}
 
 	if res.GetStatus() == Processors.ORDER_STATUS_OK {
-		return fmt.Sprintf("Successfully ordered %v!", res.GetFoodID())
+		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", res.GetFoodID(), Processors.ConvertTimeStampTime(res.GetOrderTime()))
 	}
-	return fmt.Sprintf("Failed to order %v today.", res.GetFoodID())
+	return fmt.Sprintf("Failed to order %v today. 😔", res.GetFoodID())
 }
 
 func BatchGetLatestResult() []Processors.OrderRecord {
 	var (
 		res []Processors.OrderRecord
 	)
-	if err := Processors.DB.Raw("SELECT * FROM order_log WHERE order_time BETWEEN ? AND ? ORDER BY order_time DESC LIMIT 1", Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT * FROM order_log WHERE order_time BETWEEN ? AND ? GROUP BY user_id HAVING MAX(order_time)", Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
 		log.Println("Failed to retrieve record.")
 		return nil
 	}
+	log.Println("BatchGetLatestResult:", len(res))
 	return res
 }
 
@@ -146,12 +145,13 @@ func SendNotifications() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	res := BatchGetLatestResult()
+	log.Println("SendNotifications:", len(res))
 
 	for _, r := range res {
 		if r.GetStatus() == Processors.ORDER_STATUS_OK {
-			msg = fmt.Sprintf("Successfully ordered %v!", r.GetFoodID())
+			msg = fmt.Sprintf("Successfully ordered %v! 🥳", r.GetFoodID())
 		} else {
-			msg = fmt.Sprintf("Failed to order %v today.", r.GetFoodID())
+			msg = fmt.Sprintf("Failed to order %v today. %v😔", r.GetFoodID(), r.GetErrorMsg())
 		}
 
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {

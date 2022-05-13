@@ -18,7 +18,18 @@ func main() {
 	Processors.Init()
 	Processors.ConnectDataBase()
 
+	//For testing only, update in config.toml
+	if Processors.Config.Adhoc {
+		r, donePrep = Processors.PrepOrder()
+		time.Sleep(1 * time.Second)
+		Processors.BatchOrderDinner(r)
+		time.Sleep(1 * time.Second)
+		Bot.SendNotifications()
+		return
+	}
+
 	for {
+
 		if (time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
 			time.Now().Unix() <= Processors.GetLunchTime().Unix()-15) &&
 			!donePrep {
