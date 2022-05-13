@@ -39,8 +39,8 @@ jobs:
         run: heroku login
       - name: Set Remote
         run: heroku git:remote -a sea-dinner-order
-      - name: Pull
-        run: git pull heroku master
+      - name: Filter
+        run: git filter-branch -- --all
       - name: Push
         working-directory: ./
         run: git push --force heroku master
