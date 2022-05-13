@@ -2,6 +2,7 @@ package Processors
 
 import (
 	"log"
+	"os"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jinzhu/gorm"
@@ -17,7 +18,7 @@ var (
 func LoadEnv() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatalf("unable to load .env file")
+		log.Printf("unable to load .env file")
 	}
 }
 
@@ -30,7 +31,11 @@ func Init() resty.Client {
 }
 
 func ConnectDataBase() {
-	database, err := gorm.Open("sqlite3", "../store.db")
+	dbName := "store.db"
+	if os.Getenv("HEROKU_DEPLOY") == "FALSE" {
+		dbName = "../store.db"
+	}
+	database, err := gorm.Open("sqlite3", dbName)
 
 	if err != nil {
 		panic("Failed to connect to database!")
