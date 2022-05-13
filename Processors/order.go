@@ -17,7 +17,7 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResp
 	for i := 1; i < Config.Runtime.RetryTimes; i++ {
 		log.Printf("id: %v | Attempt %v", u.UserID, i)
 
-		start := time.Now().Unix()
+		start := time.Now().UnixMilli()
 
 		_, err := client.R().
 			SetHeader("Authorization", MakeToken(u.Key)).
@@ -25,7 +25,7 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResp
 			SetResult(&resp).
 			Post(MakeURL(URL_ORDER, &menuID))
 
-		elapsed := time.Now().Unix() - start
+		elapsed := time.Now().UnixMilli() - start
 
 		if err != nil {
 			log.Println(err)
