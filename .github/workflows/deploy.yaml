@@ -44,4 +44,4 @@ jobs:
       # - name: Pull
       #   run: git pull
       - name: Push
-        run: git push heroku master
+        run: git push heroku main
