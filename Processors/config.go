@@ -2,6 +2,7 @@ package Processors
 
 import (
 	"log"
+	"os"
 
 	"github.com/BurntSushi/toml"
 )
@@ -33,7 +34,10 @@ type tomlConfig struct {
 }
 
 func LoadConfig() {
-	ConfigPath = "../config.toml"
+	ConfigPath = "config.toml"
+	if os.Getenv("HEROKU_DEPLOY") == "FALSE" {
+		ConfigPath = "../config.toml"
+	}
 	if _, err := toml.DecodeFile(ConfigPath, &Config); err != nil {
 		log.Fatalln("Reading config failed", err)
 	}
