@@ -33,17 +33,9 @@ type DinnerMenuArr struct {
 }
 
 type Current struct {
-	Status  *string `json:"status"`
-	Details Menu    `json:"menu"`
+	Status *string `json:"status"`
+	Menu   Details `json:"menu"`
 }
-
-func (c *Current) GetDetails() Menu {
-	if c != nil && c.Status != nil {
-		return c.Details
-	}
-	return Menu{}
-}
-
 type OrderRequest struct {
 	FoodID int `json:"food_id"`
 }
@@ -86,17 +78,18 @@ type Food struct {
 	Disabled    bool   `json:"disabled"`
 }
 
-type Menu struct {
+type Details struct {
 	Id          *int    `json:"id"`
 	Name        *string `json:"name"`
 	Comment     *string `json:"comment"`
-	PollStart   *string `json:"pollstart"`
-	PollEnd     *string `json:"pollend"`
-	ServingTime *string `json:"servingtime"`
+	PollStart   *string `json:"poll_start"`
+	PollEnd     *string `json:"poll_end"`
+	ServingTime *string `json:"serving_time"`
 	Active      *bool   `json:"active"`
+	VenueId     *int    `json:"venue_id"`
 }
 
-func (m *Menu) GetId() int {
+func (m *Details) GetId() int {
 	if m != nil && m.Id != nil {
 		return *m.Id
 	}
