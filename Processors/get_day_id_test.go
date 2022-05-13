@@ -20,7 +20,7 @@ func TestGetDayId(t *testing.T) {
 	}{
 		{
 			name:   "HappyCase",
-			args:   args{key: os.Getenv("Token")},
+			args:   args{key: os.Getenv("TOKEN")},
 			wantID: 3521,
 		},
 	}

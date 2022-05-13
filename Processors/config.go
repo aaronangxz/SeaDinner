@@ -40,6 +40,8 @@ func LoadConfig() {
 	}
 
 	if _, err := toml.DecodeFile(ConfigPath, &Config); err != nil {
-		log.Fatalln("Reading config failed", err, ConfigPath)
+		log.Fatalln("Reading config failed | ", err, ConfigPath)
+		return
 	}
+	log.Println("Reading config OK", ConfigPath)
 }
