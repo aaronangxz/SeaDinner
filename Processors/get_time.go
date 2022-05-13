@@ -21,7 +21,6 @@ func GetLunchTime() time.Time {
 }
 
 //time format: Mon Jan 2 15:04:05 -0700 MST 2006
-
 func ConvertTimeStamp(timestamp int64) string {
 	t := time.Unix(timestamp, 0).Local().UTC()
 	tz, _ := time.LoadLocation(TimeZone)

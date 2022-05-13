@@ -3,9 +3,14 @@ package Processors
 import (
 	"fmt"
 	"log"
+	"unicode"
 )
 
 func MakeToken(key string) string {
+	if len(key) != 40 {
+		log.Printf("Key length invalid | length: %v", len(key))
+		return ""
+	}
 	if key == "" {
 		log.Println("Key is invalid:", key)
 		return ""
@@ -47,4 +52,22 @@ func OutputResults(resultMap map[int64]int) {
 	fmt.Println("Total Success: ", passed)
 	fmt.Println("Total Failures: ", len(resultMap)-passed)
 	fmt.Println("*************************")
+}
+
+func IsNotNumber(a string) bool {
+	if a == "" {
+		return true
+	}
+
+	for _, char := range a {
+		if unicode.IsSymbol(char) {
+			return true
+		}
+	}
+	for _, char := range a {
+		if !unicode.IsNumber(char) {
+			return true
+		}
+	}
+	return false
 }
