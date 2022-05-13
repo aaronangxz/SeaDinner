@@ -24,7 +24,7 @@ func TestGetMenu(t *testing.T) {
 	}{
 		{
 			name: "HappyCase",
-			args: args{client: r, ID: 3521, key: os.Getenv("Token")},
+			args: args{client: r, ID: 3521, key: os.Getenv("TOKEN")},
 			want: 8,
 		},
 	}
