@@ -41,7 +41,7 @@ jobs:
         run: git checkout -b main
       - name: Set Remote
         run: heroku git:remote -a sea-dinner-order
-      - name: Pull
-        run: git pull
+      # - name: Pull
+      #   run: git pull
       - name: Push
         run: git push heroku master
