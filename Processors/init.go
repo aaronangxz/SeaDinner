@@ -39,3 +39,14 @@ func ConnectDataBase() {
 	log.Println("Connected to DB")
 	DB = database
 }
+
+func ConnectTestDataBase() {
+	database, err := gorm.Open("sqlite3", "../test.db")
+
+	if err != nil {
+		panic("Failed to connect to database!")
+	}
+
+	log.Println("Connected to DB")
+	DB = database
+}

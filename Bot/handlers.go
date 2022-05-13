@@ -34,7 +34,7 @@ func CheckKey(id int64) (string, bool) {
 	}
 }
 
-func UpdateKey(id int64, s string) string {
+func UpdateKey(id int64, s string) (string, bool) {
 	var (
 		existingRecord UserKey
 		r              = UserKey{
@@ -50,18 +50,18 @@ func UpdateKey(id int64, s string) string {
 		if existingRecord.UserID == nil {
 			if err := Processors.DB.Table("user_key").Create(&r).Error; err != nil {
 				log.Println("Failed to insert DB")
-				return err.Error()
+				return err.Error(), false
 			}
-			return "Okay got it. I remember your key now! 😙"
+			return "Okay got it. I remember your key now! 😙", true
 		}
-		return err.Error()
+		return err.Error(), false
 	} else {
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_key SET key = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
-			return err.Error()
+			return err.Error(), false
 		}
-		return "Okay got it. I will take note of your new key 😙"
+		return "Okay got it. I will take note of your new key 😙", true
 	}
 }
 
