@@ -6,8 +6,8 @@ import (
 )
 
 func TestGetDayId(t *testing.T) {
-	Init()
 	LoadEnv()
+	Init()
 	Config.Prefix.TokenPrefix = "Token "
 	Config.Prefix.UrlPrefix = "https://dinner.sea.com"
 	type args struct {

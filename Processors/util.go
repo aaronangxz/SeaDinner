@@ -3,6 +3,7 @@ package Processors
 import (
 	"fmt"
 	"log"
+	"unicode"
 )
 
 func MakeToken(key string) string {
@@ -47,4 +48,18 @@ func OutputResults(resultMap map[int64]int) {
 	fmt.Println("Total Success: ", passed)
 	fmt.Println("Total Failures: ", len(resultMap)-passed)
 	fmt.Println("*************************")
+}
+
+func IsNotNumber(a string) bool {
+	for _, char := range a {
+		if unicode.IsSymbol(char) {
+			return true
+		}
+	}
+	for _, char := range a {
+		if !unicode.IsNumber(char) {
+			return true
+		}
+	}
+	return false
 }

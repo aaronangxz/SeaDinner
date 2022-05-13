@@ -37,8 +37,6 @@ jobs:
           HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
       - name: Login Heroku
         run: heroku login
-      # - name: Checkout Main
-      #   run: git checkout -b main
       - name: Set Remote
         run: heroku git:remote -a sea-dinner-order
       - name: Pull

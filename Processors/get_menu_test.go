@@ -9,11 +9,8 @@ import (
 )
 
 func TestGetMenu(t *testing.T) {
-	r := Init()
 	LoadEnv()
-	exp := DinnerMenuArr{
-		Status: "success",
-	}
+	r := Init()
 
 	type args struct {
 		client resty.Client
@@ -23,18 +20,18 @@ func TestGetMenu(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want DinnerMenuArr
+		want int
 	}{
 		{
 			name: "HappyCase",
-			args: args{client: r, ID: 1234, key: os.Getenv("Token")},
-			want: exp,
+			args: args{client: r, ID: 3521, key: os.Getenv("Token")},
+			want: 8,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetMenu(tt.args.client, tt.args.ID, tt.args.key); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetMenu() = %v, want %v", got, tt.want)
+			if got := GetMenu(tt.args.client, tt.args.ID, tt.args.key); !reflect.DeepEqual(len(got.DinnerArr), tt.want) {
+				t.Errorf("GetMenu() = %v, want %v", len(got.DinnerArr), tt.want)
 			}
 		})
 	}
