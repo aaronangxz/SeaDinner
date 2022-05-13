@@ -1,11 +1,13 @@
 package Processors
 
 import (
+	"os"
 	"testing"
 )
 
 func TestGetDayId(t *testing.T) {
 	Init()
+	LoadEnv()
 	Config.Prefix.TokenPrefix = "Token "
 	Config.Prefix.UrlPrefix = "https://dinner.sea.com"
 	type args struct {
@@ -18,7 +20,7 @@ func TestGetDayId(t *testing.T) {
 	}{
 		{
 			name:   "HappyCase",
-			args:   args{key: "8f983bf2f8dfb706713896c8aa9174646e3e37c2"},
+			args:   args{key: os.Getenv("Token")},
 			wantID: 3521,
 		},
 	}

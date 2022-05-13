@@ -1,6 +1,7 @@
 package Processors
 
 import (
+	"os"
 	"reflect"
 	"testing"
 
@@ -9,7 +10,7 @@ import (
 
 func TestGetMenu(t *testing.T) {
 	r := Init()
-
+	LoadEnv()
 	exp := DinnerMenuArr{
 		Status: "success",
 	}
@@ -26,7 +27,7 @@ func TestGetMenu(t *testing.T) {
 	}{
 		{
 			name: "HappyCase",
-			args: args{client: r, ID: 1234, key: "8f983bf2f8dfb706713896c8aa9174646e3e37c2"},
+			args: args{client: r, ID: 1234, key: os.Getenv("Token")},
 			want: exp,
 		},
 	}
