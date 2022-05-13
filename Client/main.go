@@ -52,8 +52,8 @@ func main() {
 		if !update.Message.IsCommand() { // ignore any non-command Messages
 			if startListenKey {
 				//Capture key
-				if _, err := bot.Send(tgbotapi.NewMessage(Id,
-					Bot.UpdateKey(Id, update.Message.Text))); err != nil {
+				msg, _ := Bot.UpdateKey(Id, update.Message.Text)
+				if _, err := bot.Send(tgbotapi.NewMessage(Id, msg)); err != nil {
 					log.Println(err)
 				}
 				startListenKey = false
