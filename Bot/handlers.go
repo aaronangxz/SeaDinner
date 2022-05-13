@@ -16,6 +16,11 @@ func GetKey(id int64) string {
 		existingRecord UserKey
 	)
 
+	if id <= 0 {
+		log.Println("Id must be > 1.")
+		return ""
+	}
+
 	if err := Processors.DB.Table("user_key").Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return ""
 	}
@@ -26,6 +31,11 @@ func CheckKey(id int64) (string, bool) {
 	var (
 		existingRecord UserKey
 	)
+
+	if id <= 0 {
+		log.Println("Id must be > 1.")
+		return "", false
+	}
 
 	if err := Processors.DB.Table("user_key").Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return "I don't have your key, let me know in /newkey 😊", false
@@ -44,6 +54,21 @@ func UpdateKey(id int64, s string) (string, bool) {
 			Mtime:  Processors.Int64(time.Now().Unix()),
 		}
 	)
+
+	if id <= 0 {
+		log.Println("Id must be > 1.")
+		return "", false
+	}
+
+	if s == "" {
+		log.Println("Key cannot be empty.")
+		return "Key cannot be empty 😟", false
+	}
+
+	if len(s) != 40 {
+		log.Printf("Key length invalid | length: %v", len(s))
+		return "Are you sure this is a valid key? 😟", false
+	}
 
 	if err := Processors.DB.Raw("SELECT * FROM user_key WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		//Insert new row
@@ -70,6 +95,11 @@ func CheckChope(id int64) (string, bool) {
 		existingRecord UserChoice
 	)
 
+	if id <= 0 {
+		log.Println("Id must be > 1.")
+		return "", false
+	}
+
 	if err := Processors.DB.Raw("SELECT * FROM user_choice WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		return "I have yet to receive your order 🥲 Tell me at /chope", false
 	} else {
@@ -88,6 +118,16 @@ func GetChope(id int64, s string) string {
 			Mtime:  time.Now().Unix(),
 		}
 	)
+
+	if id <= 0 {
+		log.Println("Id must be > 1.")
+		return ""
+	}
+
+	if Processors.IsNotNumber(s) {
+		log.Printf("Selection contains illegal character | selection: %v", s)
+		return "Are you sure that is a valid FoodID? 😟"
+	}
 
 	if err := Processors.DB.Raw("SELECT * FROM user_choice WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		//Insert new row
@@ -110,6 +150,12 @@ func GetLatestResultByUserId(id int64) string {
 	var (
 		res Processors.OrderRecord
 	)
+
+	if id <= 0 {
+		log.Println("Id must be > 1.")
+		return ""
+	}
+
 	if err := Processors.DB.Raw("SELECT * FROM order_log WHERE user_id = ? AND order_time BETWEEN ? AND ? ORDER BY order_time DESC LIMIT 1", id, Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
 		log.Printf("id : %v | Failed to retrieve record.", id)
 		return "I have yet to order anything today 😕"

@@ -3,6 +3,7 @@ package Bot
 import (
 	"testing"
 
+	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper/user_key"
 )
 
@@ -61,7 +62,7 @@ func TestCheckKey(t *testing.T) {
 
 func TestUpdateKey(t *testing.T) {
 	u := user_key.New().Build()
-	newKey := "NEWKEY"
+	newKey := TestHelper.RandomString(40)
 	type args struct {
 		id int64
 		s  string
