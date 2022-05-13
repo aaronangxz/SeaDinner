@@ -45,4 +45,4 @@ jobs:
       #   run: git pull
       - name: Push
         working-directory: ./
-        run: git push heroku main
+        run: git push heroku master
