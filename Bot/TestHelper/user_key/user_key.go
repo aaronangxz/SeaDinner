@@ -2,6 +2,7 @@ package user_key
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
@@ -20,6 +21,7 @@ type UserKey struct {
 }
 
 func New() *UserKey {
+	TestHelper.InitTest()
 	return &UserKey{
 		UserKey: &TestHelper.UserKey{
 			UserID:  new(int64),
@@ -36,7 +38,7 @@ func (uk *UserKey) FillDefaults() *UserKey {
 	}
 
 	if uk.UserKey.GetUserKey() == "" {
-		uk.SetKey(defaultKey)
+		uk.SetKey(Processors.EncryptKey(defaultKey, os.Getenv("AES_KEY")))
 	}
 
 	if uk.UserKey.GetCtime() == 0 {
@@ -51,7 +53,6 @@ func (uk *UserKey) FillDefaults() *UserKey {
 
 func (uk *UserKey) Build() *UserKey {
 	uk.FillDefaults()
-	TestHelper.InitTest()
 	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Create(&uk).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", uk.GetUserID(), err.Error())
 		return nil
