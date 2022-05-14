@@ -22,6 +22,11 @@ func TestGetKey(t *testing.T) {
 			args: args{id: u.GetUserID()},
 			want: u.GetUserKey(),
 		},
+		{
+			name: "NotFound",
+			args: args{id: TestHelper.RandomInt(999)},
+			want: "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -48,6 +53,11 @@ func TestCheckKey(t *testing.T) {
 			args:  args{u.GetUserID()},
 			want1: true,
 		},
+		{
+			name:  "NotFound",
+			args:  args{id: TestHelper.RandomInt(999)},
+			want1: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -62,7 +72,6 @@ func TestCheckKey(t *testing.T) {
 
 func TestUpdateKey(t *testing.T) {
 	u := user_key.New().Build()
-	newKey := TestHelper.RandomString(40)
 	type args struct {
 		id int64
 		s  string
@@ -73,8 +82,23 @@ func TestUpdateKey(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "HappyCase",
-			args: args{u.GetUserID(), newKey},
+			name: "KeyInvalidLen",
+			args: args{u.GetUserID(), TestHelper.RandomString(39)},
+			want: false,
+		},
+		{
+			name: "KeyEmpty",
+			args: args{u.GetUserID(), ""},
+			want: false,
+		},
+		{
+			name: "UserKeyNotExist",
+			args: args{TestHelper.RandomInt(999), TestHelper.RandomString(40)},
+			want: true,
+		},
+		{
+			name: "UserExistsButKeyNotExist",
+			args: args{u.GetUserID(), TestHelper.RandomString(40)},
 			want: true,
 		},
 	}
