@@ -5,6 +5,11 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      TEST_DB_USERNAME: ${{env.TEST_DB_USERNAME}}
+      TEST_DB_PASSWORD: ${{env.TEST_DB_PASSWORD}}
+      TEST_DB_URL: ${{env.TEST_DB_URL}}
+      TEST_DB_NAME: ${{env.TEST_DB_NAME}}
     steps:
       - uses: actions/checkout@v2
         with:
