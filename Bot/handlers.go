@@ -105,7 +105,7 @@ func CheckChope(id int64) (string, bool) {
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		return "I have yet to receive your order 🥲 Tell me at /chope", false
 	} else {
-		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? Tell me at /chope", existingRecord.Choice), true
+		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? Tell me at /chope", existingRecord.GetUserChoice()), true
 	}
 }
 
@@ -114,10 +114,10 @@ func GetChope(id int64, s string) string {
 	var (
 		existingRecord UserChoice
 		r              = UserChoice{
-			UserID: id,
-			Choice: n,
-			Ctime:  time.Now().Unix(),
-			Mtime:  time.Now().Unix(),
+			UserID:     Processors.Int64(id),
+			UserChoice: Processors.Int64(n),
+			Ctime:      Processors.Int64(time.Now().Unix()),
+			Mtime:      Processors.Int64(time.Now().Unix()),
 		}
 	)
 
@@ -202,6 +202,37 @@ func SendNotifications() {
 			msg = fmt.Sprintf("Failed to order %v today. %v😔", r.GetFoodID(), r.GetErrorMsg())
 		}
 
+		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func BatchGetUsersChoice() []UserChoice {
+	var (
+		res []UserChoice
+	)
+	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab").Scan(&res).Error; err != nil {
+		log.Println("Failed to retrieve record.")
+		return nil
+	}
+	log.Println("BatchGetUsersChoice:", len(res))
+	return res
+}
+
+func SendReminder() {
+	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	if err != nil {
+		log.Panic(err)
+	}
+	bot.Debug = true
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+
+	res := BatchGetUsersChoice()
+	log.Println("SendReminder:", len(res))
+
+	for _, r := range res {
+		msg := fmt.Sprintf("Good Morning. Do you want me to order %v again today? 😋", r.GetUserChoice())
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
 			log.Println(err)
 		}
