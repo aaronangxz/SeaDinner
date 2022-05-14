@@ -24,7 +24,7 @@ func GetKey(id int64) string {
 	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return ""
 	}
-	return existingRecord.GetUserKey()
+	return Processors.DecryptKey(existingRecord.GetUserKey(), os.Getenv("AES_KEY"))
 }
 
 func CheckKey(id int64) (string, bool) {
@@ -45,11 +45,13 @@ func CheckKey(id int64) (string, bool) {
 }
 
 func UpdateKey(id int64, s string) (string, bool) {
+	hashedKey := Processors.EncryptKey(s, os.Getenv("AES_KEY"))
+
 	var (
 		existingRecord UserKey
 		r              = UserKey{
 			UserID:  Processors.Int64(id),
-			UserKey: Processors.String(s),
+			UserKey: Processors.String(hashedKey),
 			Ctime:   Processors.Int64(time.Now().Unix()),
 			Mtime:   Processors.Int64(time.Now().Unix()),
 		}
@@ -82,7 +84,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 		return err.Error(), false
 	} else {
 		//Update key if user_id exists
-		if err := Processors.DB.Exec("UPDATE user_key_tab SET user_key = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
+		if err := Processors.DB.Exec("UPDATE user_key_tab SET user_key = ?, mtime = ? WHERE user_id = ?", hashedKey, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
 			return err.Error(), false
 		}

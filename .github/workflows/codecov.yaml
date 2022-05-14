@@ -22,6 +22,7 @@ jobs:
           TEST_DB_PASSWORD: ${{secrets.TEST_DB_PASSWORD}}
           TEST_DB_URL: ${{secrets.TEST_DB_URL}}
           TEST_DB_NAME: ${{secrets.TEST_DB_NAME}}
+          AES_KEY: ${{secrets.AES_KEY}}
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
