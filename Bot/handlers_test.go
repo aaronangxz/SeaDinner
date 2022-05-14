@@ -30,7 +30,7 @@ func TestGetKey(t *testing.T) {
 		},
 		{
 			name: "NotFound",
-			args: args{id: 1},
+			args: args{id: TestHelper.RandomInt(999)},
 			want: "",
 		},
 	}
@@ -66,7 +66,7 @@ func TestCheckKey(t *testing.T) {
 		},
 		{
 			name:  "NotFound",
-			args:  args{id: 1},
+			args:  args{id: TestHelper.RandomInt(999)},
 			want1: false,
 		},
 	}
@@ -114,7 +114,7 @@ func TestUpdateKey(t *testing.T) {
 		},
 		{
 			name: "UserKeyNotExist",
-			args: args{1, TestHelper.RandomString(40)},
+			args: args{TestHelper.RandomInt(999), TestHelper.RandomString(40)},
 			want: true,
 		},
 		{
