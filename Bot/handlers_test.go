@@ -20,7 +20,7 @@ func TestGetKey(t *testing.T) {
 		{
 			name: "HappyCase",
 			args: args{id: u.GetUserID()},
-			want: u.GetKey(),
+			want: u.GetUserKey(),
 		},
 	}
 	for _, tt := range tests {

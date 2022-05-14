@@ -21,10 +21,10 @@ func GetKey(id int64) string {
 		return ""
 	}
 
-	if err := Processors.DB.Table("user_key").Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return ""
 	}
-	return existingRecord.GetKey()
+	return existingRecord.GetUserKey()
 }
 
 func CheckKey(id int64) (string, bool) {
@@ -37,7 +37,7 @@ func CheckKey(id int64) (string, bool) {
 		return "", false
 	}
 
-	if err := Processors.DB.Table("user_key").Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return "I don't have your key, let me know in /newkey 😊", false
 	} else {
 		return fmt.Sprintf("I have your key that you told me on %v! But I won't leak it 😀", Processors.ConvertTimeStamp(existingRecord.GetMtime())), true
@@ -48,10 +48,10 @@ func UpdateKey(id int64, s string) (string, bool) {
 	var (
 		existingRecord UserKey
 		r              = UserKey{
-			UserID: Processors.Int64(id),
-			Key:    Processors.String(s),
-			Ctime:  Processors.Int64(time.Now().Unix()),
-			Mtime:  Processors.Int64(time.Now().Unix()),
+			UserID:  Processors.Int64(id),
+			UserKey: Processors.String(s),
+			Ctime:   Processors.Int64(time.Now().Unix()),
+			Mtime:   Processors.Int64(time.Now().Unix()),
 		}
 	)
 
@@ -70,10 +70,10 @@ func UpdateKey(id int64, s string) (string, bool) {
 		return "Are you sure this is a valid key? 😟", false
 	}
 
-	if err := Processors.DB.Raw("SELECT * FROM user_key WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		//Insert new row
 		if existingRecord.UserID == nil {
-			if err := Processors.DB.Table("user_key").Create(&r).Error; err != nil {
+			if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Create(&r).Error; err != nil {
 				log.Println("Failed to insert DB")
 				return err.Error(), false
 			}
@@ -82,7 +82,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 		return err.Error(), false
 	} else {
 		//Update key if user_id exists
-		if err := Processors.DB.Exec("UPDATE user_key SET key = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
+		if err := Processors.DB.Exec("UPDATE user_key_tab SET user_key = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
 			return err.Error(), false
 		}
@@ -100,7 +100,7 @@ func CheckChope(id int64) (string, bool) {
 		return "", false
 	}
 
-	if err := Processors.DB.Raw("SELECT * FROM user_choice WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		return "I have yet to receive your order 🥲 Tell me at /chope", false
 	} else {
 		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? Tell me at /chope", existingRecord.Choice), true
@@ -129,16 +129,16 @@ func GetChope(id int64, s string) string {
 		return "Are you sure that is a valid FoodID? 😟"
 	}
 
-	if err := Processors.DB.Raw("SELECT * FROM user_choice WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		//Insert new row
-		if err := Processors.DB.Table("user_choice").Create(&r).Error; err != nil {
+		if err := Processors.DB.Table(Processors.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
 			log.Println("Failed to insert DB")
 			return err.Error()
 		}
 		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s)
 	} else {
 		//Update key if user_id exists
-		if err := Processors.DB.Exec("UPDATE user_choice SET choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
+		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
 			return err.Error()
 		}
@@ -156,7 +156,7 @@ func GetLatestResultByUserId(id int64) string {
 		return ""
 	}
 
-	if err := Processors.DB.Raw("SELECT * FROM order_log WHERE user_id = ? AND order_time BETWEEN ? AND ? ORDER BY order_time DESC LIMIT 1", id, Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT * FROM order_log_tab WHERE user_id = ? AND order_time BETWEEN ? AND ? ORDER BY order_time DESC LIMIT 1", id, Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
 		log.Printf("id : %v | Failed to retrieve record.", id)
 		return "I have yet to order anything today 😕"
 	}
@@ -171,7 +171,7 @@ func BatchGetLatestResult() []Processors.OrderRecord {
 	var (
 		res []Processors.OrderRecord
 	)
-	if err := Processors.DB.Raw("SELECT * FROM order_log WHERE order_time BETWEEN ? AND ? GROUP BY user_id HAVING MAX(order_time)", Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT * FROM order_log_tab WHERE order_time BETWEEN ? AND ? GROUP BY user_id HAVING MAX(order_time)", Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
 		log.Println("Failed to retrieve record.")
 		return nil
 	}
