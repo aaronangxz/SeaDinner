@@ -17,8 +17,7 @@ func GetKey(id int64) string {
 	)
 
 	if id <= 0 {
-		log.Println("Id must be > 1.")
-		return ""
+		return ("I can't do this in a group chat! PM me instead 😉")
 	}
 
 	if err := Processors.DB.Table("user_key").Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
@@ -33,8 +32,7 @@ func CheckKey(id int64) (string, bool) {
 	)
 
 	if id <= 0 {
-		log.Println("Id must be > 1.")
-		return "", false
+		return ("I can't do this in a group chat! PM me instead 😉"), false
 	}
 
 	if err := Processors.DB.Table("user_key").Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
@@ -56,8 +54,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 	)
 
 	if id <= 0 {
-		log.Println("Id must be > 1.")
-		return "", false
+		return ("I can't do this in a group chat! PM me instead 😉"), false
 	}
 
 	if s == "" {
@@ -94,11 +91,11 @@ func CheckChope(id int64) (string, bool) {
 	var (
 		existingRecord UserChoice
 	)
+	log.Println("CheckChope | id :", id)
 
-	if id <= 0 {
-		log.Println("Id must be > 1.")
-		return "", false
-	}
+	// if id <= 0 {
+	// 	return ("I can't do this in a group chat! PM me instead 😉"), false
+	// }
 
 	if err := Processors.DB.Raw("SELECT * FROM user_choice WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		return "I have yet to receive your order 🥲 Tell me at /chope", false
@@ -119,10 +116,10 @@ func GetChope(id int64, s string) string {
 		}
 	)
 
-	if id <= 0 {
-		log.Println("Id must be > 1.")
-		return ""
-	}
+	// if id <= 0 {
+	// 	log.Println("Id must be > 1.")
+	// 	return ""
+	// }
 
 	if Processors.IsNotNumber(s) {
 		log.Printf("Selection contains illegal character | selection: %v", s)
@@ -151,20 +148,17 @@ func GetLatestResultByUserId(id int64) string {
 		res Processors.OrderRecord
 	)
 
-	if id <= 0 {
-		log.Println("Id must be > 1.")
-		return ""
-	}
+	log.Println("GetLatestResultByUserId | id :", id)
 
 	if err := Processors.DB.Raw("SELECT * FROM order_log WHERE user_id = ? AND order_time BETWEEN ? AND ? ORDER BY order_time DESC LIMIT 1", id, Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
 		log.Printf("id : %v | Failed to retrieve record.", id)
-		return "I have yet to order anything today 😕"
+		return "I have yet to order anything for you today 😕"
 	}
 
 	if res.GetStatus() == Processors.ORDER_STATUS_OK {
 		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", res.GetFoodID(), Processors.ConvertTimeStampTime(res.GetOrderTime()))
 	}
-	return fmt.Sprintf("Failed to order %v today. 😔", res.GetFoodID())
+	return fmt.Sprintf("I failed to order %v for you today. 😔", res.GetFoodID())
 }
 
 func BatchGetLatestResult() []Processors.OrderRecord {
