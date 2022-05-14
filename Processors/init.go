@@ -61,3 +61,18 @@ func ConnectMySQL() {
 	log.Println("NewMySQL: Database connection established")
 	DB = db
 }
+
+func ConnectTestMySQL() {
+	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_URL"), os.Getenv("TEST_DB_NAME"))
+
+	log.Printf("Connecting to %v", URL)
+	db, err := gorm.Open("mysql", URL)
+
+	if err != nil {
+		log.Printf("Error while establishing Test DB Connection: %v", err)
+		panic("Failed to connect to test database!")
+	}
+
+	log.Println("NewMySQL: Test Database connection established")
+	DB = db
+}
