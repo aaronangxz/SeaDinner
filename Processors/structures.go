@@ -10,6 +10,10 @@ const (
 
 	ORDER_STATUS_OK   = 0
 	ORDER_STATUS_FAIL = 1
+
+	DB_ORDER_LOG_TAB   = "order_log_tab"
+	DB_USER_CHOICE_TAB = "user_choice_tab"
+	DB_USER_KEY_TAB    = "user_key_tab"
 )
 
 var Constant_URL_type = map[int32]string{

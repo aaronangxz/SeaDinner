@@ -22,10 +22,10 @@ type UserKey struct {
 func New() *UserKey {
 	return &UserKey{
 		UserKey: &TestHelper.UserKey{
-			UserID: new(int64),
-			Key:    new(string),
-			Ctime:  new(int64),
-			Mtime:  new(int64),
+			UserID:  new(int64),
+			UserKey: new(string),
+			Ctime:   new(int64),
+			Mtime:   new(int64),
 		},
 	}
 }
@@ -35,7 +35,7 @@ func (uk *UserKey) FillDefaults() *UserKey {
 		uk.SetUserId(defaultUserID)
 	}
 
-	if uk.UserKey.GetKey() == "" {
+	if uk.UserKey.GetUserKey() == "" {
 		uk.SetKey(defaultKey)
 	}
 
@@ -52,7 +52,7 @@ func (uk *UserKey) FillDefaults() *UserKey {
 func (uk *UserKey) Build() *UserKey {
 	uk.FillDefaults()
 	TestHelper.InitTest()
-	if err := Processors.DB.Table("user_key").Create(&uk).Error; err != nil {
+	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Create(&uk).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", uk.GetUserID(), err.Error())
 		return nil
 	}
@@ -65,8 +65,8 @@ func (uk *UserKey) SetUserId(userId int64) *UserKey {
 	return uk
 }
 
-func (uk *UserKey) SetKey(key string) *UserKey {
-	uk.UserKey.Key = Processors.String(key)
+func (uk *UserKey) SetKey(userKey string) *UserKey {
+	uk.UserKey.UserKey = Processors.String(userKey)
 	return uk
 }
 
@@ -81,7 +81,7 @@ func (uk *UserKey) SetMtime(mtime int64) *UserKey {
 }
 
 func (uk *UserKey) TearDown() error {
-	if err := Processors.DB.Exec("DELETE FROM user_key WHERE user_id = ?", uk.GetUserID()).Error; err != nil {
+	if err := Processors.DB.Exec("DELETE FROM user_key_tab WHERE user_id = ?", uk.GetUserID()).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", uk.GetUserID())
 		return err
 	}
