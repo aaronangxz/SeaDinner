@@ -161,3 +161,56 @@ func TestIsNotNumber(t *testing.T) {
 		})
 	}
 }
+
+func TestEncryptKey(t *testing.T) {
+	type args struct {
+		stringToEncrypt string
+		keyString       string
+	}
+	tests := []struct {
+		name         string
+		args         args
+		isSameString bool
+	}{
+		{
+			name:         "HappyCase",
+			args:         args{stringToEncrypt: "SOMESTRING", keyString: MakeKey()},
+			isSameString: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotEncryptedString := EncryptKey(tt.args.stringToEncrypt, tt.args.keyString); (gotEncryptedString == tt.args.stringToEncrypt) != tt.isSameString {
+				t.Errorf("EncryptKey() = %v, want %v", gotEncryptedString, tt.isSameString)
+			}
+		})
+	}
+}
+
+func TestDecryptKey(t *testing.T) {
+	originalString := "SomeString"
+	key := MakeKey()
+	enc := EncryptKey(originalString, key)
+	type args struct {
+		encryptedString string
+		keyString       string
+	}
+	tests := []struct {
+		name                string
+		args                args
+		wantDecryptedString string
+	}{
+		{
+			name:                "HappyCase",
+			args:                args{encryptedString: enc, keyString: key},
+			wantDecryptedString: originalString,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotDecryptedString := DecryptKey(tt.args.encryptedString, tt.args.keyString); gotDecryptedString != tt.wantDecryptedString {
+				t.Errorf("DecryptKey() = %v, want %v", gotDecryptedString, tt.wantDecryptedString)
+			}
+		})
+	}
+}
