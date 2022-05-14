@@ -17,6 +17,11 @@ jobs:
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Run coverage in Bot
         working-directory: ./Bot
+        env:
+          TEST_DB_USERNAME: ${{secrets.TEST_DB_USERNAME}}
+          TEST_DB_PASSWORD: ${{secrets.TEST_DB_PASSWORD}}
+          TEST_DB_URL: ${{secrets.TEST_DB_URL}}
+          TEST_DB_NAME: ${{secrets.TEST_DB_NAME}}
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2

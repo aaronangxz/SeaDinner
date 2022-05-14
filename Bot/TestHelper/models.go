@@ -1,10 +1,10 @@
 package TestHelper
 
 type UserKey struct {
-	UserID *int64  `json:"user_id"`
-	Key    *string `json:"key"`
-	Ctime  *int64  `json:"ctime"`
-	Mtime  *int64  `json:"mtime"`
+	UserID  *int64  `json:"user_id"`
+	UserKey *string `json:"user_key"`
+	Ctime   *int64  `json:"ctime"`
+	Mtime   *int64  `json:"mtime"`
 }
 
 func (u *UserKey) GetUserID() int64 {
@@ -14,9 +14,9 @@ func (u *UserKey) GetUserID() int64 {
 	return 0
 }
 
-func (u *UserKey) GetKey() string {
-	if u != nil && u.Key != nil {
-		return *u.Key
+func (u *UserKey) GetUserKey() string {
+	if u != nil && u.UserKey != nil {
+		return *u.UserKey
 	}
 	return ""
 }
@@ -35,8 +35,8 @@ func (u *UserKey) GetMtime() int64 {
 }
 
 type UserChoice struct {
-	UserID int64 `json:"user_id"`
-	Choice int64 `json:"choice"`
-	Ctime  int64 `json:"ctime"`
-	Mtime  int64 `json:"mtime"`
+	UserID     int64 `json:"user_id"`
+	UserChoice int64 `json:"user_choice"`
+	Ctime      int64 `json:"ctime"`
+	Mtime      int64 `json:"mtime"`
 }
