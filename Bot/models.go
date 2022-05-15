@@ -35,10 +35,10 @@ func (u *UserKey) GetMtime() int64 {
 }
 
 type UserChoice struct {
-	UserID     *int64 `json:"user_id"`
-	UserChoice *int64 `json:"user_choice"`
-	Ctime      *int64 `json:"ctime"`
-	Mtime      *int64 `json:"mtime"`
+	UserID     *int64  `json:"user_id"`
+	UserChoice *string `json:"user_choice"`
+	Ctime      *int64  `json:"ctime"`
+	Mtime      *int64  `json:"mtime"`
 }
 
 func (u *UserChoice) GetUserID() int64 {
@@ -48,11 +48,11 @@ func (u *UserChoice) GetUserID() int64 {
 	return 0
 }
 
-func (u *UserChoice) GetUserChoice() int64 {
+func (u *UserChoice) GetUserChoice() string {
 	if u != nil && u.UserChoice != nil {
 		return *u.UserChoice
 	}
-	return 0
+	return ""
 }
 
 func (u *UserChoice) GetCtime() int64 {

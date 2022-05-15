@@ -16,15 +16,16 @@ func main() {
 	Processors.LoadEnv()
 	Processors.Init()
 	//Processors.ConnectDataBase()
-	Processors.ConnectMySQL()
-
+	// Processors.ConnectMySQL()
+	Processors.ConnectTestMySQL()
 	//For testing only, update in config.toml
 	if Processors.Config.Adhoc {
-		r, donePrep = Processors.PrepOrder()
-		time.Sleep(1 * time.Second)
-		Processors.BatchOrderDinner(r)
-		time.Sleep(1 * time.Second)
-		Bot.SendNotifications()
+		// r, donePrep = Processors.PrepOrder()
+		// time.Sleep(1 * time.Second)
+		// Processors.BatchOrderDinner(r)
+		// time.Sleep(1 * time.Second)
+		// Bot.SendNotifications()
+		Bot.SendReminder()
 		return
 	}
 
