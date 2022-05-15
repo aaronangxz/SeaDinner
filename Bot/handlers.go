@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Processors"
@@ -110,12 +109,12 @@ func CheckChope(id int64) (string, bool) {
 }
 
 func GetChope(id int64, s string) string {
-	n, _ := strconv.ParseInt(s, 10, 64)
+	//n, _ := strconv.ParseInt(s, 10, 64)
 	var (
 		existingRecord UserChoice
 		r              = UserChoice{
 			UserID:     Processors.Int64(id),
-			UserChoice: Processors.Int64(n),
+			UserChoice: Processors.String(s),
 			Ctime:      Processors.Int64(time.Now().Unix()),
 			Mtime:      Processors.Int64(time.Now().Unix()),
 		}
@@ -213,10 +212,11 @@ func BatchGetUsersChoice() []UserChoice {
 		res []UserChoice
 	)
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab").Scan(&res).Error; err != nil {
-		log.Println("Failed to retrieve record.")
+		log.Println("Failed to retrieve record:", err.Error())
 		return nil
 	}
 	log.Println("BatchGetUsersChoice:", len(res))
+	log.Println(res)
 	return res
 }
 
@@ -231,10 +231,30 @@ func SendReminder() {
 	res := BatchGetUsersChoice()
 	log.Println("SendReminder:", len(res))
 
+	menu := MakeMenuMap()
+
 	for _, r := range res {
-		msg := fmt.Sprintf("Good Morning. Do you want me to order %v again today? 😋", r.GetUserChoice())
+		var msg string
+		_, ok := menu[r.GetUserChoice()]
+		if !ok {
+			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! Let me know your new choice at /chope 😃 ", r.GetUserChoice())
+		} else {
+			msg = fmt.Sprintf("Good Morning. Do you want me to order %v again today? 😋", menu[r.GetUserChoice()])
+		}
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
 			log.Println(err)
 		}
 	}
+}
+
+func MakeMenuMap() map[string]string {
+	key := os.Getenv("TOKEN")
+	menuMap := make(map[string]string)
+
+	menu := Processors.GetMenu(Processors.Client, Processors.GetDayId(key), key)
+
+	for _, m := range menu.DinnerArr {
+		menuMap[fmt.Sprint(m.Id)] = m.Name
+	}
+	return menuMap
 }
