@@ -29,8 +29,8 @@ func main() {
 	}
 
 	for {
-		if Processors.IsWeekDay() && time.Now().Unix() == Processors.GetLunchTime().Unix()-7200 {
-			Bot.SendNotifications()
+		if Processors.IsWeekDay() && time.Now().Unix() == Processors.GetLunchTime().Unix()-5400 {
+			Bot.SendReminder()
 		}
 
 		if (Processors.IsWeekDay() && time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
