@@ -195,13 +195,14 @@ func SendNotifications() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	res := BatchGetLatestResult()
+	menu := MakeMenuMap()
 	log.Println("SendNotifications:", len(res))
 
 	for _, r := range res {
 		if r.GetStatus() == Processors.ORDER_STATUS_OK {
-			msg = fmt.Sprintf("Successfully ordered %v! 🥳", r.GetFoodID())
+			msg = fmt.Sprintf("Successfully ordered %v! 🥳", menu[r.GetFoodID()])
 		} else {
-			msg = fmt.Sprintf("Failed to order %v today. %v😔", r.GetFoodID(), r.GetErrorMsg())
+			msg = fmt.Sprintf("Failed to order %v today. %v😔", menu[r.GetFoodID()], r.GetErrorMsg())
 		}
 
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
