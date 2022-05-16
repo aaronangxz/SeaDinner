@@ -14,6 +14,11 @@ func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 	log.Println("header:", MakeToken(key))
 	log.Println("url:", MakeURL(URL_MENU, &ID))
 
+	if ID == 0 {
+		log.Println("GetMenu | Invalid id:", ID)
+		return currentarr
+	}
+
 	_, err := client.R().
 		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentarr).
@@ -33,7 +38,13 @@ func OutputMenu(key string) string {
 		output string
 	)
 
-	for _, d := range GetMenu(Client, GetDayId(key), key).DinnerArr {
+	m := GetMenu(Client, GetDayId(key), key)
+
+	if m.Status == nil {
+		return "There is no dinner order today!"
+	}
+
+	for _, d := range m.DinnerArr {
 		output += fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
 			d.ImageURL, d.Id, d.Name, d.Quota)
 	}
