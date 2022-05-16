@@ -32,8 +32,15 @@ type DinnerMenu struct {
 }
 
 type DinnerMenuArr struct {
-	Status    string `json:"status"`
-	DinnerArr []Food `json:"food"`
+	Status    *string `json:"status"`
+	DinnerArr []Food  `json:"food"`
+}
+
+func (d *DinnerMenuArr) GetStatus() string {
+	if d != nil && d.Status != nil {
+		return *d.Status
+	}
+	return ""
 }
 
 type Current struct {
@@ -106,6 +113,13 @@ func (m *Details) GetId() int {
 		return *m.Id
 	}
 	return 0
+}
+
+func (m *Details) GetPollStart() string {
+	if m != nil && m.Id != nil {
+		return *m.PollStart
+	}
+	return ""
 }
 
 type UserChoice struct {
