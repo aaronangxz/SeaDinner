@@ -1,38 +1,44 @@
 package Processors
 
 import (
+	"os"
 	"testing"
 )
 
 func TestMakeToken(t *testing.T) {
-	Config.Prefix.TokenPrefix = "Token "
+	LoadEnv()
+	key := "ogNiXZrVyXZglYPZHmhoF7J9JvQzxaIINBRgntOA"
+	shortKey := "abcde"
+	eKey := EncryptKey(key, os.Getenv("AES_KEY"))
+	shortEKey := EncryptKey(shortKey, os.Getenv("AES_KEY"))
 	type args struct {
 		key string
 	}
 	tests := []struct {
 		name string
 		args args
-		want string
+		want bool
 	}{
 		{
 			name: "HappyCase",
-			args: args{key: "ogNiXZrVyXZglYPZHmhoF7J9JvQzxaIINBRgntOA"},
-			want: "Token ogNiXZrVyXZglYPZHmhoF7J9JvQzxaIINBRgntOA",
-		}, {
+			args: args{key: eKey},
+			want: false,
+		},
+		{
 			name: "EmptyString",
 			args: args{key: ""},
-			want: "",
+			want: true,
 		},
 		{
 			name: "LessThanMinLength",
-			args: args{key: "ogNiXZrVyXZglYPZHmhoF7J9JvzxaIINBRgntOA"},
-			want: "",
+			args: args{key: shortEKey},
+			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MakeToken(tt.args.key); got != tt.want {
-				t.Errorf("MakeToken() = %v, want %v", got, tt.want)
+			if got := MakeToken(tt.args.key); (got == tt.args.key) != tt.want {
+				t.Errorf("MakeToken() = %v, want %v", (got == tt.args.key), tt.want)
 			}
 		})
 	}
