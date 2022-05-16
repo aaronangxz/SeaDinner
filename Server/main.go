@@ -15,35 +15,35 @@ var (
 func main() {
 	Processors.LoadEnv()
 	Processors.Init()
-	//Processors.ConnectDataBase()
-	Processors.ConnectMySQL()
 
 	//For testing only, update in config.toml
 	if Processors.Config.Adhoc {
-		r, donePrep = Processors.PrepOrder()
-		time.Sleep(1 * time.Second)
-		Processors.BatchOrderDinner(r)
-		time.Sleep(1 * time.Second)
-		Bot.SendNotifications()
-		return
+		Processors.ConnectTestMySQL()
+	} else {
+		Processors.ConnectMySQL()
 	}
 
 	for {
-		if Processors.IsWeekDay() && time.Now().Unix() == Processors.GetLunchTime().Unix()-5400 {
+		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix()-7200 {
 			Bot.SendReminder()
 		}
 
-		if (Processors.IsWeekDay() && time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
+		if (Processors.IsWeekDay(time.Now()) && time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
 			time.Now().Unix() <= Processors.GetLunchTime().Unix()-15) &&
 			!donePrep {
 			//get key and choice
 			r, donePrep = Processors.PrepOrder()
 		}
 
-		if Processors.IsWeekDay() && time.Now().Unix() == Processors.GetLunchTime().Unix() {
-			Processors.BatchOrderDinner(r)
-			time.Sleep(1 * time.Second)
-			//send notifications
+		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix() {
+			for {
+				if time.Now().Unix() <= Processors.GetLunchTime().Unix()+180 {
+					Processors.BatchOrderDinner(r)
+					time.Sleep(30 * time.Second)
+					continue
+				}
+				break
+			}
 			Bot.SendNotifications()
 		}
 	}

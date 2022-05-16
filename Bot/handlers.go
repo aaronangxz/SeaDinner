@@ -24,7 +24,7 @@ func GetKey(id int64) string {
 	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return ""
 	}
-	return Processors.DecryptKey(existingRecord.GetUserKey(), os.Getenv("AES_KEY"))
+	return existingRecord.GetUserKey()
 }
 
 func CheckKey(id int64) (string, bool) {
@@ -109,7 +109,7 @@ func CheckChope(id int64) (string, bool) {
 	}
 }
 
-func GetChope(id int64, s string) string {
+func GetChope(id int64, s string) (string, bool) {
 	n, _ := strconv.ParseInt(s, 10, 64)
 	var (
 		existingRecord UserChoice
@@ -123,28 +123,28 @@ func GetChope(id int64, s string) string {
 
 	if id <= 0 {
 		log.Println("Id must be > 1.")
-		return ""
+		return "", false
 	}
 
 	if Processors.IsNotNumber(s) {
 		log.Printf("Selection contains illegal character | selection: %v", s)
-		return "Are you sure that is a valid FoodID? 😟"
+		return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
 	}
 
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		//Insert new row
 		if err := Processors.DB.Table(Processors.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
 			log.Println("Failed to insert DB")
-			return err.Error()
+			return err.Error(), false
 		}
-		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s)
+		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s), true
 	} else {
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
-			return err.Error()
+			return err.Error(), false
 		}
-		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s)
+		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s), true
 	}
 }
 
@@ -173,7 +173,11 @@ func BatchGetLatestResult() []Processors.OrderRecord {
 	var (
 		res []Processors.OrderRecord
 	)
-	if err := Processors.DB.Raw("SELECT * FROM order_log_tab WHERE order_time BETWEEN ? AND ? GROUP BY user_id HAVING MAX(order_time)", Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
+
+	if err := Processors.DB.Raw("SELECT ol.* FROM order_log_tab ol INNER JOIN "+
+		"(SELECT MAX(order_time) AS max_order_time FROM order_log_tab WHERE order_time BETWEEN ? AND ? GROUP BY user_id) nestedQ "+
+		"ON ol.order_time = nestedQ.max_order_time",
+		Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
 		log.Println("Failed to retrieve record.")
 		return nil
 	}
