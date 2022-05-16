@@ -20,7 +20,7 @@ func MakeToken(key string) string {
 
 	decrypt := DecryptKey(key, os.Getenv("AES_KEY"))
 	if len(decrypt) != 40 {
-		log.Printf("Key length invalid | length: %v", len(key))
+		log.Printf("Key length invalid | length: %v", len(decrypt))
 		return ""
 	}
 	return fmt.Sprint(Config.Prefix.TokenPrefix, decrypt)
