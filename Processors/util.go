@@ -8,19 +8,22 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"unicode"
 )
 
 func MakeToken(key string) string {
-	if len(key) != 40 {
-		log.Printf("Key length invalid | length: %v", len(key))
-		return ""
-	}
 	if key == "" {
 		log.Println("Key is invalid:", key)
 		return ""
 	}
-	return fmt.Sprint(Config.Prefix.TokenPrefix, key)
+
+	decrypt := DecryptKey(key, os.Getenv("AES_KEY"))
+	if len(decrypt) != 40 {
+		log.Printf("Key length invalid | length: %v", len(decrypt))
+		return ""
+	}
+	return fmt.Sprint(Config.Prefix.TokenPrefix, decrypt)
 }
 
 func MakeURL(opt int, id *int) string {
@@ -141,7 +144,7 @@ func DecryptKey(encryptedString string, keyString string) (decryptedString strin
 }
 
 func MakeKey() string {
-	bytes := make([]byte, 32) //generate a random 32 byte key for AES-256
+	bytes := make([]byte, 16) //generate a random 32 byte key for AES-256
 	if _, err := rand.Read(bytes); err != nil {
 		panic(err.Error())
 	}

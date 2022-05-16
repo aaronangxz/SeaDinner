@@ -1,12 +1,10 @@
 package Bot
 
 import (
-	"os"
 	"testing"
 
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper/user_key"
-	"github.com/aaronangxz/SeaDinner/Processors"
 )
 
 func TestGetKey(t *testing.T) {
@@ -22,7 +20,7 @@ func TestGetKey(t *testing.T) {
 		{
 			name: "HappyCase",
 			args: args{id: u.GetUserID()},
-			want: Processors.DecryptKey(u.GetUserKey(), os.Getenv("AES_KEY")),
+			want: u.GetUserKey(),
 		},
 		{
 			name: "NotFound",

@@ -6,25 +6,6 @@ import (
 	"time"
 )
 
-func Test_IsWeekDay(t *testing.T) {
-	tests := []struct {
-		name string
-		want bool
-	}{
-		{
-			name: "HappyCase_Weekday",
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := IsWeekDay(); got != tt.want {
-				t.Errorf("isWeekDay() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestGetLunchTime(t *testing.T) {
 	tz, _ := time.LoadLocation(TimeZone)
 	now := time.Now().In(tz)
@@ -99,6 +80,30 @@ func TestConvertTimeStampTime(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ConvertTimeStampTime(tt.args.timestamp); got != tt.want {
 				t.Errorf("ConvertTimeStampTime() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsWeekDay(t *testing.T) {
+	type args struct {
+		t time.Time
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "HappyCase_weekday",
+			args: args{time.Now()},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsWeekDay(tt.args.t); got != tt.want {
+				t.Errorf("IsWeekDay() = %v, want %v", got, tt.want)
 			}
 		})
 	}

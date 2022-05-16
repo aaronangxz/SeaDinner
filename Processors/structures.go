@@ -109,24 +109,49 @@ func (m *Details) GetId() int {
 }
 
 type UserChoice struct {
-	UserID int64 `json:"user_id"`
-	Choice int64 `json:"choice"`
-	Ctime  int64 `json:"ctime"`
-	Mtime  int64 `json:"mtime"`
+	UserID     int64 `json:"user_id"`
+	UserChoice int64 `json:"user_choice"`
+	Ctime      int64 `json:"ctime"`
+	Mtime      int64 `json:"mtime"`
 }
 
 type UserChoiceWithKey struct {
-	UserID int64  `json:"user_id"`
-	Key    string `json:"string"`
-	Choice int64  `json:"choice"`
-	Ctime  int64  `json:"ctime"`
-	Mtime  int64  `json:"mtime"`
+	UserID     *int64  `json:"user_id"`
+	UserKey    *string `json:"user_key"`
+	UserChoice *string `json:"user_choice"`
+	Ctime      *int64  `json:"ctime"`
+	Mtime      *int64  `json:"mtime"`
+}
+
+func (u *UserChoiceWithKey) GetUserID() int64 {
+	if u != nil && u.UserID != nil {
+		return *u.UserID
+	}
+	return 0
+}
+
+func (u *UserChoiceWithKey) GetUserKey() string {
+	if u != nil && u.UserKey != nil {
+		return *u.UserKey
+	}
+	return ""
+}
+
+func (u *UserChoiceWithKey) SetUserKey(key *string) {
+	u.UserKey = key
+}
+
+func (u *UserChoiceWithKey) GetUserChoice() string {
+	if u != nil && u.UserChoice != nil {
+		return *u.UserChoice
+	}
+	return ""
 }
 
 type OrderRecord struct {
 	ID        *int64  `json:"id"`
 	UserID    *int64  `json:"user_id"`
-	FoodID    *int64  `json:"food_id"`
+	FoodID    *string `json:"food_id"`
 	OrderTime *int64  `json:"order_time"`
 	Status    *int64  `json:"status"`
 	ErrorMsg  *string `json:"error_msg"`
@@ -139,11 +164,11 @@ func (o *OrderRecord) GetUserID() int64 {
 	return 0
 }
 
-func (o *OrderRecord) GetFoodID() int64 {
+func (o *OrderRecord) GetFoodID() string {
 	if o != nil && o.FoodID != nil {
 		return *o.FoodID
 	}
-	return 0
+	return ""
 }
 
 func (o *OrderRecord) GetOrderTime() int64 {
