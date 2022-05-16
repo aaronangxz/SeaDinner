@@ -41,7 +41,7 @@ func OutputMenu(key string) string {
 	m := GetMenu(Client, GetDayId(key), key)
 
 	if m.Status == nil {
-		return "There is no dinner order today!"
+		return "There is no dinner order today! 😕"
 	}
 
 	for _, d := range m.DinnerArr {
