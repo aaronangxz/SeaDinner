@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Processors"
@@ -105,17 +104,17 @@ func CheckChope(id int64) (string, bool) {
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		return "I have yet to receive your order 🥲 Tell me at /chope", false
 	} else {
-		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? Tell me at /chope", existingRecord.GetUserChoice()), true
+		menu := MakeMenuMap()
+		return fmt.Sprintf("I'm tasked to snatch %v %v for you 😀 Changed your mind? Tell me at /chope", existingRecord.GetUserChoice(), menu[existingRecord.GetUserChoice()]), true
 	}
 }
 
 func GetChope(id int64, s string) (string, bool) {
-	n, _ := strconv.ParseInt(s, 10, 64)
 	var (
 		existingRecord UserChoice
 		r              = UserChoice{
 			UserID:     Processors.Int64(id),
-			UserChoice: Processors.Int64(n),
+			UserChoice: Processors.String(s),
 			Ctime:      Processors.Int64(time.Now().Unix()),
 			Mtime:      Processors.Int64(time.Now().Unix()),
 		}
@@ -130,21 +129,21 @@ func GetChope(id int64, s string) (string, bool) {
 		log.Printf("Selection contains illegal character | selection: %v", s)
 		return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
 	}
-
+	menu := MakeMenuMap()
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		//Insert new row
 		if err := Processors.DB.Table(Processors.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
 			log.Println("Failed to insert DB")
 			return err.Error(), false
 		}
-		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s), true
+		return fmt.Sprintf("Okay got it. I will order %v %v for you 😙", s, menu[s]), true
 	} else {
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
 			return err.Error(), false
 		}
-		return fmt.Sprintf("Okay got it. I will order %v for you 😙", s), true
+		return fmt.Sprintf("Okay got it. I will order %v %v for you 😙", s, menu[s]), true
 	}
 }
 
@@ -162,11 +161,12 @@ func GetLatestResultByUserId(id int64) string {
 		log.Printf("id : %v | Failed to retrieve record.", id)
 		return "I have yet to order anything today 😕"
 	}
+	menu := MakeMenuMap()
 
 	if res.GetStatus() == Processors.ORDER_STATUS_OK {
-		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", res.GetFoodID(), Processors.ConvertTimeStampTime(res.GetOrderTime()))
+		return fmt.Sprintf("Successfully ordered %v %v at %v! 🥳", res.GetFoodID(), menu[res.GetFoodID()], Processors.ConvertTimeStampTime(res.GetOrderTime()))
 	}
-	return fmt.Sprintf("Failed to order %v today. 😔", res.GetFoodID())
+	return fmt.Sprintf("Failed to order %v %v today. 😔", res.GetFoodID(), menu[res.GetFoodID()])
 }
 
 func BatchGetLatestResult() []Processors.OrderRecord {
@@ -197,13 +197,14 @@ func SendNotifications() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	res := BatchGetLatestResult()
+	menu := MakeMenuMap()
 	log.Println("SendNotifications:", len(res))
 
 	for _, r := range res {
 		if r.GetStatus() == Processors.ORDER_STATUS_OK {
-			msg = fmt.Sprintf("Successfully ordered %v! 🥳", r.GetFoodID())
+			msg = fmt.Sprintf("Successfully ordered %v! 🥳", menu[r.GetFoodID()])
 		} else {
-			msg = fmt.Sprintf("Failed to order %v today. %v😔", r.GetFoodID(), r.GetErrorMsg())
+			msg = fmt.Sprintf("Failed to order %v today. %v😔", menu[r.GetFoodID()], r.GetErrorMsg())
 		}
 
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
@@ -217,10 +218,11 @@ func BatchGetUsersChoice() []UserChoice {
 		res []UserChoice
 	)
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab").Scan(&res).Error; err != nil {
-		log.Println("Failed to retrieve record.")
+		log.Println("Failed to retrieve record:", err.Error())
 		return nil
 	}
 	log.Println("BatchGetUsersChoice:", len(res))
+	log.Println(res)
 	return res
 }
 
@@ -235,10 +237,30 @@ func SendReminder() {
 	res := BatchGetUsersChoice()
 	log.Println("SendReminder:", len(res))
 
+	menu := MakeMenuMap()
+
 	for _, r := range res {
-		msg := fmt.Sprintf("Good Morning. Do you want me to order %v again today? 😋", r.GetUserChoice())
+		var msg string
+		_, ok := menu[r.GetUserChoice()]
+		if !ok {
+			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! Let me know your new choice at /chope 😃 ", menu[r.GetUserChoice()])
+		} else {
+			msg = fmt.Sprintf("Good Morning. Do you want me to order %v again today? 😋", menu[r.GetUserChoice()])
+		}
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
 			log.Println(err)
 		}
 	}
+}
+
+func MakeMenuMap() map[string]string {
+	key := os.Getenv("TOKEN")
+	menuMap := make(map[string]string)
+
+	menu := Processors.GetMenu(Processors.Client, Processors.GetDayId(key), key)
+
+	for _, m := range menu.DinnerArr {
+		menuMap[fmt.Sprint(m.Id)] = m.Name
+	}
+	return menuMap
 }

@@ -15,7 +15,6 @@ var (
 func main() {
 	Processors.LoadEnv()
 	Processors.Init()
-
 	//For testing only, update in config.toml
 	if Processors.Config.Adhoc {
 		Processors.ConnectTestMySQL()
