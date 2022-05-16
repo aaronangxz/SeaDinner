@@ -148,6 +148,11 @@ func TestIsNotNumber(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "BeginWithNumber",
+			args: args{"123ABC"},
+			want: true,
+		},
+		{
 			name: "EmptyString",
 			args: args{""},
 			want: true,

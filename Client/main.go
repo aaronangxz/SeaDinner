@@ -19,8 +19,11 @@ var (
 func main() {
 	Processors.Init()
 	Processors.LoadEnv()
-	//Processors.ConnectDataBase()
-	Processors.ConnectMySQL()
+	if Processors.Config.Adhoc {
+		Processors.ConnectTestMySQL()
+	} else {
+		Processors.ConnectMySQL()
+	}
 
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
 	if err != nil {
@@ -39,8 +42,8 @@ func main() {
 		if update.Message.Chat.ID != 0 {
 			Id = update.Message.Chat.ID
 		}
-		log.Println(time.Now().Unix(), Processors.GetLunchTime().Unix()-60)
-		if time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 && time.Now().Unix() <= Processors.GetLunchTime().Unix()+5 {
+
+		if time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 && time.Now().Unix() <= Processors.GetLunchTime().Unix()+210 {
 			if _, err := bot.Send(tgbotapi.NewMessage(Id, "Omw to order, wait for my good news! 🏃")); err != nil {
 				log.Println(err)
 			}
@@ -61,9 +64,16 @@ func main() {
 				startListenKey = false
 				continue
 			} else if startListenChope {
+				msg, ok := Bot.GetChope(Id, update.Message.Text)
+
+				if !ok {
+					if _, err := bot.Send(tgbotapi.NewMessage(Id, msg)); err != nil {
+						log.Println(err)
+					}
+					continue
+				}
 				//Capture chope
-				if _, err := bot.Send(tgbotapi.NewMessage(Id,
-					Bot.GetChope(Id, update.Message.Text))); err != nil {
+				if _, err := bot.Send(tgbotapi.NewMessage(Id, msg)); err != nil {
 					log.Println(err)
 				}
 				startListenChope = false
