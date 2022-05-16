@@ -16,6 +16,7 @@ jobs:
         working-directory: ./Processors
         env:
           AES_KEY: ${{secrets.AES_KEY}}
+          TOKEN: ${{secrets.TOKEN}}
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Run coverage in Bot
         working-directory: ./Bot

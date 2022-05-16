@@ -11,7 +11,7 @@ import (
 func TestGetMenu(t *testing.T) {
 	LoadEnv()
 	r := Init()
-
+	key := os.Getenv("TOKEN")
 	type args struct {
 		client resty.Client
 		ID     int
@@ -24,12 +24,12 @@ func TestGetMenu(t *testing.T) {
 	}{
 		{
 			name: "HappyCase",
-			args: args{client: r, ID: 3521, key: os.Getenv("TOKEN")},
+			args: args{client: r, ID: 3521, key: key},
 			want: 8,
 		},
 		{
 			name: "InvalidID",
-			args: args{client: r, ID: 0, key: os.Getenv("TOKEN")},
+			args: args{client: r, ID: 0, key: key},
 			want: 0,
 		},
 	}
