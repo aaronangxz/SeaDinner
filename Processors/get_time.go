@@ -33,8 +33,8 @@ func ConvertTimeStampTime(timestamp int64) string {
 	return fmt.Sprint(t.In(tz).Format("3:04PM"))
 }
 
-func IsWeekDay() bool {
+func IsWeekDay(t time.Time) bool {
 	tz, _ := time.LoadLocation(TimeZone)
-	day := time.Now().In(tz).Weekday()
-	return day < 1 && day > 5
+	day := t.In(tz).Weekday()
+	return day >= 1 && day <= 5
 }

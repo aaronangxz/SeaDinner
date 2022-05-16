@@ -10,7 +10,7 @@ func PrepOrder() ([]UserChoiceWithKey, bool) {
 		record []UserChoiceWithKey
 	)
 	//check whole db
-	if err := DB.Raw("SELECT c.*, k.key FROM user_choice c, user_key k WHERE c.user_id = k.user_id").Scan(&record).Error; err != nil {
+	if err := DB.Raw("SELECT c.*, k.user_key FROM user_choice_tab c, user_key_tab k WHERE c.user_id = k.user_id").Scan(&record).Error; err != nil {
 		fmt.Println(err.Error())
 		return nil, false
 	}

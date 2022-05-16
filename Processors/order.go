@@ -11,16 +11,15 @@ import (
 func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResponse {
 	var resp OrderResponse
 	fData := make(map[string]string)
-	fData["food_id"] = fmt.Sprint(u.Choice)
+	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
 
-	log.Println(u)
 	for i := 1; i < Config.Runtime.RetryTimes; i++ {
-		log.Printf("id: %v | Attempt %v", u.UserID, i)
+		log.Printf("id: %v | Attempt %v", u.GetUserID(), i)
 
 		start := time.Now().UnixMilli()
 
 		_, err := client.R().
-			SetHeader("Authorization", MakeToken(u.Key)).
+			SetHeader("Authorization", MakeToken(u.GetUserKey())).
 			SetFormData(fData).
 			SetResult(&resp).
 			Post(MakeURL(URL_ORDER, &menuID))
@@ -33,14 +32,14 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResp
 		}
 
 		if resp.Status != nil && resp.GetStatus() == "error" {
-			log.Printf("id: %v | %v : %v : %v : %v", u.UserID, resp.GetError(), resp.GetStatus(), resp.GetStatusCode(), resp.GetSelected())
+			log.Printf("id: %v | %v : %v : %v : %v", u.GetUserID(), resp.GetError(), resp.GetStatus(), resp.GetStatusCode(), resp.GetSelected())
 		}
 
 		if resp.GetSelected() != 0 {
-			log.Printf("id: %v | Dinner Selected: %d. Successful in %v try. Time: %vms\n", u.UserID, resp.GetSelected(), i, elapsed)
+			log.Printf("id: %v | Dinner Selected: %d. Successful in %v try. Time: %vms\n", u.GetUserID(), resp.GetSelected(), i, elapsed)
 			break
 		}
-		log.Printf("id: %v | Dinner Not Selected. Retrying.\n", u.UserID)
+		log.Printf("id: %v | Dinner Not Selected. Retrying.\n", u.GetUserID())
 	}
 	return resp
 }
@@ -52,20 +51,20 @@ func BatchOrderDinner(u []UserChoiceWithKey) {
 	)
 
 	for _, r := range u {
-		log.Printf("id: %v | Ordering\n", r.UserID)
-		resp := OrderDinner(Client, GetDayId(r.Key), r)
+		log.Printf("id: %v | Ordering\n", r.GetUserID())
+		resp := OrderDinner(Client, GetDayId(r.GetUserKey()), r)
 
 		if resp.GetSelected() == 0 {
-			m[r.UserID] = ORDER_STATUS_FAIL
+			m[r.GetUserID()] = ORDER_STATUS_FAIL
 		} else {
-			m[r.UserID] = ORDER_STATUS_OK
+			m[r.GetUserID()] = ORDER_STATUS_OK
 		}
 
 		record := OrderRecord{
-			UserID:    Int64(r.UserID),
-			FoodID:    Int64(r.Choice),
+			UserID:    Int64(r.GetUserID()),
+			FoodID:    String(r.GetUserChoice()),
 			OrderTime: Int64(time.Now().Unix()),
-			Status:    Int64(int64(m[r.UserID])),
+			Status:    Int64(int64(m[r.GetUserID()])),
 			ErrorMsg:  String(resp.GetError()),
 		}
 		records = append(records, record)
@@ -78,7 +77,7 @@ func BatchOrderDinner(u []UserChoiceWithKey) {
 
 func UpdateOrderLog(records []OrderRecord) {
 	for _, r := range records {
-		if err := DB.Exec("INSERT INTO order_log (user_id, food_id, order_time, status, error_msg) VALUES (?,?,?,?,?)",
+		if err := DB.Exec("INSERT INTO order_log_tab (user_id, food_id, order_time, status, error_msg) VALUES (?,?,?,?,?)",
 			r.GetUserID(), r.GetFoodID(), r.GetOrderTime(), r.GetStatus(), r.GetErrorMsg()).Error; err != nil {
 			log.Printf("id : %v | Failed to update record.", r.GetUserID())
 		}
