@@ -136,14 +136,14 @@ func GetChope(id int64, s string) (string, bool) {
 			log.Println("Failed to insert DB")
 			return err.Error(), false
 		}
-		return fmt.Sprintf("Okay got it. I will order %v %v for you 😙", s, menu[s]), true
+		return fmt.Sprintf("Okay got it. I will order %v for you 😙", menu[s]), true
 	} else {
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
 			return err.Error(), false
 		}
-		return fmt.Sprintf("Okay got it. I will order %v %v for you 😙", s, menu[s]), true
+		return fmt.Sprintf("Okay got it. I will order %v for you 😙", menu[s]), true
 	}
 }
 
@@ -263,4 +263,8 @@ func MakeMenuMap() map[string]string {
 		menuMap[fmt.Sprint(m.Id)] = m.Name
 	}
 	return menuMap
+}
+
+func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
+	return GetChope(id, callBack.Data)
 }
