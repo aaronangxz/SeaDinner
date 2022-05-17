@@ -18,7 +18,8 @@ type OrderTimeConfig struct {
 	Seconds int `toml:"seconds"`
 }
 type runtimeConfig struct {
-	RetryTimes int `toml:"retry_times"`
+	RetryTimes                int `toml:"retry_times"`
+	BatchRetryCooldownSeconds int `toml:"batch_retry_cooldown_seconds"`
 }
 
 type prefixConfig struct {
