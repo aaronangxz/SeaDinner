@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
@@ -9,7 +10,7 @@ import (
 
 var (
 	donePrep = false
-	r        []Processors.UserChoiceWithKey
+	r        []Processors.UserChoiceWithKeyAndStatus
 )
 
 func main() {
@@ -37,13 +38,18 @@ func main() {
 		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix() {
 			for {
 				if time.Now().Unix() <= Processors.GetLunchTime().Unix()+180 {
-					Processors.BatchOrderDinner(r)
+					Processors.BatchOrderDinner(&r)
+					if len(r) == 0 {
+						log.Println("Done processing all orders.")
+						break
+					}
 					time.Sleep(time.Duration(Processors.Config.Runtime.BatchRetryCooldownSeconds) * time.Second)
 					continue
 				}
 				break
 			}
 			Bot.SendNotifications()
+			log.Printf("Finished run | %v at %v", Processors.ConvertTimeStamp(time.Now().Unix()), Processors.ConvertTimeStampTime(time.Now().Unix()))
 		}
 	}
 }

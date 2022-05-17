@@ -11,10 +11,6 @@ import (
 func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 	var currentarr DinnerMenuArr
 
-	log.Println("key:", key)
-	log.Println("header:", MakeToken(key))
-	log.Println("url:", MakeURL(URL_MENU, &ID))
-
 	if ID == 0 {
 		log.Println("GetMenu | Invalid id:", ID)
 		return currentarr
@@ -29,7 +25,7 @@ func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 		fmt.Println(err)
 	}
 
-	fmt.Printf("Query status of today's menu: %v\n\n", currentarr.Status)
+	fmt.Printf("GetMenu | Query status of today's menu: %v\n\n", currentarr.Status)
 
 	return currentarr
 }
@@ -63,7 +59,6 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 	if m.Status == nil {
 		texts = append(texts, "There is no dinner order today! 😕")
 		return texts, out
-		//return []string{"There is no dinner order today! 😕"}, []tgbotapi.InlineKeyboardMarkup{tgbotapi.NewInlineKeyboardMarkup([]tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("", "")})})
 	}
 
 	for _, d := range m.DinnerArr {
