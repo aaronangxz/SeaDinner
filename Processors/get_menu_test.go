@@ -42,7 +42,7 @@ func TestGetMenu(t *testing.T) {
 	}
 }
 
-func TestOutputMenu(t *testing.T) {
+func AdhocTestOutputMenu(t *testing.T) {
 	LoadEnv()
 	Init()
 	key := os.Getenv("TOKEN")

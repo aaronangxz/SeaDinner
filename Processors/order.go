@@ -13,7 +13,7 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResp
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
 
-	for i := 1; i < Config.Runtime.RetryTimes; i++ {
+	for i := 1; i <= Config.Runtime.RetryTimes; i++ {
 		log.Printf("id: %v | Attempt %v", u.GetUserID(), i)
 
 		start := time.Now().UnixMilli()
