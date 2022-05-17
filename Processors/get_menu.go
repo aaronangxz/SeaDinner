@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/go-resty/resty/v2"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
@@ -49,4 +50,27 @@ func OutputMenu(key string) string {
 			d.ImageURL, d.Id, d.Name, d.Quota)
 	}
 	return output
+}
+
+func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyboardMarkup) {
+	var (
+		texts []string
+		out   []tgbotapi.InlineKeyboardMarkup
+	)
+
+	m := GetMenu(Client, GetDayId(key), key)
+
+	if m.Status == nil {
+		texts = append(texts, "There is no dinner order today! 😕")
+		return texts, out
+		//return []string{"There is no dinner order today! 😕"}, []tgbotapi.InlineKeyboardMarkup{tgbotapi.NewInlineKeyboardMarkup([]tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("", "")})})
+	}
+
+	for _, d := range m.DinnerArr {
+		texts = append(texts, fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable:%v/%v", d.ImageURL, d.Code, d.Id, d.Name, d.Ordered, d.Quota))
+		var buttons []tgbotapi.InlineKeyboardButton
+		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("Order %v", d.Code), fmt.Sprint(d.Id)))
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
+	}
+	return texts, out
 }

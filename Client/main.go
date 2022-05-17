@@ -38,7 +38,28 @@ func main() {
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 
+	// var b = tgbotapi.NewInlineKeyboardMarkup(
+	// 	[]tgbotapi.InlineKeyboardButton{
+	// 		tgbotapi.NewInlineKeyboardButtonData("Select me", "sss"),
+	// 		tgbotapi.NewInlineKeyboardButtonData("Select me", "sss"),
+	// 	},
+	// )
+
+	// var a []tgbotapi.InlineKeyboardButton
+	// a = append(a, tgbotapi.NewInlineKeyboardButtonData("Select This", "sss"))
+	// a = append(a, tgbotapi.NewInlineKeyboardButtonData("Select That", "sss"))
+	// mk := tgbotapi.NewInlineKeyboardMarkup(a)
+
 	for update := range updates {
+		if update.CallbackQuery != nil {
+			msg := tgbotapi.NewMessage(Id, "")
+			msg.Text, _ = Bot.CallbackQueryHandler(Id, update.CallbackQuery)
+			if _, err := bot.Send(msg); err != nil {
+				log.Println(err)
+			}
+			continue
+		}
+
 		if update.Message.Chat.ID != 0 {
 			Id = update.Message.Chat.ID
 		}
@@ -64,16 +85,19 @@ func main() {
 				startListenKey = false
 				continue
 			} else if startListenChope {
-				msg, ok := Bot.GetChope(Id, update.Message.Text)
+				msg := tgbotapi.NewMessage(Id, "")
+				ok := false
+				msg.Text, ok = Bot.GetChope(Id, update.Message.Text)
 
 				if !ok {
-					if _, err := bot.Send(tgbotapi.NewMessage(Id, msg)); err != nil {
+					if _, err := bot.Send(msg); err != nil {
 						log.Println(err)
 					}
 					continue
 				}
 				//Capture chope
-				if _, err := bot.Send(tgbotapi.NewMessage(Id, msg)); err != nil {
+				msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+				if _, err := bot.Send(msg); err != nil {
 					log.Println(err)
 				}
 				startListenChope = false
@@ -100,7 +124,16 @@ func main() {
 			if !ok {
 				msg.Text = s
 			} else {
-				msg.Text = Processors.OutputMenu(Bot.GetKey(Id))
+				//msg.Text = Processors.OutputMenu(Bot.GetKey(Id))
+				txt, mp := Processors.OutputMenuWithButton(Bot.GetKey(Id), Id)
+				for i, r := range txt {
+					msg.Text = r
+					msg.ReplyMarkup = mp[i]
+					if _, err := bot.Send(msg); err != nil {
+						log.Panic(err)
+					}
+				}
+				continue
 			}
 		case "help":
 			msg.Text = "Check the commands."
@@ -113,6 +146,7 @@ func main() {
 			msg.Text = Bot.GetLatestResultByUserId(Id)
 		case "chope":
 			msg.Text = "What do you want to order? Tell me the Food ID 😋"
+			//msg.ReplyMarkup = numericKeyboard
 			startListenChope = true
 		case "choice":
 			msg.Text, _ = Bot.CheckChope(Id)
