@@ -9,7 +9,7 @@ import (
 
 var (
 	donePrep = false
-	r        []Processors.UserChoiceWithKey
+	r        []Processors.UserChoiceWithKeyAndStatus
 )
 
 func main() {
@@ -37,7 +37,7 @@ func main() {
 		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix() {
 			for {
 				if time.Now().Unix() <= Processors.GetLunchTime().Unix()+180 {
-					Processors.BatchOrderDinner(r)
+					Processors.BatchOrderDinner(&r)
 					time.Sleep(time.Duration(Processors.Config.Runtime.BatchRetryCooldownSeconds) * time.Second)
 					continue
 				}
