@@ -16,7 +16,7 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKeyAndStatus) 
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
 
 	for i := 1; i <= Config.Runtime.RetryTimes; i++ {
-		log.Printf("id: %v | Attempt %v", u.GetUserID(), i)
+		log.Printf("id: %v | OrderDinner | Attempt %v", u.GetUserID(), i)
 
 		_, err := client.R().
 			SetHeader("Authorization", MakeToken(u.GetUserKey())).
@@ -50,7 +50,7 @@ func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) {
 
 	for i := 0; i < len(*u); i++ {
 		r := (*u)[i]
-		log.Printf("id: %v | Ordering\n", r.GetUserID())
+		log.Printf("id: %v | BatchOrderDinner | Ordering\n", r.GetUserID())
 		start := time.Now().UnixMilli()
 		resp := OrderDinner(Client, GetDayId(r.GetUserKey()), r)
 
@@ -85,7 +85,7 @@ func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) {
 
 func UpdateOrderLog(records []OrderRecord) {
 	for _, r := range records {
-		log.Printf("id : %v | Updating record. | status: %v", r.GetUserID(), r.GetStatus())
+		log.Printf("id : %v | UpdateOrderLog | status: %v", r.GetUserID(), r.GetStatus())
 		if err := DB.Exec("INSERT INTO order_log_tab (user_id, food_id, order_time, status, error_msg) VALUES (?,?,?,?,?)",
 			r.GetUserID(), r.GetFoodID(), r.GetOrderTime(), r.GetStatus(), r.GetErrorMsg()).Error; err != nil {
 			log.Printf("id : %v | Failed to update record.", r.GetUserID())
