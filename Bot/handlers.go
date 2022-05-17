@@ -252,7 +252,7 @@ func SendReminder() {
 		if !ok {
 			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! Let me know your new choice at /chope 😃 ", r.GetUserChoice())
 		} else {
-			msg = fmt.Sprintf("Good Morning. Do you want me to order %v again today? 😋", menu[r.GetUserChoice()])
+			msg = fmt.Sprintf("Good Morning. I will order %v again today! Otherwise, you can tell me at /chope 😋", menu[r.GetUserChoice()])
 		}
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
 			log.Println(err)
