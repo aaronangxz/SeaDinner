@@ -38,7 +38,7 @@ func main() {
 			for {
 				if time.Now().Unix() <= Processors.GetLunchTime().Unix()+180 {
 					Processors.BatchOrderDinner(r)
-					time.Sleep(30 * time.Second)
+					time.Sleep(time.Duration(Processors.Config.Runtime.BatchRetryCooldownSeconds) * time.Second)
 					continue
 				}
 				break
