@@ -48,31 +48,32 @@ func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) {
 		m       = make(map[int64]int)
 	)
 
-	for _, r := range *u {
-		if r.IsSuccess != nil && r.GetIsSuccess() {
-			log.Printf("id: %v | Previous order successful. Skipping.\n", r.GetUserID())
-			continue
-		}
-
+	for i := 0; i < len(*u); i++ {
+		r := (*u)[i]
 		log.Printf("id: %v | Ordering\n", r.GetUserID())
 		start := time.Now().UnixMilli()
 		resp := OrderDinner(Client, GetDayId(r.GetUserKey()), r)
-
-		if resp.GetSelected() == 0 {
-			m[r.GetUserID()] = ORDER_STATUS_FAIL
-		} else {
-			elapsed := time.Now().UnixMilli() - start
-			m[r.GetUserID()] = ORDER_STATUS_OK
-			r.IsSuccess = Bool(true)
-			SendInstantNotification(r, elapsed)
-		}
 
 		record := OrderRecord{
 			UserID:    Int64(r.GetUserID()),
 			FoodID:    String(r.GetUserChoice()),
 			OrderTime: Int64(time.Now().Unix()),
 			Status:    Int64(int64(m[r.GetUserID()])),
-			ErrorMsg:  String(resp.GetError()),
+		}
+
+		if resp.GetSelected() == 0 {
+			m[r.GetUserID()] = ORDER_STATUS_FAIL
+			record.ErrorMsg = String(resp.GetError())
+		} else {
+			elapsed := time.Now().UnixMilli() - start
+			m[r.GetUserID()] = ORDER_STATUS_OK
+			//TODO: Has issues updating via reference
+			r.IsSuccess = new(bool)
+			r.IsSuccess = Bool(true)
+			//Truncate successful orders so it won't be repeated next round
+			r = (*u)[len(*u)-1]
+			*u = (*u)[:len(*u)-1]
+			SendInstantNotification(r, elapsed)
 		}
 		records = append(records, record)
 	}
