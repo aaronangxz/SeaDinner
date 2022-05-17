@@ -25,6 +25,7 @@ var Constant_URL_type = map[int32]string{
 func Int(v int) *int          { return &v }
 func Int64(v int64) *int64    { return &v }
 func String(s string) *string { return &s }
+func Bool(b bool) *bool       { return &b }
 
 type DinnerMenu struct {
 	Status string `json:"status"`
@@ -129,37 +130,45 @@ type UserChoice struct {
 	Mtime      int64 `json:"mtime"`
 }
 
-type UserChoiceWithKey struct {
+type UserChoiceWithKeyAndStatus struct {
 	UserID     *int64  `json:"user_id"`
 	UserKey    *string `json:"user_key"`
 	UserChoice *string `json:"user_choice"`
 	Ctime      *int64  `json:"ctime"`
 	Mtime      *int64  `json:"mtime"`
+	IsSuccess  *bool   `json:"is_success"`
 }
 
-func (u *UserChoiceWithKey) GetUserID() int64 {
+func (u *UserChoiceWithKeyAndStatus) GetUserID() int64 {
 	if u != nil && u.UserID != nil {
 		return *u.UserID
 	}
 	return 0
 }
 
-func (u *UserChoiceWithKey) GetUserKey() string {
+func (u *UserChoiceWithKeyAndStatus) GetUserKey() string {
 	if u != nil && u.UserKey != nil {
 		return *u.UserKey
 	}
 	return ""
 }
 
-func (u *UserChoiceWithKey) SetUserKey(key *string) {
+func (u *UserChoiceWithKeyAndStatus) SetUserKey(key *string) {
 	u.UserKey = key
 }
 
-func (u *UserChoiceWithKey) GetUserChoice() string {
+func (u *UserChoiceWithKeyAndStatus) GetUserChoice() string {
 	if u != nil && u.UserChoice != nil {
 		return *u.UserChoice
 	}
 	return ""
+}
+
+func (u *UserChoiceWithKeyAndStatus) GetIsSuccess() bool {
+	if u != nil && u.IsSuccess != nil {
+		return *u.IsSuccess
+	}
+	return false
 }
 
 type OrderRecord struct {
