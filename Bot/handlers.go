@@ -130,6 +130,13 @@ func GetChope(id int64, s string) (string, bool) {
 		return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
 	}
 	menu := MakeMenuMap()
+
+	_, ok := menu[s]
+	if !ok {
+		log.Printf("Selection is invalid | selection: %v", s)
+		return "This dish is not available today. Tell me another one. 😟", false
+	}
+
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		//Insert new row
 		if err := Processors.DB.Table(Processors.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
