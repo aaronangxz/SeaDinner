@@ -105,7 +105,7 @@ func CheckChope(id int64) (string, bool) {
 		return "I have yet to receive your order 🥲 Tell me at /chope", false
 	} else {
 		menu := MakeMenuMap()
-		return fmt.Sprintf("I'm tasked to snatch %v %v for you 😀 Changed your mind? Tell me at /chope", existingRecord.GetUserChoice(), menu[existingRecord.GetUserChoice()]), true
+		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? Tell me at /chope", menu[existingRecord.GetUserChoice()]), true
 	}
 }
 
@@ -171,9 +171,9 @@ func GetLatestResultByUserId(id int64) string {
 	menu := MakeMenuMap()
 
 	if res.GetStatus() == Processors.ORDER_STATUS_OK {
-		return fmt.Sprintf("Successfully ordered %v %v at %v! 🥳", res.GetFoodID(), menu[res.GetFoodID()], Processors.ConvertTimeStampTime(res.GetOrderTime()))
+		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", menu[res.GetFoodID()], Processors.ConvertTimeStampTime(res.GetOrderTime()))
 	}
-	return fmt.Sprintf("Failed to order %v %v today. 😔", res.GetFoodID(), menu[res.GetFoodID()])
+	return fmt.Sprintf("Failed to order %v today. 😔", menu[res.GetFoodID()])
 }
 
 func BatchGetLatestResult() []Processors.OrderRecord {
@@ -252,7 +252,7 @@ func SendReminder() {
 		if !ok {
 			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! Let me know your new choice at /chope 😃 ", r.GetUserChoice())
 		} else {
-			msg = fmt.Sprintf("Good Morning. I will order %v again today! Otherwise, you can tell me at /chope 😋", menu[r.GetUserChoice()])
+			msg = fmt.Sprintf("Good Morning. I will order %v again today! If you changed your mind, you can tell me at /chope 😋", menu[r.GetUserChoice()])
 		}
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
 			log.Println(err)
@@ -273,5 +273,6 @@ func MakeMenuMap() map[string]string {
 }
 
 func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
+	log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack)
 	return GetChope(id, callBack.Data)
 }

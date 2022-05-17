@@ -128,7 +128,9 @@ func main() {
 				txt, mp := Processors.OutputMenuWithButton(Bot.GetKey(Id), Id)
 				for i, r := range txt {
 					msg.Text = r
-					msg.ReplyMarkup = mp[i]
+					if len(mp) > 0 {
+						msg.ReplyMarkup = mp[i]
+					}
 					if _, err := bot.Send(msg); err != nil {
 						log.Panic(err)
 					}
