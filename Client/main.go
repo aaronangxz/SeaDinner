@@ -16,6 +16,27 @@ var (
 	Id               int64
 )
 
+var numericKeyboard = tgbotapi.NewReplyKeyboard(
+	tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("1"),
+		tgbotapi.NewKeyboardButton("2"),
+		tgbotapi.NewKeyboardButton("3"),
+	),
+	tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("4"),
+		tgbotapi.NewKeyboardButton("5"),
+		tgbotapi.NewKeyboardButton("6"),
+	),
+	tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("7"),
+		tgbotapi.NewKeyboardButton("8"),
+		tgbotapi.NewKeyboardButton("9"),
+	),
+	tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("0"),
+	),
+)
+
 func main() {
 	Processors.Init()
 	Processors.LoadEnv()
@@ -64,16 +85,19 @@ func main() {
 				startListenKey = false
 				continue
 			} else if startListenChope {
-				msg, ok := Bot.GetChope(Id, update.Message.Text)
+				msg := tgbotapi.NewMessage(Id, "")
+				ok := false
+				msg.Text, ok = Bot.GetChope(Id, update.Message.Text)
 
 				if !ok {
-					if _, err := bot.Send(tgbotapi.NewMessage(Id, msg)); err != nil {
+					if _, err := bot.Send(msg); err != nil {
 						log.Println(err)
 					}
 					continue
 				}
 				//Capture chope
-				if _, err := bot.Send(tgbotapi.NewMessage(Id, msg)); err != nil {
+				msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+				if _, err := bot.Send(msg); err != nil {
 					log.Println(err)
 				}
 				startListenChope = false
@@ -113,6 +137,7 @@ func main() {
 			msg.Text = Bot.GetLatestResultByUserId(Id)
 		case "chope":
 			msg.Text = "What do you want to order? Tell me the Food ID 😋"
+			msg.ReplyMarkup = numericKeyboard
 			startListenChope = true
 		case "choice":
 			msg.Text, _ = Bot.CheckChope(Id)
