@@ -182,9 +182,10 @@ func BatchGetLatestResult() []Processors.OrderRecord {
 	)
 
 	if err := Processors.DB.Raw("SELECT ol.* FROM order_log_tab ol INNER JOIN "+
-		"(SELECT MAX(order_time) AS max_order_time FROM order_log_tab WHERE order_time BETWEEN ? AND ? GROUP BY user_id) nestedQ "+
+		"(SELECT MAX(order_time) AS max_order_time FROM order_log_tab WHERE status <> ? AND order_time BETWEEN ? AND ? GROUP BY user_id) nestedQ "+
 		"ON ol.order_time = nestedQ.max_order_time",
-		Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
+		Processors.ORDER_STATUS_OK, Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).
+		Scan(&res).Error; err != nil {
 		log.Println("Failed to retrieve record.")
 		return nil
 	}
@@ -219,7 +220,6 @@ func SendNotifications() {
 		}
 	}
 }
-
 func BatchGetUsersChoice() []UserChoice {
 	var (
 		res []UserChoice
