@@ -250,7 +250,7 @@ func SendReminder() {
 		var msg string
 		_, ok := menu[r.GetUserChoice()]
 		if !ok {
-			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! Choose another dish from /menu 😃 ", r.GetUserChoice())
+			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! I will not proceed to order. Choose another dish from /menu 😃 ", r.GetUserChoice())
 		} else {
 			msg = fmt.Sprintf("Good Morning. I will order %v again today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
 		}
