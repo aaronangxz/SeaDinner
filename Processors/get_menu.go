@@ -22,11 +22,10 @@ func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 		Get(MakeURL(URL_MENU, &ID))
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
-	fmt.Printf("GetMenu | Query status of today's menu: %v\n\n", currentarr.Status)
-
+	log.Printf("GetMenu | Query status of today's menu: %v", currentarr.GetStatus())
 	return currentarr
 }
 
