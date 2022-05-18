@@ -9,7 +9,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/joho/godotenv"
 )
 
@@ -38,21 +37,6 @@ func Init() resty.Client {
 	ConnectRedis()
 	Client = *resty.New()
 	return Client
-}
-
-func ConnectDataBase() {
-	dbName := "store.db"
-	if os.Getenv("HEROKU_DEPLOY") == "FALSE" {
-		dbName = "../store.db"
-	}
-	database, err := gorm.Open("sqlite3", dbName)
-
-	if err != nil {
-		panic("Failed to connect to database!")
-	}
-
-	log.Println("Connected to DB")
-	DB = database
 }
 
 func ConnectMySQL() {
