@@ -49,14 +49,3 @@ func ConnectTestMySQL() {
 	log.Println("NewMySQL: Test Database connection established")
 	Processors.DB = db
 }
-
-func ConnectTestDataBase() {
-	database, err := gorm.Open("sqlite3", "../test.db")
-
-	if err != nil {
-		panic("Failed to connect to test database!")
-	}
-
-	log.Println("Connected to Test DB")
-	Processors.DB = database
-}
