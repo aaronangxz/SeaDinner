@@ -15,6 +15,10 @@ jobs:
       - name: Run coverage in Processors
         working-directory: ./Processors
         env:
+          TEST_DB_USERNAME: ${{secrets.TEST_DB_USERNAME}}
+          TEST_DB_PASSWORD: ${{secrets.TEST_DB_PASSWORD}}
+          TEST_DB_URL: ${{secrets.TEST_DB_URL}}
+          TEST_DB_NAME: ${{secrets.TEST_DB_NAME}}
           AES_KEY: ${{secrets.AES_KEY}}
           TOKEN: ${{secrets.TOKEN}}
         run: go test -coverprofile=coverage.out -covermode=atomic
