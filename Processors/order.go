@@ -52,7 +52,7 @@ func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) []OrderRecord {
 		r := (*u)[i]
 		log.Printf("id: %v | BatchOrderDinner | Ordering\n", r.GetUserID())
 		start := time.Now().UnixMilli()
-		resp := OrderDinner(Client, GetDayId(r.GetUserKey()), r)
+		resp := OrderDinner(Client, GetDayId(), r)
 
 		record := OrderRecord{
 			UserID:    Int64(r.GetUserID()),
@@ -117,7 +117,7 @@ func MakeMenuMap() map[string]string {
 	key := os.Getenv("TOKEN")
 	menuMap := make(map[string]string)
 
-	menu := GetMenu(Client, GetDayId(key), key)
+	menu := GetMenu(Client, GetDayId(), key)
 
 	for _, m := range menu.DinnerArr {
 		menuMap[fmt.Sprint(m.Id)] = m.Name

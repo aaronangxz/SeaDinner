@@ -261,11 +261,11 @@ func SendReminder() {
 }
 
 func MakeMenuMap() map[string]string {
-	key := os.Getenv("TOKEN")
+	var (
+		key = os.Getenv("TOKEN")
+	)
 	menuMap := make(map[string]string)
-
-	menu := Processors.GetMenu(Processors.Client, Processors.GetDayId(key), key)
-
+	menu := Processors.GetMenu(Processors.Client, Processors.GetDayId(), key)
 	for _, m := range menu.DinnerArr {
 		menuMap[fmt.Sprint(m.Id)] = m.Name
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetMenu(t *testing.T) {
-	LoadEnv()
+	Config.Adhoc = true
 	r := Init()
 	key := os.Getenv("TOKEN")
 	type args struct {

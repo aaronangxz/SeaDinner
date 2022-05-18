@@ -18,15 +18,7 @@ var (
 )
 
 func main() {
-	Processors.LoadEnv()
 	Processors.Init()
-	//For testing only, update in config.toml
-	if Processors.Config.Adhoc {
-		Processors.ConnectTestMySQL()
-	} else {
-		Processors.ConnectMySQL()
-	}
-
 	for {
 		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix()-7200 {
 			Bot.SendReminder()

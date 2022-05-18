@@ -1,32 +1,22 @@
 package Processors
 
-import (
-	"os"
-	"testing"
-)
+import "testing"
 
 func AdhocTestGetDayId(t *testing.T) {
-	LoadEnv()
+	Config.Adhoc = true
 	Init()
-	Config.Prefix.TokenPrefix = "Token "
-	Config.Prefix.UrlPrefix = "https://dinner.sea.com"
-	type args struct {
-		key string
-	}
 	tests := []struct {
 		name   string
-		args   args
 		wantID int
 	}{
 		{
 			name:   "HappyCase",
-			args:   args{key: os.Getenv("TOKEN")},
-			wantID: 3521,
+			wantID: 3556,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotID := GetDayId(tt.args.key); gotID != tt.wantID {
+			if gotID := GetDayId(); gotID != tt.wantID {
 				t.Errorf("GetDayId() = %v, want %v", gotID, tt.wantID)
 			}
 		})

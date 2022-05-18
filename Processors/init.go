@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -13,8 +14,9 @@ import (
 )
 
 var (
-	Client resty.Client
-	DB     *gorm.DB
+	Client      resty.Client
+	DB          *gorm.DB
+	RedisClient *redis.Client
 )
 
 func LoadEnv() {
@@ -25,9 +27,15 @@ func LoadEnv() {
 }
 
 func Init() resty.Client {
-	// Path to config file can be passed in.
+	LoadEnv()
 	LoadConfig()
-
+	//For testing only, update in config.toml
+	if Config.Adhoc {
+		ConnectTestMySQL()
+	} else {
+		ConnectMySQL()
+	}
+	ConnectRedis()
 	Client = *resty.New()
 	return Client
 }
@@ -75,4 +83,21 @@ func ConnectTestMySQL() {
 
 	log.Println("NewMySQL: Test Database connection established")
 	DB = db
+}
+
+func ConnectRedis() {
+	redisAddress := fmt.Sprintf("%v:%v", os.Getenv("REDIS_URL"), os.Getenv("REDIS_PORT"))
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     redisAddress,
+		Password: redisPassword,
+		DB:       0, // use default DB
+	})
+
+	if err := rdb.Ping().Err(); err != nil {
+		log.Printf("Error while establishing Redis Client: %v", err)
+	}
+	log.Println("NewRedisClient: Redis connection established")
+	RedisClient = rdb
 }

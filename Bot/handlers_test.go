@@ -9,6 +9,7 @@ import (
 
 func TestGetKey(t *testing.T) {
 	u := user_key.New().Build()
+	randId := TestHelper.RandomInt(9999999)
 	type args struct {
 		id int64
 	}
@@ -24,7 +25,7 @@ func TestGetKey(t *testing.T) {
 		},
 		{
 			name: "NotFound",
-			args: args{id: TestHelper.RandomInt(999)},
+			args: args{id: randId},
 			want: "",
 		},
 	}
@@ -36,6 +37,7 @@ func TestGetKey(t *testing.T) {
 		})
 	}
 	u.TearDown()
+	user_key.DeleteUserKey(randId)
 }
 
 func TestCheckKey(t *testing.T) {
