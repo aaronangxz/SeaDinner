@@ -26,6 +26,11 @@ func LoadEnv() {
 	}
 }
 
+func InitClient() resty.Client {
+	Client = *resty.New()
+	return Client
+}
+
 func Init() resty.Client {
 	LoadEnv()
 	LoadConfig()
@@ -36,8 +41,7 @@ func Init() resty.Client {
 		ConnectMySQL()
 	}
 	ConnectRedis()
-	Client = *resty.New()
-	return Client
+	return InitClient()
 }
 
 func ConnectMySQL() {

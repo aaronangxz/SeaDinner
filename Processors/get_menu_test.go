@@ -9,10 +9,7 @@ import (
 )
 
 func TestGetMenu(t *testing.T) {
-	LoadEnv()
-	LoadConfig()
-	Config.Adhoc = true
-	r := Init()
+	r := InitClient()
 	key := os.Getenv("TOKEN")
 	type args struct {
 		client resty.Client
