@@ -89,3 +89,13 @@ func (uk *UserKey) TearDown() error {
 	log.Printf("Successfully deleted from DB | user_id:%v", uk.GetUserID())
 	return nil
 }
+
+func DeleteUserKey(userId int64) error {
+	if err := Processors.DB.Exec("DELETE FROM user_key_tab WHERE user_id = ?", userId).Error; err != nil {
+		log.Printf("Failed to delete from DB | user_id:%v", userId)
+		return err
+	}
+
+	log.Printf("Successfully deleted from DB | user_id:%v", userId)
+	return nil
+}

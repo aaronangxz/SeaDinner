@@ -1,19 +1,45 @@
 package Processors
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
-	var currentarr DinnerMenuArr
+	var (
+		cacheKey   = fmt.Sprint(MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
+		expiry     = 86400 * time.Second
+		currentarr DinnerMenuArr
+	)
 
 	if ID == 0 {
 		log.Println("GetMenu | Invalid id:", ID)
 		return currentarr
+	}
+
+	//check cache
+	val, redisErr := RedisClient.Get(cacheKey).Result()
+	if redisErr != nil {
+		if redisErr == redis.Nil {
+			log.Printf("GetMenu | No result of %v in Redis, reading from API", cacheKey)
+		} else {
+			log.Printf("GetMenu | Error while reading from redis: %v", redisErr.Error())
+		}
+	} else {
+		redisResp := DinnerMenuArr{}
+		err := json.Unmarshal([]byte(val), &redisResp)
+		if err != nil {
+			log.Printf("GetMenu | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
+		} else {
+			log.Printf("GetMenu | Successful | Cached %v", cacheKey)
+			return redisResp
+		}
 	}
 
 	_, err := client.R().
@@ -25,6 +51,18 @@ func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 		log.Println(err)
 	}
 
+	//set back into cache
+	data, err := json.Marshal(currentarr)
+	if err != nil {
+		log.Printf("GetMenu | Failed to marshal JSON results: %v\n", err.Error())
+	}
+
+	if err := RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
+		log.Printf("GetMenu | Error while writing to redis: %v", err.Error())
+	} else {
+		log.Printf("GetMenu | Successful | Written %v to redis", cacheKey)
+	}
+
 	log.Printf("GetMenu | Query status of today's menu: %v", currentarr.GetStatus())
 	return currentarr
 }
@@ -34,7 +72,7 @@ func OutputMenu(key string) string {
 		output string
 	)
 
-	m := GetMenu(Client, GetDayId(key), key)
+	m := GetMenu(Client, GetDayId(), key)
 
 	if m.Status == nil {
 		return "There is no dinner order today! 😕"
@@ -53,7 +91,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		out   []tgbotapi.InlineKeyboardMarkup
 	)
 
-	m := GetMenu(Client, GetDayId(key), key)
+	m := GetMenu(Client, GetDayId(), key)
 
 	if m.Status == nil {
 		texts = append(texts, "There is no dinner order today! 😕")

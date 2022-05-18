@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/go-redis/redis v6.15.9+incompatible // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.0 // indirect
 	golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9 // indirect

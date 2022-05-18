@@ -1,9 +1,6 @@
 package Processors
 
 const (
-	// UrlPrefix   = "https://dinner.sea.com"
-	// TokenPrefix = "Token "
-
 	URL_CURRENT = 0
 	URL_MENU    = 1
 	URL_ORDER   = 2
@@ -14,6 +11,9 @@ const (
 	DB_ORDER_LOG_TAB   = "order_log_tab"
 	DB_USER_CHOICE_TAB = "user_choice_tab"
 	DB_USER_KEY_TAB    = "user_key_tab"
+
+	MENU_CACHE_KEY_PREFIX = "current_menu:"
+	DAY_ID_KEY_PREFIX     = "day_id:"
 )
 
 var Constant_URL_type = map[int32]string{
