@@ -31,7 +31,7 @@ func InitClient() resty.Client {
 	return Client
 }
 
-func Init() resty.Client {
+func Init() {
 	LoadEnv()
 	LoadConfig()
 	//For testing only, update in config.toml
@@ -41,7 +41,6 @@ func Init() resty.Client {
 		ConnectMySQL()
 	}
 	ConnectRedis()
-	return InitClient()
 }
 
 func ConnectMySQL() {

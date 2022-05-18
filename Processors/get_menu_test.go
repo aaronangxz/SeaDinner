@@ -9,6 +9,10 @@ import (
 )
 
 func TestGetMenu(t *testing.T) {
+	LoadEnv()
+	LoadConfig()
+	ConnectRedis()
+	ConnectTestMySQL()
 	r := InitClient()
 	key := os.Getenv("TOKEN")
 	type args struct {
