@@ -1,4 +1,4 @@
-adhoc = true
+adhoc = false
 
 [prefix]
 url_prefix = "https://dinner.sea.com"
@@ -10,6 +10,6 @@ retry_offset_seconds = 180
 batch_retry_cooldown_seconds = 1
 
 [order_time]
-hour = 17
-minutes = 25
+hour = 12
+minutes = 30
 seconds = 0
