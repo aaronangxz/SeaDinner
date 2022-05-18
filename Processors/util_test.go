@@ -296,3 +296,24 @@ func TestPopSuccessfulOrder(t *testing.T) {
 		})
 	}
 }
+
+func TestOutputResultsCount(t *testing.T) {
+	type args struct {
+		total  int
+		failed int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "HappyCase",
+			args: args{10, 5},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			OutputResultsCount(tt.args.total, tt.args.failed)
+		})
+	}
+}
