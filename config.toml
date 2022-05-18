@@ -6,6 +6,7 @@ token_prefix = "Token "
 
 [runtime]
 retry_times = 5
+retry_offset_seconds = 180
 batch_retry_cooldown_seconds = 1
 
 [order_time]
