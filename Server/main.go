@@ -17,6 +17,7 @@ var (
 
 func main() {
 	Processors.Init()
+	Processors.InitClient()
 	for {
 		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix()-7200 {
 			Bot.SendReminder()
