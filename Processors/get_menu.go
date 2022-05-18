@@ -62,9 +62,9 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 	}
 
 	for _, d := range m.DinnerArr {
-		texts = append(texts, fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable:%v/%v", d.ImageURL, d.Code, d.Id, d.Name, d.Ordered, d.Quota))
+		texts = append(texts, fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable: %v/%v", d.ImageURL, d.Code, d.Id, d.Name, d.Remaining, d.Quota))
 		var buttons []tgbotapi.InlineKeyboardButton
-		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("Order %v", d.Code), fmt.Sprint(d.Id)))
+		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("Snatch %v", d.Code), fmt.Sprint(d.Id)))
 		out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
 	}
 	return texts, out

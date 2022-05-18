@@ -96,6 +96,7 @@ type Food struct {
 	Ordered     int    `json:"ordered"`
 	Quota       int    `json:"quota"`
 	Disabled    bool   `json:"disabled"`
+	Remaining   int    `json:"remaining"`
 }
 
 type Details struct {

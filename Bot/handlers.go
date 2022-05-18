@@ -102,10 +102,10 @@ func CheckChope(id int64) (string, bool) {
 	}
 
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
-		return "I have yet to receive your order 🥲 Tell me at /chope", false
+		return "I have yet to receive your order 🥲 You can choose from /menu", false
 	} else {
 		menu := MakeMenuMap()
-		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? Tell me at /chope", menu[existingRecord.GetUserChoice()]), true
+		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
 	}
 }
 
@@ -250,9 +250,9 @@ func SendReminder() {
 		var msg string
 		_, ok := menu[r.GetUserChoice()]
 		if !ok {
-			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! Let me know your new choice at /chope 😃 ", r.GetUserChoice())
+			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! Choose another dish from /menu 😃 ", r.GetUserChoice())
 		} else {
-			msg = fmt.Sprintf("Good Morning. I will order %v again today! If you changed your mind, you can tell me at /chope 😋", menu[r.GetUserChoice()])
+			msg = fmt.Sprintf("Good Morning. I will order %v again today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
 		}
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
 			log.Println(err)
