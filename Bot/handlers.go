@@ -183,7 +183,7 @@ func BatchGetLatestResult() []Processors.OrderRecord {
 
 	if err := Processors.DB.Raw("SELECT ol.* FROM order_log_tab ol INNER JOIN "+
 		"(SELECT MAX(order_time) AS max_order_time FROM order_log_tab WHERE status <> ? AND order_time BETWEEN ? AND ? GROUP BY user_id) nestedQ "+
-		"ON ol.order_time = nestedQ.max_order_time",
+		"ON ol.order_time = nestedQ.max_order_time GROUP BY user_id",
 		Processors.ORDER_STATUS_OK, Processors.GetLunchTime().Unix()-300, Processors.GetLunchTime().Unix()+300).
 		Scan(&res).Error; err != nil {
 		log.Println("Failed to retrieve record.")
@@ -206,7 +206,7 @@ func SendNotifications() {
 
 	res := BatchGetLatestResult()
 	menu := MakeMenuMap()
-	log.Println("SendNotifications:", len(res))
+	log.Println("SendNotifications | size:", len(res))
 
 	for _, r := range res {
 		if r.GetStatus() == Processors.ORDER_STATUS_OK {
@@ -225,10 +225,10 @@ func BatchGetUsersChoice() []UserChoice {
 		res []UserChoice
 	)
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab").Scan(&res).Error; err != nil {
-		log.Println("Failed to retrieve record:", err.Error())
+		log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
 		return nil
 	}
-	log.Println("BatchGetUsersChoice:", len(res))
+	log.Println("BatchGetUsersChoice | size:", len(res))
 	log.Println(res)
 	return res
 }
@@ -242,7 +242,7 @@ func SendReminder() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	res := BatchGetUsersChoice()
-	log.Println("SendReminder:", len(res))
+	log.Println("SendReminder | size:", len(res))
 
 	menu := MakeMenuMap()
 
@@ -273,6 +273,6 @@ func MakeMenuMap() map[string]string {
 }
 
 func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
-	log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack)
+	log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack.Data)
 	return GetChope(id, callBack.Data)
 }
