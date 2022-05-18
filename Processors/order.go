@@ -62,7 +62,11 @@ func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) []OrderRecord {
 
 		if resp.GetSelected() == 0 {
 			m[r.GetUserID()] = ORDER_STATUS_FAIL
-			record.ErrorMsg = String(resp.GetError())
+			if resp.Error == nil {
+				record.ErrorMsg = String("Unknown Error")
+			} else {
+				record.ErrorMsg = String(resp.GetError())
+			}
 			record.Status = Int64(int64(m[r.GetUserID()]))
 		} else {
 			elapsed := time.Now().UnixMilli() - start
@@ -76,15 +80,7 @@ func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) []OrderRecord {
 		records = append(records, record)
 	}
 	log.Println("BatchOrderDinner | Records:", len(records))
-	//UpdateOrderLog(records)
-	//OutputResults(m)
 	return records
-}
-
-func PopSuccessfulOrder(s []UserChoiceWithKeyAndStatus, index int) []UserChoiceWithKeyAndStatus {
-	ret := make([]UserChoiceWithKeyAndStatus, 0)
-	ret = append(ret, s[:index]...)
-	return append(ret, s[index+1:]...)
 }
 
 func UpdateOrderLog(records []OrderRecord) {
