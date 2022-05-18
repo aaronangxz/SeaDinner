@@ -27,10 +27,6 @@ func PrepOrder() ([]UserChoiceWithKeyAndStatus, bool) {
 		return nil, false
 	}
 
-	for _, r := range record {
-		r.IsSuccess = Bool(false)
-	}
-
-	log.Println("Fetched user_records:", len(record))
+	log.Println("PrepOrder | Fetched user_records:", len(record))
 	return record, true
 }

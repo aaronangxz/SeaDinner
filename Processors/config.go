@@ -19,6 +19,7 @@ type OrderTimeConfig struct {
 }
 type runtimeConfig struct {
 	RetryTimes                int `toml:"retry_times"`
+	RetryOffsetSeconds        int `toml:"retry_offset_seconds"`
 	BatchRetryCooldownSeconds int `toml:"batch_retry_cooldown_seconds"`
 }
 

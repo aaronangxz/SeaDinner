@@ -42,7 +42,7 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKeyAndStatus) 
 	return resp
 }
 
-func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) {
+func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) []OrderRecord {
 	var (
 		records []OrderRecord
 		m       = make(map[int64]int)
@@ -58,29 +58,33 @@ func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) {
 			UserID:    Int64(r.GetUserID()),
 			FoodID:    String(r.GetUserChoice()),
 			OrderTime: Int64(time.Now().Unix()),
-			Status:    Int64(int64(m[r.GetUserID()])),
 		}
 
 		if resp.GetSelected() == 0 {
 			m[r.GetUserID()] = ORDER_STATUS_FAIL
 			record.ErrorMsg = String(resp.GetError())
+			record.Status = Int64(int64(m[r.GetUserID()]))
 		} else {
 			elapsed := time.Now().UnixMilli() - start
 			m[r.GetUserID()] = ORDER_STATUS_OK
-			//TODO: Has issues updating via reference
-			r.IsSuccess = new(bool)
-			r.IsSuccess = Bool(true)
-			//Truncate successful orders so it won't be repeated next round
-			r = (*u)[len(*u)-1]
-			*u = (*u)[:len(*u)-1]
+			record.Status = Int64(int64(m[r.GetUserID()]))
 			SendInstantNotification(r, elapsed)
+			//Truncate successful orders so it won't be repeated next round
+			*u = PopSuccessfulOrder(*u, i)
+			i--
 		}
 		records = append(records, record)
 	}
-	log.Println("records:", len(records))
+	log.Println("BatchOrderDinner | Records:", len(records))
+	//UpdateOrderLog(records)
+	//OutputResults(m)
+	return records
+}
 
-	UpdateOrderLog(records)
-	OutputResults(m)
+func PopSuccessfulOrder(s []UserChoiceWithKeyAndStatus, index int) []UserChoiceWithKeyAndStatus {
+	ret := make([]UserChoiceWithKeyAndStatus, 0)
+	ret = append(ret, s[:index]...)
+	return append(ret, s[index+1:]...)
 }
 
 func UpdateOrderLog(records []OrderRecord) {
