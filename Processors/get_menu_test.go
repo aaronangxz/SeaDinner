@@ -9,6 +9,8 @@ import (
 )
 
 func TestGetMenu(t *testing.T) {
+	LoadEnv()
+	LoadConfig()
 	Config.Adhoc = true
 	r := Init()
 	key := os.Getenv("TOKEN")
