@@ -2,6 +2,7 @@ package Processors
 
 import (
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -221,6 +222,76 @@ func TestDecryptKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if gotDecryptedString := DecryptKey(tt.args.encryptedString, tt.args.keyString); gotDecryptedString != tt.wantDecryptedString {
 				t.Errorf("DecryptKey() = %v, want %v", gotDecryptedString, tt.wantDecryptedString)
+			}
+		})
+	}
+}
+
+func TestPopSuccessfulOrder(t *testing.T) {
+	type args struct {
+		s     []UserChoiceWithKeyAndStatus
+		index int
+	}
+	tests := []struct {
+		name string
+		args args
+		want []UserChoiceWithKeyAndStatus
+	}{
+		{
+			name: "HappyCase_startOfSlice",
+			args: args{[]UserChoiceWithKeyAndStatus{
+				{
+					UserID: Int64(1),
+				}, {
+					UserID: Int64(2),
+				}}, 0},
+			want: []UserChoiceWithKeyAndStatus{
+				{
+					UserID: Int64(2),
+				},
+			},
+		},
+		{
+			name: "HappyCase_middleOfSlice",
+			args: args{[]UserChoiceWithKeyAndStatus{
+				{
+					UserID: Int64(1),
+				}, {
+					UserID: Int64(2),
+				}, {
+					UserID: Int64(3),
+				}, {
+					UserID: Int64(4),
+				}, {
+					UserID: Int64(5),
+				}}, 2},
+			want: []UserChoiceWithKeyAndStatus{
+				{
+					UserID: Int64(1),
+				}, {
+					UserID: Int64(2),
+				}, {
+					UserID: Int64(4),
+				}, {
+					UserID: Int64(5),
+				},
+			},
+		},
+		{
+			name: "indexExceedsLen",
+			args: args{[]UserChoiceWithKeyAndStatus{
+				{
+					UserID: Int64(1),
+				}, {
+					UserID: Int64(2),
+				}}, 2},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := PopSuccessfulOrder(tt.args.s, tt.args.index); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("PopSuccessfulOrder() = %v, want %v", got, tt.want)
 			}
 		})
 	}

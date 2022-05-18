@@ -147,7 +147,6 @@ func DecryptKey(encryptedString string, keyString string) (decryptedString strin
 	if err != nil {
 		panic(err.Error())
 	}
-
 	return string(plaintext)
 }
 
@@ -156,6 +155,15 @@ func MakeKey() string {
 	if _, err := rand.Read(bytes); err != nil {
 		panic(err.Error())
 	}
-
 	return hex.EncodeToString(bytes) //encode key in bytes to string for saving
+}
+
+func PopSuccessfulOrder(s []UserChoiceWithKeyAndStatus, index int) []UserChoiceWithKeyAndStatus {
+	if index >= len(s) {
+		log.Printf("PopSuccessfulOrder | index exceeds slice size | size: %v index: %v", len(s), index)
+		return nil
+	}
+	ret := make([]UserChoiceWithKeyAndStatus, 0)
+	ret = append(ret, s[:index]...)
+	return append(ret, s[index+1:]...)
 }
