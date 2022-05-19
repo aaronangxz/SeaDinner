@@ -28,6 +28,18 @@ func ConvertTimeStamp(timestamp int64) string {
 	return fmt.Sprint(t.In(tz).Format("2006-01-02"))
 }
 
+func ConvertTimeStampMonthDay(timestamp int64) string {
+	t := time.Unix(timestamp, 0).Local().UTC()
+	tz, _ := time.LoadLocation(TimeZone)
+	return fmt.Sprint(t.In(tz).Format("2/1"))
+}
+
+func ConvertTimeStampDayOfWeek(timestamp int64) string {
+	t := time.Unix(timestamp, 0).Local().UTC()
+	tz, _ := time.LoadLocation(TimeZone)
+	return fmt.Sprint(t.In(tz).Format("Mon 2/1"))
+}
+
 func ConvertTimeStampTime(timestamp int64) string {
 	t := time.Unix(timestamp, 0).Local().UTC()
 	tz, _ := time.LoadLocation(TimeZone)
