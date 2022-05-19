@@ -57,3 +57,16 @@ func IsPollStart() bool {
 
 	return status.Menu.GetActive()
 }
+
+func WeekStartEndDate(timestamp int64) (int64, int64) {
+	tz, _ := time.LoadLocation(TimeZone)
+	date := time.Unix(timestamp, 0).Local().UTC().In(tz)
+
+	startOffset := (int(time.Monday) - int(date.Weekday()) - 7) % 7
+	startResult := date.Add(time.Duration(startOffset*24) * time.Hour)
+	endResult := startResult.Add(time.Duration(4*24) * time.Hour)
+
+	startYear, startMonth, startDay := startResult.Date()
+	endYear, endMonth, endDay := endResult.Date()
+	return time.Date(startYear, startMonth, startDay, 0, 0, 0, 0, tz).Unix(), time.Date(endYear, endMonth, endDay, 23, 59, 59, 59, tz).Unix()
+}
