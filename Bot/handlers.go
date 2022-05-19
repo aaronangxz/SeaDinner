@@ -170,6 +170,10 @@ func GetLatestResultByUserId(id int64) string {
 	}
 	menu := MakeMenuMap()
 
+	if res.Status == nil {
+		return "I have yet to order anything today 😕"
+	}
+
 	if res.GetStatus() == Processors.ORDER_STATUS_OK {
 		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", menu[res.GetFoodID()], Processors.ConvertTimeStampTime(res.GetOrderTime()))
 	}
