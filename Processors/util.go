@@ -75,6 +75,11 @@ func IsNotNumber(a string) bool {
 		return true
 	}
 
+	// Catch "-1", hacky, to be re-done
+	if a == "-1" {
+		return false
+	}
+
 	for _, char := range a {
 		if unicode.IsSymbol(char) {
 			return true
