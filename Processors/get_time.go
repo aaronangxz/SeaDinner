@@ -2,6 +2,7 @@ package Processors
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -37,4 +38,22 @@ func IsWeekDay(t time.Time) bool {
 	tz, _ := time.LoadLocation(TimeZone)
 	day := t.In(tz).Weekday()
 	return day >= 1 && day <= 5
+}
+
+func IsPollStart() bool {
+	var (
+		status Current
+		key    = os.Getenv("TOKEN")
+	)
+
+	_, err := Client.R().
+		SetHeader("Authorization", MakeToken(key)).
+		SetResult(&status).
+		Get(MakeURL(URL_CURRENT, nil))
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return status.Menu.GetActive()
 }
