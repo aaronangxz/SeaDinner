@@ -144,3 +144,59 @@ func TestWeekStartEndDate(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertTimeStampMonthDay(t *testing.T) {
+	timeNow := time.Unix(time.Now().Unix(), 0).Local().UTC()
+	tz, _ := time.LoadLocation(TimeZone)
+	s := (timeNow.In(tz).Format("2/1"))
+
+	type args struct {
+		timestamp int64
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "HappyCase",
+			args: args{time.Now().Unix()},
+			want: s,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ConvertTimeStampMonthDay(tt.args.timestamp); got != tt.want {
+				t.Errorf("ConvertTimeStampMonthDay() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConvertTimeStampDayOfWeek(t *testing.T) {
+	timeNow := time.Unix(time.Now().Unix(), 0).Local().UTC()
+	tz, _ := time.LoadLocation(TimeZone)
+	s := (timeNow.In(tz).Format("Mon 2/1"))
+
+	type args struct {
+		timestamp int64
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "HappyCase",
+			args: args{time.Now().Unix()},
+			want: s,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ConvertTimeStampDayOfWeek(tt.args.timestamp); got != tt.want {
+				t.Errorf("ConvertTimeStampDayOfWeek() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
