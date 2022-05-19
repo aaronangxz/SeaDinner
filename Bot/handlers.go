@@ -107,7 +107,7 @@ func CheckChope(id int64) (string, bool) {
 		if existingRecord.UserChoice == nil {
 			return "I have yet to receive your order 🥲 You can choose from /menu", false
 		} else if existingRecord.GetUserChoice() == "-1" {
-			return "Not placing dinner order for you today 🙅‍♂️ Changed your mind? You can choose from /menu", false
+			return "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu", false
 		}
 		menu := MakeMenuNameMap()
 		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
@@ -302,7 +302,9 @@ func SendReminder() {
 		if !ok {
 			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! I will not proceed to order. Choose another dish from /menu 😃 ", r.GetUserChoice())
 		} else {
-			msg = fmt.Sprintf("Good Morning. I will order %v again today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+			if r.GetUserChoice() != "-1" {
+				msg = fmt.Sprintf("Good Morning. I will order %v again today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+			}
 		}
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
 			log.Println(err)

@@ -19,17 +19,15 @@ func main() {
 	Processors.Init()
 	Processors.InitClient()
 	for {
-		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix()-7200 {
+		if Processors.IsSendReminderTime() {
 			Bot.SendReminder()
 		}
 
-		if (Processors.IsWeekDay(time.Now()) && time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
-			time.Now().Unix() <= Processors.GetLunchTime().Unix()-15) &&
-			!donePrep {
+		if Processors.IsPrepOrderTime() && !donePrep {
 			r, donePrep = Processors.PrepOrder()
 		}
 
-		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix() {
+		if Processors.IsOrderTime() {
 			for {
 				if Processors.IsPollStart() {
 					start = time.Now().UnixMilli()
