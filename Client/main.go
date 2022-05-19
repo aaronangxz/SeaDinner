@@ -148,7 +148,7 @@ func main() {
 		case "status":
 			msg.Text = Bot.GetLatestResultByUserId(Id)
 		case "chope":
-			msg.Text = "What do you want to order? Tell me the Food ID 😋"
+			msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅‍♀️"
 			//msg.ReplyMarkup = numericKeyboard
 			startListenChope = true
 		case "choice":
