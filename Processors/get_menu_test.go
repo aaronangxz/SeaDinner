@@ -9,8 +9,11 @@ import (
 )
 
 func TestGetMenu(t *testing.T) {
-	Config.Adhoc = true
-	r := Init()
+	LoadEnv()
+	LoadConfig()
+	ConnectRedis()
+	ConnectTestMySQL()
+	r := InitClient()
 	key := os.Getenv("TOKEN")
 	type args struct {
 		client resty.Client

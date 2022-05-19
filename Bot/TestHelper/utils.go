@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Processors"
-	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func RandomString(length int) string {
@@ -39,7 +40,8 @@ func ConnectTestMySQL() {
 	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_URL"), os.Getenv("TEST_DB_NAME"))
 
 	log.Printf("Connecting to %v", URL)
-	db, err := gorm.Open("mysql", URL)
+	// sqlDB, err := sql.Open("mysql", URL)
+	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{})
 
 	if err != nil {
 		log.Printf("Error while establishing Test DB Connection: %v", err)

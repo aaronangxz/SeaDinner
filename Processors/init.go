@@ -8,8 +8,9 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 var (
@@ -25,7 +26,12 @@ func LoadEnv() {
 	}
 }
 
-func Init() resty.Client {
+func InitClient() resty.Client {
+	Client = *resty.New()
+	return Client
+}
+
+func Init() {
 	LoadEnv()
 	LoadConfig()
 	//For testing only, update in config.toml
@@ -35,15 +41,14 @@ func Init() resty.Client {
 		ConnectMySQL()
 	}
 	ConnectRedis()
-	Client = *resty.New()
-	return Client
 }
 
 func ConnectMySQL() {
 	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_URL"), os.Getenv("DB_NAME"))
 
 	log.Printf("Connecting to %v", URL)
-	db, err := gorm.Open("mysql", URL)
+	// sqlDB, err := sql.Open("mysql", URL)
+	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{})
 
 	if err != nil {
 		log.Printf("Error while establishing DB Connection: %v", err)
@@ -58,7 +63,8 @@ func ConnectTestMySQL() {
 	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_URL"), os.Getenv("TEST_DB_NAME"))
 
 	log.Printf("Connecting to %v", URL)
-	db, err := gorm.Open("mysql", URL)
+	// sqlDB, err := sql.Open("mysql", URL)
+	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{})
 
 	if err != nil {
 		log.Printf("Error while establishing Test DB Connection: %v", err)
