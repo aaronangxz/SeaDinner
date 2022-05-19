@@ -19,6 +19,7 @@ var (
 func main() {
 	Processors.Init()
 	Processors.LoadEnv()
+	Processors.InitClient()
 	if Processors.Config.Adhoc {
 		Processors.ConnectTestMySQL()
 	} else {
