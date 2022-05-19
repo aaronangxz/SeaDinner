@@ -96,6 +96,7 @@ func main() {
 					continue
 				}
 				//Capture chope
+				msg.ParseMode = "MARKDOWN"
 				msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 				if _, err := bot.Send(msg); err != nil {
 					log.Println(err)

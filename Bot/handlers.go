@@ -281,7 +281,7 @@ func MakeMenuMap() map[string]string {
 		menuMap[fmt.Sprint(m.Id)] = m.Name
 	}
 	// Store -1 hash to menuMap
-	menuMap["-1"] = "**NOTHING**" // to be renamed
+	menuMap["-1"] = "*NOTHING*" // to be renamed
 
 	return menuMap
 }
