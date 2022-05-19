@@ -109,7 +109,7 @@ func CheckChope(id int64) (string, bool) {
 		} else if existingRecord.GetUserChoice() == "-1" {
 			return "Not placing dinner order for you today 🙅‍♂️ Changed your mind? You can choose from /menu", false
 		}
-		menu := MakeMenuMap()
+		menu := MakeMenuNameMap()
 		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
 	}
 }
@@ -134,7 +134,7 @@ func GetChope(id int64, s string) (string, bool) {
 		log.Printf("Selection contains illegal character | selection: %v", s)
 		return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
 	}
-	menu := MakeMenuMap()
+	menu := MakeMenuNameMap()
 
 	_, ok := menu[s]
 	if !ok {
@@ -181,12 +181,49 @@ func GetLatestResultByUserId(id int64) string {
 		return "I have yet to order anything today 😕"
 	}
 
-	menu := MakeMenuMap()
+	menu := MakeMenuNameMap()
 
 	if res.GetStatus() == Processors.ORDER_STATUS_OK {
 		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", menu[res.GetFoodID()], Processors.ConvertTimeStampTime(res.GetOrderTime()))
 	}
 	return fmt.Sprintf("Failed to order %v today. 😔", menu[res.GetFoodID()])
+}
+
+func ListWeeklyResultByUserId(id int64) string {
+	var (
+		res []Processors.OrderRecord
+	)
+
+	start, end := Processors.WeekStartEndDate(time.Now().Unix())
+
+	if id <= 0 {
+		log.Println("Id must be > 1.")
+		return ""
+	}
+
+	if err := Processors.DB.Raw("SELECT * FROM order_log_tab WHERE user_id = ? AND order_time BETWEEN ? AND ?", id, start, end).Scan(&res).Error; err != nil {
+		log.Printf("id : %v | Failed to retrieve record.", id)
+		return "You have not ordered anything this week. 😕"
+	}
+
+	if res == nil {
+		return "You have not ordered anything this week. 😕"
+	}
+	return GenerateWeeklyResultTable(res)
+}
+
+func GenerateWeeklyResultTable(record []Processors.OrderRecord) string {
+	start, end := Processors.WeekStartEndDate(time.Now().Unix())
+	m := MakeMenuCodeMap()
+	status := map[int64]string{Processors.ORDER_STATUS_OK: "✅", Processors.ORDER_STATUS_FAIL: "❌"}
+	header := fmt.Sprintf("Your orders from %v to %v\n\n", Processors.ConvertTimeStampMonthDay(start), Processors.ConvertTimeStampMonthDay(end))
+	table := "<pre>\n     Day    Code  Status\n"
+	table += "-------------------------\n"
+	for _, r := range record {
+		table += fmt.Sprintf("  %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), m[r.GetFoodID()], status[r.GetStatus()])
+	}
+	table += "</pre>"
+	return header + table
 }
 
 func BatchGetLatestResult() []Processors.OrderRecord {
@@ -218,7 +255,7 @@ func SendNotifications() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	res := BatchGetLatestResult()
-	menu := MakeMenuMap()
+	menu := MakeMenuNameMap()
 	log.Println("SendNotifications | size:", len(res))
 
 	for _, r := range res {
@@ -257,7 +294,7 @@ func SendReminder() {
 	res := BatchGetUsersChoice()
 	log.Println("SendReminder | size:", len(res))
 
-	menu := MakeMenuMap()
+	menu := MakeMenuNameMap()
 
 	for _, r := range res {
 		var msg string
@@ -273,7 +310,7 @@ func SendReminder() {
 	}
 }
 
-func MakeMenuMap() map[string]string {
+func MakeMenuNameMap() map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
 	)
@@ -285,6 +322,18 @@ func MakeMenuMap() map[string]string {
 	// Store -1 hash to menuMap
 	menuMap["-1"] = "*NOTHING*" // to be renamed
 
+	return menuMap
+}
+
+func MakeMenuCodeMap() map[string]string {
+	var (
+		key = os.Getenv("TOKEN")
+	)
+	menuMap := make(map[string]string)
+	menu := Processors.GetMenu(Processors.Client, Processors.GetDayId(), key)
+	for _, m := range menu.DinnerArr {
+		menuMap[fmt.Sprint(m.Id)] = m.Code
+	}
 	return menuMap
 }
 
