@@ -137,7 +137,7 @@ func main() {
 			msg.Text = Bot.ListWeeklyResultByUserId(Id)
 			msg.ParseMode = "HTML"
 		case "chope":
-			msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅‍♀️"
+			msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅"
 			//msg.ReplyMarkup = numericKeyboard
 			startListenChope = true
 		case "choice":
