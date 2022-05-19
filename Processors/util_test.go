@@ -164,6 +164,16 @@ func TestIsNotNumber(t *testing.T) {
 			args: args{""},
 			want: true,
 		},
+		{
+			name: "Minus One (-1)",
+			args: args{"-1"},
+			want: false,
+		},
+		{
+			name: "Minus 1.0 (-1.0)",
+			args: args{"-1.0"},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

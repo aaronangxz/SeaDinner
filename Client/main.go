@@ -19,6 +19,7 @@ var (
 func main() {
 	Processors.Init()
 	Processors.LoadEnv()
+	Processors.InitClient()
 	if Processors.Config.Adhoc {
 		Processors.ConnectTestMySQL()
 	} else {
@@ -84,6 +85,7 @@ func main() {
 					continue
 				}
 				//Capture chope
+				msg.ParseMode = "MARKDOWN"
 				msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 				if _, err := bot.Send(msg); err != nil {
 					log.Println(err)
@@ -136,7 +138,8 @@ func main() {
 			msg.Text = Bot.ListWeeklyResultByUserId(Id)
 			msg.ParseMode = "HTML"
 		case "chope":
-			msg.Text = "What do you want to order? Tell me the Food ID 😋"
+			msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅"
+			//msg.ReplyMarkup = numericKeyboard
 			startListenChope = true
 		case "choice":
 			msg.Text, _ = Bot.CheckChope(Id)
