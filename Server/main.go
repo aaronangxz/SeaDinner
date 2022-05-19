@@ -9,51 +9,40 @@ import (
 )
 
 var (
-	donePrep    = false
-	r           []Processors.UserChoiceWithKeyAndStatus
-	records     []Processors.OrderRecord
-	start       int64
-	elapsed     int64
-	totalOrders int
+	donePrep = false
+	r        []Processors.UserChoiceWithKeyAndStatus
+	start    int64
+	elapsed  int64
 )
 
 func main() {
 	Processors.Init()
+	Processors.InitClient()
 	for {
-		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix()-6900 {
+		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix()-7200 {
 			Bot.SendReminder()
 		}
 
 		if (Processors.IsWeekDay(time.Now()) && time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
 			time.Now().Unix() <= Processors.GetLunchTime().Unix()-15) &&
 			!donePrep {
-			//get key and choice
 			r, donePrep = Processors.PrepOrder()
-			totalOrders = len(r)
 		}
 
 		if Processors.IsWeekDay(time.Now()) && time.Now().Unix() == Processors.GetLunchTime().Unix() {
 			for {
-				if time.Now().Unix() <= Processors.GetLunchTime().Unix()+int64(Processors.Config.Runtime.RetryOffsetSeconds) {
+				if Processors.IsPollStart() {
 					start = time.Now().UnixMilli()
-					records = Processors.BatchOrderDinner(&r)
-					if len(r) == 0 {
-						elapsed = time.Now().UnixMilli() - start
-						log.Println("Successfully processed all orders.")
-						break
-					}
-					time.Sleep(time.Duration(Processors.Config.Runtime.BatchRetryCooldownSeconds) * time.Second)
-					continue
-				}
-				if elapsed == 0 {
+					Processors.BatchOrderDinnerMultiThreaded(r)
 					elapsed = time.Now().UnixMilli() - start
+					break
 				}
-				Processors.UpdateOrderLog(records)
-				Processors.OutputResultsCount(totalOrders, len(records))
-				break
+				log.Println("Poll has not started, retrying.")
 			}
 			Bot.SendNotifications()
-			log.Printf("Finished run | %v at %v in %vms", Processors.ConvertTimeStamp(time.Now().Unix()), Processors.ConvertTimeStampTime(time.Now().Unix()), elapsed)
+			log.Printf("Finished run | %v at %v in %vms",
+				Processors.ConvertTimeStamp(time.Now().Unix()),
+				Processors.ConvertTimeStampTime(time.Now().Unix()), elapsed)
 		}
 	}
 }
