@@ -72,7 +72,9 @@ func UpdateKey(id int64, s string) (string, bool) {
 	}
 
 	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
-		//Insert new row
+		log.Printf("UpdateKey | %v", err.Error())
+		return err.Error(), false
+	} else {
 		if existingRecord.UserID == nil {
 			if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Create(&r).Error; err != nil {
 				log.Println("Failed to insert DB")
@@ -80,11 +82,9 @@ func UpdateKey(id int64, s string) (string, bool) {
 			}
 			return "Okay got it. I remember your key now! 😙", true
 		}
-		return err.Error(), false
-	} else {
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_key_tab SET user_key = ?, mtime = ? WHERE user_id = ?", hashedKey, time.Now().Unix(), id).Error; err != nil {
-			log.Println("Failed to update DB")
+			log.Printf("UpdateKey | %v", err.Error())
 			return err.Error(), false
 		}
 		return "Okay got it. I will take note of your new key 😙", true
@@ -104,6 +104,9 @@ func CheckChope(id int64) (string, bool) {
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		return "I have yet to receive your order 🥲 You can choose from /menu", false
 	} else {
+		if existingRecord.UserChoice == nil {
+			return "I have yet to receive your order 🥲 You can choose from /menu", false
+		}
 		menu := MakeMenuMap()
 		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
 	}
@@ -138,13 +141,16 @@ func GetChope(id int64, s string) (string, bool) {
 	}
 
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
-		//Insert new row
-		if err := Processors.DB.Table(Processors.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
-			log.Println("Failed to insert DB")
-			return err.Error(), false
-		}
-		return fmt.Sprintf("Okay got it. I will order %v for you 😙", menu[s]), true
+		log.Printf("GetChope | %v", err.Error())
+		return err.Error(), false
 	} else {
+		if existingRecord.UserID == nil {
+			if err := Processors.DB.Table(Processors.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
+				log.Println("Failed to insert DB")
+				return err.Error(), false
+			}
+			return fmt.Sprintf("Okay got it. I will order %v for you 😙", menu[s]), true
+		}
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
@@ -168,11 +174,12 @@ func GetLatestResultByUserId(id int64) string {
 		log.Printf("id : %v | Failed to retrieve record.", id)
 		return "I have yet to order anything today 😕"
 	}
-	menu := MakeMenuMap()
 
 	if res.Status == nil {
 		return "I have yet to order anything today 😕"
 	}
+
+	menu := MakeMenuMap()
 
 	if res.GetStatus() == Processors.ORDER_STATUS_OK {
 		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", menu[res.GetFoodID()], Processors.ConvertTimeStampTime(res.GetOrderTime()))
