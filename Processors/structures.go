@@ -124,6 +124,13 @@ func (m *Details) GetPollStart() string {
 	return ""
 }
 
+func (m *Details) GetActive() bool {
+	if m != nil && m.Active != nil {
+		return *m.Active
+	}
+	return false
+}
+
 type UserChoice struct {
 	UserID     int64 `json:"user_id"`
 	UserChoice int64 `json:"user_choice"`
