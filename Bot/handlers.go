@@ -106,6 +106,8 @@ func CheckChope(id int64) (string, bool) {
 	} else {
 		if existingRecord.UserChoice == nil {
 			return "I have yet to receive your order 🥲 You can choose from /menu", false
+		} else if existingRecord.GetUserChoice() == "-1" {
+			return "Not placing dinner order for you today 🙅‍♂️ Changed your mind? You can choose from /menu", false
 		}
 		menu := MakeMenuMap()
 		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
