@@ -180,7 +180,7 @@ func (u *UserChoiceWithKeyAndStatus) GetIsSuccess() bool {
 }
 
 type OrderRecord struct {
-	ID        *int64
+	ID        *int64  `json:"id"`
 	UserID    *int64  `json:"user_id"`
 	FoodID    *string `json:"food_id"`
 	OrderTime *int64  `json:"order_time"`
