@@ -10,10 +10,9 @@ import (
 )
 
 var (
-	defaultUserID = TestHelper.RandomInt(99999)
-	defaultKey    = TestHelper.RandomString(10)
-	defaultCtime  = time.Now().Unix()
-	defaultMtime  = time.Now().Unix()
+	defaultKey   = TestHelper.RandomString(10)
+	defaultCtime = time.Now().Unix()
+	defaultMtime = time.Now().Unix()
 )
 
 type UserKey struct {
@@ -34,7 +33,7 @@ func New() *UserKey {
 
 func (uk *UserKey) FillDefaults() *UserKey {
 	if uk.UserKey.GetUserID() == 0 {
-		uk.SetUserId(defaultUserID)
+		uk.SetUserId(TestHelper.RandomInt(99999))
 	}
 
 	if uk.UserKey.GetUserKey() == "" {
