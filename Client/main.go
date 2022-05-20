@@ -13,7 +13,6 @@ import (
 var (
 	startListenKey   = false
 	startListenChope = false
-	Id               int64
 )
 
 func main() {
@@ -41,20 +40,20 @@ func main() {
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
-			msg := tgbotapi.NewMessage(Id, "")
-			msg.Text, _ = Bot.CallbackQueryHandler(Id, update.CallbackQuery)
+			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+			msg.Text, _ = Bot.CallbackQueryHandler(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
 			if _, err := bot.Send(msg); err != nil {
 				log.Println(err)
 			}
 			continue
 		}
 
-		if update.Message.Chat.ID != 0 {
-			Id = update.Message.Chat.ID
-		}
+		// if update.Message.Chat.ID != 0 {
+		// 	Id = update.Message.Chat.ID
+		// }
 
 		if time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 && time.Now().Unix() <= Processors.GetLunchTime().Unix()+210 {
-			if _, err := bot.Send(tgbotapi.NewMessage(Id, "Omw to order, wait for my good news! 🏃")); err != nil {
+			if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Omw to order, wait for my good news! 🏃")); err != nil {
 				log.Println(err)
 			}
 			continue
@@ -67,16 +66,16 @@ func main() {
 		if !update.Message.IsCommand() { // ignore any non-command Messages
 			if startListenKey {
 				//Capture key
-				msg, _ := Bot.UpdateKey(Id, update.Message.Text)
-				if _, err := bot.Send(tgbotapi.NewMessage(Id, msg)); err != nil {
+				msg, _ := Bot.UpdateKey(update.Message.Chat.ID, update.Message.Text)
+				if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, msg)); err != nil {
 					log.Println(err)
 				}
 				startListenKey = false
 				continue
 			} else if startListenChope {
-				msg := tgbotapi.NewMessage(Id, "")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 				ok := false
-				msg.Text, ok = Bot.GetChope(Id, update.Message.Text)
+				msg.Text, ok = Bot.GetChope(update.Message.Chat.ID, update.Message.Text)
 
 				if !ok {
 					if _, err := bot.Send(msg); err != nil {
@@ -99,23 +98,23 @@ func main() {
 
 		// Create a new MessageConfig. We don't have text yet,
 		// so we leave it empty.
-		msg := tgbotapi.NewMessage(Id, "")
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 		// Extract the command from the Message.
 		switch update.Message.Command() {
 		case "start":
-			s, ok := Bot.CheckKey(Id)
+			s, ok := Bot.CheckKey(update.Message.Chat.ID)
 			if !ok {
 				msg.Text = s
 			} else {
 				msg.Text = "Hello! " + update.Message.Chat.UserName
 			}
 		case "menu":
-			s, ok := Bot.CheckKey(Id)
+			s, ok := Bot.CheckKey(update.Message.Chat.ID)
 			if !ok {
 				msg.Text = s
 			} else {
 				//msg.Text = Processors.OutputMenu(Bot.GetKey(Id))
-				txt, mp := Processors.OutputMenuWithButton(Bot.GetKey(Id), Id)
+				txt, mp := Processors.OutputMenuWithButton(Bot.GetKey(update.Message.Chat.ID), update.Message.Chat.ID)
 				for i, r := range txt {
 					msg.Text = r
 					if len(mp) > 0 {
@@ -130,19 +129,19 @@ func main() {
 		case "help":
 			msg.Text = "Check the commands."
 		case "key":
-			msg.Text, _ = Bot.CheckKey(Id)
+			msg.Text, _ = Bot.CheckKey(update.Message.Chat.ID)
 		case "newkey":
 			msg.Text = "What's your key? \nGo to https://dinner.sea.com/accounts/token, copy the Key under Generate Auth Token and paste it here:"
 			startListenKey = true
 		case "status":
-			msg.Text = Bot.ListWeeklyResultByUserId(Id)
+			msg.Text = Bot.ListWeeklyResultByUserId(update.Message.Chat.ID)
 			msg.ParseMode = "HTML"
 		case "chope":
 			msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅"
 			//msg.ReplyMarkup = numericKeyboard
 			startListenChope = true
 		case "choice":
-			msg.Text, _ = Bot.CheckChope(Id)
+			msg.Text, _ = Bot.CheckChope(update.Message.Chat.ID)
 		case "ret":
 			return
 		default:
