@@ -28,6 +28,18 @@ func ConvertTimeStamp(timestamp int64) string {
 	return fmt.Sprint(t.In(tz).Format("2006-01-02"))
 }
 
+func ConvertTimeStampMonthDay(timestamp int64) string {
+	t := time.Unix(timestamp, 0).Local().UTC()
+	tz, _ := time.LoadLocation(TimeZone)
+	return fmt.Sprint(t.In(tz).Format("2/1"))
+}
+
+func ConvertTimeStampDayOfWeek(timestamp int64) string {
+	t := time.Unix(timestamp, 0).Local().UTC()
+	tz, _ := time.LoadLocation(TimeZone)
+	return fmt.Sprint(t.In(tz).Format("Mon 2/1"))
+}
+
 func ConvertTimeStampTime(timestamp int64) string {
 	t := time.Unix(timestamp, 0).Local().UTC()
 	tz, _ := time.LoadLocation(TimeZone)
@@ -56,4 +68,17 @@ func IsPollStart() bool {
 	}
 
 	return status.Menu.GetActive()
+}
+
+func WeekStartEndDate(timestamp int64) (int64, int64) {
+	tz, _ := time.LoadLocation(TimeZone)
+	date := time.Unix(timestamp, 0).Local().UTC().In(tz)
+
+	startOffset := (int(time.Monday) - int(date.Weekday()) - 7) % 7
+	startResult := date.Add(time.Duration(startOffset*24) * time.Hour)
+	endResult := startResult.Add(time.Duration(4*24) * time.Hour)
+
+	startYear, startMonth, startDay := startResult.Date()
+	endYear, endMonth, endDay := endResult.Date()
+	return time.Date(startYear, startMonth, startDay, 0, 0, 0, 0, tz).Unix(), time.Date(endYear, endMonth, endDay, 23, 59, 59, 59, tz).Unix()
 }

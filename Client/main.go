@@ -19,6 +19,7 @@ var (
 func main() {
 	Processors.Init()
 	Processors.LoadEnv()
+	Processors.InitClient()
 	if Processors.Config.Adhoc {
 		Processors.ConnectTestMySQL()
 	} else {
@@ -37,18 +38,6 @@ func main() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
-
-	// var b = tgbotapi.NewInlineKeyboardMarkup(
-	// 	[]tgbotapi.InlineKeyboardButton{
-	// 		tgbotapi.NewInlineKeyboardButtonData("Select me", "sss"),
-	// 		tgbotapi.NewInlineKeyboardButtonData("Select me", "sss"),
-	// 	},
-	// )
-
-	// var a []tgbotapi.InlineKeyboardButton
-	// a = append(a, tgbotapi.NewInlineKeyboardButtonData("Select This", "sss"))
-	// a = append(a, tgbotapi.NewInlineKeyboardButtonData("Select That", "sss"))
-	// mk := tgbotapi.NewInlineKeyboardMarkup(a)
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
@@ -96,6 +85,7 @@ func main() {
 					continue
 				}
 				//Capture chope
+				msg.ParseMode = "MARKDOWN"
 				msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 				if _, err := bot.Send(msg); err != nil {
 					log.Println(err)
@@ -145,9 +135,10 @@ func main() {
 			msg.Text = "What's your key? \nGo to https://dinner.sea.com/accounts/token, copy the Key under Generate Auth Token and paste it here:"
 			startListenKey = true
 		case "status":
-			msg.Text = Bot.GetLatestResultByUserId(Id)
+			msg.Text = Bot.ListWeeklyResultByUserId(Id)
+			msg.ParseMode = "HTML"
 		case "chope":
-			msg.Text = "What do you want to order? Tell me the Food ID 😋"
+			msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅"
 			//msg.ReplyMarkup = numericKeyboard
 			startListenChope = true
 		case "choice":

@@ -14,6 +14,10 @@ func PrepOrder() ([]UserChoiceWithKeyAndStatus, bool) {
 	m := MakeMenuMap()
 	inQuery := "("
 	for e := range m {
+		// Skip menu id: -1
+		if e == "-1" {
+			continue
+		}
 		inQuery += e + ", "
 	}
 	inQuery += ")"
