@@ -85,6 +85,30 @@ func TestConvertTimeStampTime(t *testing.T) {
 	}
 }
 
+func AdhocTestIsWeekDay(t *testing.T) {
+	type args struct {
+		t time.Time
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "HappyCase_weekday",
+			args: args{time.Now()},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsWeekDay(tt.args.t); got != tt.want {
+				t.Errorf("IsWeekDay() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestWeekStartEndDate(t *testing.T) {
 	type args struct {
 		timestamp int64
