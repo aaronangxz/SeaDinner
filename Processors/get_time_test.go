@@ -102,7 +102,7 @@ func AdhocTestIsWeekDay(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsWeekDay(tt.args.t); got != tt.want {
+			if got := IsWeekDay(); got != tt.want {
 				t.Errorf("IsWeekDay() = %v, want %v", got, tt.want)
 			}
 		})
