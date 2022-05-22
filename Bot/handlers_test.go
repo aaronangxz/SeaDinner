@@ -74,6 +74,7 @@ func TestCheckKey(t *testing.T) {
 
 func TestUpdateKey(t *testing.T) {
 	u := user_key.New().Build()
+	randU := TestHelper.RandomInt(999)
 	type args struct {
 		id int64
 		s  string
@@ -95,7 +96,7 @@ func TestUpdateKey(t *testing.T) {
 		},
 		{
 			name: "UserKeyNotExist",
-			args: args{TestHelper.RandomInt(999), TestHelper.RandomString(40)},
+			args: args{randU, TestHelper.RandomString(40)},
 			want: true,
 		},
 		{
@@ -113,4 +114,5 @@ func TestUpdateKey(t *testing.T) {
 		})
 	}
 	u.TearDown()
+	user_key.DeleteUserKey(randU)
 }
