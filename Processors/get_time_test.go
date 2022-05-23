@@ -85,7 +85,7 @@ func TestConvertTimeStampTime(t *testing.T) {
 	}
 }
 
-func TestIsWeekDay(t *testing.T) {
+func AdhocTestIsWeekDay(t *testing.T) {
 	type args struct {
 		t time.Time
 	}
