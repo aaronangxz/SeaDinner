@@ -107,9 +107,15 @@ func CheckChope(id int64) (string, bool) {
 		if existingRecord.UserChoice == nil {
 			return "I have yet to receive your order 🥲 You can choose from /menu", false
 		} else if existingRecord.GetUserChoice() == "-1" {
-			return "Not placing dinner order for you today 🙅‍♂️ Changed your mind? You can choose from /menu", false
+			return "Not placing dinner order for you today🙅 Changed your mind? You can choose from /menu", false
 		}
 		menu := MakeMenuNameMap()
+
+		_, ok := menu[existingRecord.GetUserChoice()]
+
+		if !ok {
+			return fmt.Sprintf("Your choice %v is not available today, so I will not order anything🥲 Choose a new dish from /menu", existingRecord.GetUserChoice()), true
+		}
 		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
 	}
 }
@@ -151,12 +157,18 @@ func GetChope(id int64, s string) (string, bool) {
 				log.Println("Failed to insert DB")
 				return err.Error(), false
 			}
+			if s == "-1" {
+				return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
+			}
 			return fmt.Sprintf("Okay got it. I will order %v for you 😙", menu[s]), true
 		}
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
 			return err.Error(), false
+		}
+		if s == "-1" {
+			return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
 		}
 		return fmt.Sprintf("Okay got it. I will order %v for you 😙", menu[s]), true
 	}
@@ -270,6 +282,7 @@ func SendNotifications() {
 		}
 	}
 }
+
 func BatchGetUsersChoice() []UserChoice {
 	var (
 		res []UserChoice
@@ -297,6 +310,10 @@ func SendReminder() {
 	menu := MakeMenuNameMap()
 
 	for _, r := range res {
+		if r.GetUserChoice() == "-1" {
+			log.Printf("SendReminder | skip -1 records | %v", r.GetUserID())
+			continue
+		}
 		var msg string
 		_, ok := menu[r.GetUserChoice()]
 		if !ok {
