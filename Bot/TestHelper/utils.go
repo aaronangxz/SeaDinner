@@ -21,8 +21,8 @@ func RandomString(length int) string {
 }
 
 func RandomInt(max int) int64 {
-	rand.Seed(time.Now().UnixNano())
-	return int64(rand.Intn(max))
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return int64(r.Intn(max))
 }
 func LoadEnv() {
 	err := godotenv.Load(".env")

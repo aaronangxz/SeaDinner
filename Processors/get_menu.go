@@ -14,7 +14,7 @@ import (
 func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 	var (
 		cacheKey   = fmt.Sprint(MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
-		expiry     = 86400 * time.Second
+		expiry     = 3600 * time.Second
 		currentarr DinnerMenuArr
 	)
 
@@ -87,8 +87,10 @@ func OutputMenu(key string) string {
 
 func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyboardMarkup) {
 	var (
-		texts []string
-		out   []tgbotapi.InlineKeyboardMarkup
+		texts           []string
+		out             []tgbotapi.InlineKeyboardMarkup
+		buttonText      string = "Snatch %v today"
+		skipFillButtons bool
 	)
 
 	m := GetMenu(Client, GetDayId(), key)
@@ -98,11 +100,23 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		return texts, out
 	}
 
+	tz, _ := time.LoadLocation(TimeZone)
+	if time.Now().In(tz).Unix() > GetLunchTime().Unix() {
+		if IsNotEOW(time.Now().In(tz)) {
+			buttonText = "Snatch %v tomorrow"
+		} else {
+			skipFillButtons = true
+		}
+	}
+
 	for _, d := range m.DinnerArr {
-		texts = append(texts, fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable: %v/%v", d.ImageURL, d.Code, d.Id, d.Name, d.Remaining, d.Quota))
-		var buttons []tgbotapi.InlineKeyboardButton
-		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("Snatch %v", d.Code), fmt.Sprint(d.Id)))
-		out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
+		texts = append(texts, fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable: %v", d.ImageURL, d.Code, d.Id, d.Name, d.Quota))
+
+		if !skipFillButtons {
+			var buttons []tgbotapi.InlineKeyboardButton
+			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf(buttonText, d.Code), fmt.Sprint(d.Id)))
+			out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
+		}
 	}
 	return texts, out
 }

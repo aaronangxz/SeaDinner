@@ -85,7 +85,9 @@ func TestConvertTimeStampTime(t *testing.T) {
 	}
 }
 
-func AdhocTestIsWeekDay(t *testing.T) {
+func TestIsWeekDay(t *testing.T) {
+	weekday := time.Date(2022, 5, 24, 0, 0, 0, 0, time.Local)
+	weekend := time.Date(2022, 5, 21, 0, 0, 0, 0, time.Local)
 	type args struct {
 		t time.Time
 	}
@@ -96,8 +98,13 @@ func AdhocTestIsWeekDay(t *testing.T) {
 	}{
 		{
 			name: "HappyCase_weekday",
-			args: args{time.Now()},
+			args: args{weekday},
 			want: true,
+		},
+		{
+			name: "HappyCase_weekend",
+			args: args{weekend},
+			want: false,
 		},
 	}
 	for _, tt := range tests {
@@ -196,6 +203,37 @@ func TestConvertTimeStampDayOfWeek(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ConvertTimeStampDayOfWeek(tt.args.timestamp); got != tt.want {
 				t.Errorf("ConvertTimeStampDayOfWeek() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsNotEOW(t *testing.T) {
+	notEow := time.Date(2022, 5, 24, 0, 0, 0, 0, time.Local)
+	isEow := time.Date(2022, 5, 20, 0, 0, 0, 0, time.Local)
+	type args struct {
+		t time.Time
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "HappyCase",
+			args: args{notEow},
+			want: true,
+		},
+		{
+			name: "HappyCase",
+			args: args{isEow},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsNotEOW(tt.args.t); got != tt.want {
+				t.Errorf("IsNotEOW() = %v, want %v", got, tt.want)
 			}
 		})
 	}
