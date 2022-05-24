@@ -21,8 +21,8 @@ func RandomString(length int) string {
 }
 
 func RandomInt(max int) int64 {
-	rand.Seed(time.Now().UnixNano())
-	return int64(rand.Intn(max))
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return int64(r.Intn(max))
 }
 func LoadEnv() {
 	err := godotenv.Load(".env")
@@ -40,7 +40,6 @@ func ConnectTestMySQL() {
 	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_URL"), os.Getenv("TEST_DB_NAME"))
 
 	log.Printf("Connecting to %v", URL)
-	// sqlDB, err := sql.Open("mysql", URL)
 	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{})
 
 	if err != nil {

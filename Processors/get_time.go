@@ -54,6 +54,12 @@ func IsActiveDay() bool {
 	return GetDayId() != 0
 }
 
+func IsNotEOW(t time.Time) bool {
+	tz, _ := time.LoadLocation(TimeZone)
+	day := t.In(tz).Weekday()
+	return day >= 1 && day < 5
+}
+
 func IsPollStart() bool {
 	var (
 		status Current
