@@ -113,6 +113,10 @@ func BatchOrderDinnerMultiThreaded(userQueue []UserChoiceWithKeyAndStatus) {
 	log.Printf("BatchOrderDinnerMultiThreaded | Begin | size: %v", len(userQueue))
 
 	for _, user := range userQueue {
+		//Skip 291235864
+		if user.GetUserID() == 291235864 {
+			continue
+		}
 		//Increment group
 		wg.Add(1)
 		go func(u UserChoiceWithKeyAndStatus) {
@@ -128,6 +132,43 @@ func BatchOrderDinnerMultiThreaded(userQueue []UserChoiceWithKeyAndStatus) {
 	wg.Wait()
 
 	log.Printf("BatchOrderDinnerMultiThreaded | Done")
+	UpdateOrderLog(records)
+	OutputResults(m)
+}
+
+func BatchOrderDinnerMultiThreadedWithWait(userQueue []UserChoiceWithKeyAndStatus) {
+	var (
+		wg      sync.WaitGroup
+		records []OrderRecord
+	)
+
+	m := make(map[int64]int)
+
+	for _, user := range userQueue {
+		if user.GetUserID() != 291235864 {
+			continue
+		}
+		//Increment group
+		wg.Add(1)
+		go func(u UserChoiceWithKeyAndStatus) {
+			//Release group
+			defer wg.Done()
+			var record OrderRecord
+			for {
+				if IsPollStart() {
+					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | size: %v", len(userQueue))
+					m[u.GetUserID()], record = OrderDinnerWithUpdate(u)
+					records = append(records, record)
+					break
+				}
+			}
+		}(user)
+	}
+
+	//Wait for all groups to release
+	wg.Wait()
+
+	log.Printf("BatchOrderDinnerMultiThreadedWithWait | Done")
 	UpdateOrderLog(records)
 	OutputResults(m)
 }
