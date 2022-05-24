@@ -48,10 +48,6 @@ func main() {
 			continue
 		}
 
-		// if update.Message.Chat.ID != 0 {
-		// 	Id = update.Message.Chat.ID
-		// }
-
 		if time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 && time.Now().Unix() <= Processors.GetLunchTime().Unix()+210 {
 			if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Omw to order, wait for my good news! 🏃")); err != nil {
 				log.Println(err)
@@ -76,7 +72,6 @@ func main() {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 				ok := false
 				msg.Text, ok = Bot.GetChope(update.Message.Chat.ID, update.Message.Text)
-
 				if !ok {
 					if _, err := bot.Send(msg); err != nil {
 						log.Println(err)
@@ -85,7 +80,6 @@ func main() {
 				}
 				//Capture chope
 				msg.ParseMode = "MARKDOWN"
-				msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 				if _, err := bot.Send(msg); err != nil {
 					log.Println(err)
 				}
@@ -113,7 +107,6 @@ func main() {
 			if !ok {
 				msg.Text = s
 			} else {
-				//msg.Text = Processors.OutputMenu(Bot.GetKey(Id))
 				txt, mp := Processors.OutputMenuWithButton(Bot.GetKey(update.Message.Chat.ID), update.Message.Chat.ID)
 				for i, r := range txt {
 					msg.Text = r
@@ -134,14 +127,28 @@ func main() {
 			msg.Text = "What's your key? \nGo to https://dinner.sea.com/accounts/token, copy the Key under Generate Auth Token and paste it here:"
 			startListenKey = true
 		case "status":
-			msg.Text = Bot.ListWeeklyResultByUserId(update.Message.Chat.ID)
-			msg.ParseMode = "HTML"
+			s, ok := Bot.CheckKey(update.Message.Chat.ID)
+			if !ok {
+				msg.Text = s
+			} else {
+				msg.Text = Bot.ListWeeklyResultByUserId(update.Message.Chat.ID)
+				msg.ParseMode = "HTML"
+			}
 		case "chope":
-			msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅"
-			//msg.ReplyMarkup = numericKeyboard
-			startListenChope = true
+			s, ok := Bot.CheckKey(update.Message.Chat.ID)
+			if !ok {
+				msg.Text = s
+			} else {
+				msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅"
+				startListenChope = true
+			}
 		case "choice":
-			msg.Text, _ = Bot.CheckChope(update.Message.Chat.ID)
+			s, ok := Bot.CheckKey(update.Message.Chat.ID)
+			if !ok {
+				msg.Text = s
+			} else {
+				msg.Text, _ = Bot.CheckChope(update.Message.Chat.ID)
+			}
 		case "ret":
 			return
 		default:
