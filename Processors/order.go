@@ -46,10 +46,11 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKeyAndStatus) 
 
 func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
 	var (
-		status  int
-		resp    OrderResponse
-		apiResp *resty.Response
-		err     error
+		status    int
+		resp      OrderResponse
+		apiResp   *resty.Response
+		err       error
+		timeTaken int64 = 0
 	)
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
@@ -67,6 +68,7 @@ func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
 			log.Println(err)
 			continue
 		}
+		timeTaken += apiResp.Request.TraceInfo().TotalTime.Milliseconds()
 
 		if resp.Status != nil && resp.GetStatus() == "error" {
 			log.Printf("id: %v | %v : %v : %v : %v", u.GetUserID(), resp.GetError(), resp.GetStatus(), resp.GetStatusCode(), resp.GetSelected())
@@ -85,7 +87,7 @@ func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
 		OrderTime: Int64(time.Now().Unix()),
 	}
 
-	if resp.GetSelected() == 0 {
+	if resp.GetSelected() != 0 {
 		status = ORDER_STATUS_FAIL
 		if resp.Error == nil {
 			record.ErrorMsg = String("Unknown Error")
@@ -97,8 +99,7 @@ func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
 		status = ORDER_STATUS_OK
 		record.Status = Int64(int64(status))
 
-		trace := apiResp.Request.TraceInfo()
-		SendInstantNotification(u, trace.TotalTime.Milliseconds())
+		SendInstantNotification(u, timeTaken)
 	}
 	return status, record
 }
@@ -155,7 +156,7 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []UserChoiceWithKeyAndStatu
 			defer wg.Done()
 			var record OrderRecord
 			for {
-				if IsPollStart() {
+				if IsOrderTime() && IsPollStart() {
 					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | size: %v", len(userQueue))
 					m[u.GetUserID()], record = OrderDinnerWithUpdate(u)
 					records = append(records, record)

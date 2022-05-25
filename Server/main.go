@@ -26,7 +26,7 @@ func main() {
 		if Processors.IsPrepOrderTime() && !donePrep {
 			r, donePrep = Processors.PrepOrder()
 			//Test
-			Processors.BatchOrderDinnerMultiThreadedWithWait(r)
+			go Processors.BatchOrderDinnerMultiThreadedWithWait(r)
 		}
 
 		if Processors.IsOrderTime() {
