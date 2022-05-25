@@ -48,22 +48,20 @@ func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
 	var (
 		status  int
 		resp    OrderResponse
-		start   int64
-		elapsed int64
+		apiResp *resty.Response
+		err     error
 	)
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
-	start = time.Now().UnixMilli()
 
 	for i := 1; i <= Config.Runtime.RetryTimes; i++ {
 		log.Printf("id: %v | OrderDinner | Attempt %v", u.GetUserID(), i)
-		_, err := Client.R().
+		apiResp, err = Client.R().
 			SetHeader("Authorization", MakeToken(u.GetUserKey())).
 			SetFormData(fData).
 			SetResult(&resp).
+			EnableTrace().
 			Post(MakeURL(URL_ORDER, Int(GetDayId())))
-
-		elapsed = time.Now().UnixMilli() - start
 
 		if err != nil {
 			log.Println(err)
@@ -98,7 +96,9 @@ func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
 	} else {
 		status = ORDER_STATUS_OK
 		record.Status = Int64(int64(status))
-		SendInstantNotification(u, elapsed)
+
+		trace := apiResp.Request.TraceInfo()
+		SendInstantNotification(u, trace.TotalTime.Milliseconds())
 	}
 	return status, record
 }
