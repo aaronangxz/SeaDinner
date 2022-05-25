@@ -26,7 +26,6 @@ func GetDayId() (ID int) {
 			log.Printf("GetDayId | Error while reading from redis: %v", redisErr.Error())
 		}
 	} else {
-		log.Printf("GetDayId | Successful | Cached %v", cacheKey)
 		redisRespInt, _ := strconv.Atoi(redisResp)
 		return redisRespInt
 	}

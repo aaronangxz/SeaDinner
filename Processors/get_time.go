@@ -91,7 +91,7 @@ func WeekStartEndDate(timestamp int64) (int64, int64) {
 }
 
 func IsSendReminderTime() bool {
-	return ShouldOrder() && time.Now() == GetLunchTime().Add(time.Duration(-2)*time.Hour)
+	return ShouldOrder() && time.Now().Unix() == GetLunchTime().Add(time.Duration(-2)*time.Hour).Unix()
 }
 
 func IsPrepOrderTime() bool {
@@ -101,5 +101,5 @@ func IsPrepOrderTime() bool {
 }
 
 func IsOrderTime() bool {
-	return ShouldOrder() && time.Now() == GetLunchTime()
+	return ShouldOrder() && time.Now().Unix() == GetLunchTime().Unix()
 }
