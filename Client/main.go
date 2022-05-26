@@ -48,7 +48,9 @@ func main() {
 			continue
 		}
 
-		if time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 && time.Now().Unix() <= Processors.GetLunchTime().Unix()+210 {
+		//Stop responding from 12.29pm to 12.31pm or until dinner order has started (For occasional weird order timings)
+		if time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
+			(time.Now().Unix() <= Processors.GetLunchTime().Unix()+60 && !Processors.IsPollStart()) {
 			if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Omw to order, wait for my good news! 🏃")); err != nil {
 				log.Println(err)
 			}
