@@ -1,44 +1,115 @@
 package Bot
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/go-redis/redis"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func GetKey(id int64) string {
 	var (
 		existingRecord UserKey
+		cacheKey       = fmt.Sprint(Processors.USER_KEY_PREFIX, id)
+		expiry         = 604800 * time.Second
 	)
 
 	if id <= 0 {
-		log.Println("Id must be > 1.")
+		log.Println("GetKey | Id must be > 1.")
 		return ""
 	}
 
+	//Read from cache
+	val, redisErr := Processors.RedisClient.Get(cacheKey).Result()
+	if redisErr != nil {
+		if redisErr == redis.Nil {
+			log.Printf("GetKey | No result of %v in Redis, reading from DB", cacheKey)
+		} else {
+			log.Printf("GetKey | Error while reading from redis: %v", redisErr.Error())
+		}
+	} else {
+		redisResp := UserKey{}
+		err := json.Unmarshal([]byte(val), &redisResp)
+		if err != nil {
+			log.Printf("GetKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
+		} else {
+			log.Printf("GetKey | Successful | Cached %v", cacheKey)
+			return redisResp.GetUserKey()
+		}
+	}
+
+	//Read from DB
 	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return ""
 	}
+
+	//set back into cache
+	data, err := json.Marshal(existingRecord)
+	if err != nil {
+		log.Printf("GetKey | Failed to marshal JSON results: %v\n", err.Error())
+	}
+
+	if err := Processors.RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
+		log.Printf("GetKey | Error while writing to redis: %v", err.Error())
+	} else {
+		log.Printf("GetKey | Successful | Written %v to redis", cacheKey)
+	}
+
 	return existingRecord.GetUserKey()
 }
 
 func CheckKey(id int64) (string, bool) {
 	var (
 		existingRecord UserKey
+		cacheKey       = fmt.Sprint(Processors.USER_KEY_PREFIX, id)
+		expiry         = 604800 * time.Second
 	)
 
 	if id <= 0 {
-		log.Println("Id must be > 1.")
+		log.Println("CheckKey | Id must be > 1.")
 		return "", false
 	}
 
+	//Read from cache
+	val, redisErr := Processors.RedisClient.Get(cacheKey).Result()
+	if redisErr != nil {
+		if redisErr == redis.Nil {
+			log.Printf("CheckKey | No result of %v in Redis, reading from DB", cacheKey)
+		} else {
+			log.Printf("CheckKey | Error while reading from redis: %v", redisErr.Error())
+		}
+	} else {
+		redisResp := UserKey{}
+		err := json.Unmarshal([]byte(val), &redisResp)
+		if err != nil {
+			log.Printf("CheckKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
+		} else {
+			log.Printf("CheckKey | Successful | Cached %v", cacheKey)
+			return fmt.Sprintf("I have your key that you told me on %v! But I won't leak it 😀", Processors.ConvertTimeStamp(redisResp.GetMtime())), true
+		}
+	}
+
+	//Read from DB
 	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return "I don't have your key, let me know in /newkey 😊", false
 	} else {
+		//set back into cache
+		data, err := json.Marshal(existingRecord)
+		if err != nil {
+			log.Printf("CheckKey | Failed to marshal JSON results: %v\n", err.Error())
+		}
+
+		if err := Processors.RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
+			log.Printf("CheckKey | Error while writing to redis: %v", err.Error())
+		} else {
+			log.Printf("CheckKey | Successful | Written %v to redis", cacheKey)
+		}
+
 		return fmt.Sprintf("I have your key that you told me on %v! But I won't leak it 😀", Processors.ConvertTimeStamp(existingRecord.GetMtime())), true
 	}
 }
@@ -47,6 +118,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 	hashedKey := Processors.EncryptKey(s, os.Getenv("AES_KEY"))
 
 	var (
+		cacheKey       = fmt.Sprint(Processors.USER_KEY_PREFIX, id)
 		existingRecord UserKey
 		r              = UserKey{
 			UserID:  Processors.Int64(id),
@@ -57,17 +129,17 @@ func UpdateKey(id int64, s string) (string, bool) {
 	)
 
 	if id <= 0 {
-		log.Println("Id must be > 1.")
+		log.Println("UpdateKey | Id must be > 1.")
 		return "", false
 	}
 
 	if s == "" {
-		log.Println("Key cannot be empty.")
+		log.Println("UpdateKey | Key cannot be empty.")
 		return "Key cannot be empty 😟", false
 	}
 
 	if len(s) != 40 {
-		log.Printf("Key length invalid | length: %v", len(s))
+		log.Printf("UpdateKey | Key length invalid | length: %v", len(s))
 		return "Are you sure this is a valid key? 😟", false
 	}
 
@@ -77,7 +149,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 	} else {
 		if existingRecord.UserID == nil {
 			if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Create(&r).Error; err != nil {
-				log.Println("Failed to insert DB")
+				log.Println("UpdateKey | Failed to insert DB")
 				return err.Error(), false
 			}
 			return "Okay got it. I remember your key now! 😙", true
@@ -87,6 +159,13 @@ func UpdateKey(id int64, s string) (string, bool) {
 			log.Printf("UpdateKey | %v", err.Error())
 			return err.Error(), false
 		}
+
+		//Invalidate cache after successful update
+		if _, err := Processors.RedisClient.Del(cacheKey).Result(); err != nil {
+			log.Printf("UpdateKey | Failed to invalidate cache: %v. %v", cacheKey, err)
+		}
+		log.Printf("UpdateKey | Successfully invalidated cache: %v", cacheKey)
+
 		return "Okay got it. I will take note of your new key 😙", true
 	}
 }
@@ -136,6 +215,11 @@ func GetChope(id int64, s string) (string, bool) {
 		return "", false
 	}
 
+	//When it is Friday after 12.30pm, we don't accept any orders (except -1) because we don't know next week's menu yet
+	if !Processors.IsNotEOW(time.Now()) && time.Now().Unix() > Processors.GetLunchTime().Unix() && s != "-1" {
+		return "TGIF! You can tell me your order again next week!😀", false
+	}
+
 	if Processors.IsNotNumber(s) {
 		log.Printf("Selection contains illegal character | selection: %v", s)
 		return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
@@ -157,20 +241,36 @@ func GetChope(id int64, s string) (string, bool) {
 				log.Println("Failed to insert DB")
 				return err.Error(), false
 			}
+
+			//To stop ordering
 			if s == "-1" {
 				return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
 			}
-			return fmt.Sprintf("Okay got it. I will order %v for you 😙", menu[s]), true
+
+			//Orders placed before lunch time
+			if time.Now().Unix() < Processors.GetLunchTime().Unix() {
+				return fmt.Sprintf("Okay got it. I will order %v for you today😙", menu[s]), true
+			}
+
+			return fmt.Sprintf("Okay got it. I will order %v for you tomorrow😙", menu[s]), true
 		}
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
 			return err.Error(), false
 		}
+
+		//To stop ordering
 		if s == "-1" {
 			return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
 		}
-		return fmt.Sprintf("Okay got it. I will order %v for you 😙", menu[s]), true
+
+		//Orders placed before lunch time
+		if time.Now().Unix() < Processors.GetLunchTime().Unix() {
+			return fmt.Sprintf("Okay got it. I will order %v for you today😙", menu[s]), true
+		}
+
+		return fmt.Sprintf("Okay got it. I will order %v for you tomorrow😙", menu[s]), true
 	}
 }
 
@@ -320,7 +420,12 @@ func SendReminder() {
 			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! I will not proceed to order. Choose another dish from /menu 😃 ", r.GetUserChoice())
 		} else {
 			if r.GetUserChoice() != "-1" {
-				msg = fmt.Sprintf("Good Morning. I will order %v again today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+				//If choice was updated after yesterdays' lunch time
+				if r.GetMtime() > Processors.GetPreviousDayLunchTime().Unix() {
+					msg = fmt.Sprintf("Good Morning. I will order %v today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+				} else {
+					msg = fmt.Sprintf("Good Morning. I will order %v again, just like yesterday! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+				}
 			}
 		}
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
