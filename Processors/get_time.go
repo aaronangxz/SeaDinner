@@ -24,6 +24,12 @@ func GetLunchTime() time.Time {
 	return time.Date(year, month, day, Config.OrderTime.Hour, Config.OrderTime.Minutes, Config.OrderTime.Seconds, 0, now.Location())
 }
 
+func GetPreviousDayLunchTime() time.Time {
+	now := time.Now().In(tz)
+	year, month, day := now.Date()
+	return time.Date(year, month, day-1, Config.OrderTime.Hour, Config.OrderTime.Minutes, Config.OrderTime.Seconds, 0, now.Location())
+}
+
 //time format: Mon Jan 2 15:04:05 -0700 MST 2006
 func ConvertTimeStamp(timestamp int64) string {
 	return fmt.Sprint(UnixToUTC(timestamp).In(tz).Format("2006-01-02"))
