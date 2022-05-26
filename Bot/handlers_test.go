@@ -24,6 +24,11 @@ func TestGetKey(t *testing.T) {
 			want: u.GetUserKey(),
 		},
 		{
+			name: "HappyCaseCached",
+			args: args{id: u.GetUserID()},
+			want: u.GetUserKey(),
+		},
+		{
 			name: "NotFound",
 			args: args{id: randId},
 			want: "",
