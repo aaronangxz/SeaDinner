@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Processors"
@@ -296,6 +297,33 @@ func BatchGetUsersChoice() []UserChoice {
 	return res
 }
 
+func BatchGetUsersChoiceWithKey() ([]Processors.UserChoiceWithKey, error) {
+	var (
+		record []Processors.UserChoiceWithKey
+	)
+	m := Processors.MakeMenuMap()
+	inQuery := "("
+	for e := range m {
+		// Skip menu id: -1
+		if e == "-1" {
+			continue
+		}
+		inQuery += e + ", "
+	}
+	inQuery += ")"
+	inQuery = strings.ReplaceAll(inQuery, ", )", ")")
+	query := fmt.Sprintf("SELECT c.*, k.user_key FROM user_choice_tab c, user_key_tab k WHERE user_choice IN %v AND c.user_id = k.user_id", inQuery)
+	log.Println(query)
+
+	//check whole db
+	if err := Processors.DB.Raw(query).Scan(&record).Error; err != nil {
+		log.Println("BatchGetUsersChoiceWithKey | Error:", err.Error())
+		return nil, err
+	}
+	log.Println("BatchGetUsersChoiceWithKey | Success | size:", len(record))
+	return record, nil
+}
+
 func SendReminder() {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
 	if err != nil {
@@ -359,4 +387,69 @@ func MakeMenuCodeMap() map[string]string {
 func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
 	log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack.Data)
 	return GetChope(id, callBack.Data)
+}
+
+func SendCheckInLink() {
+	var (
+		txt        = "Check in now to collect your food!"
+		url        = "https://link.seatalk.io/sop/NjQyMjg3NjU4OTAx/CheckInScreen?tabId=6851"
+		buttonText = "Check in"
+		out        []tgbotapi.InlineKeyboardMarkup
+	)
+	orders := BatchGetSuccessfulOrder()
+	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	if err != nil {
+		log.Panic(err)
+	}
+	bot.Debug = true
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+
+	for _, user := range orders {
+		if user != 291235864 {
+			continue
+		}
+		var buttons []tgbotapi.InlineKeyboardButton
+		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonURL(buttonText, url))
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
+
+		msg := tgbotapi.NewMessage(user, "")
+		msg.Text = txt
+		msg.ReplyMarkup = out[0]
+
+		if _, err := bot.Send(msg); err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func BatchGetSuccessfulOrder() []int64 {
+	var (
+		success []int64
+	)
+	records, err := BatchGetUsersChoiceWithKey()
+	if err != nil {
+		log.Println("BatchGetSuccessfulOrder | Failed to fetch user_records:", err.Error())
+		return nil
+	}
+
+	for _, r := range records {
+		ok := Processors.GetSuccessfulOrder(r.GetUserKey())
+		if ok {
+			success = append(success, r.GetUserID())
+		}
+	}
+	log.Println("BatchGetSuccessfulOrder | Sucess | size:", len(success))
+	return success
+}
+
+func PrepOrder() ([]Processors.UserChoiceWithKey, bool) {
+	records, err := BatchGetUsersChoiceWithKey()
+
+	if err != nil {
+		log.Println("PrepOrder | Failed to fetch user_records:", err.Error())
+		return nil, false
+	}
+
+	log.Println("PrepOrder | Fetched user_records:", len(records))
+	return records, true
 }
