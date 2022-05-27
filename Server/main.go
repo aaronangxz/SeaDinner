@@ -10,7 +10,7 @@ import (
 
 var (
 	donePrep = false
-	r        []Processors.UserChoiceWithKeyAndStatus
+	r        []Processors.UserChoiceWithKey
 	start    int64
 	elapsed  int64
 )
@@ -19,12 +19,16 @@ func main() {
 	Processors.Init()
 	Processors.InitClient()
 	for {
+		if Processors.IsSendCheckInTime() {
+			Bot.SendCheckInLink()
+		}
+
 		if Processors.IsSendReminderTime() {
 			Bot.SendReminder()
 		}
 
 		if Processors.IsPrepOrderTime() && !donePrep {
-			r, donePrep = Processors.PrepOrder()
+			r, donePrep = Bot.PrepOrder()
 		}
 
 		if Processors.IsOrderTime() {

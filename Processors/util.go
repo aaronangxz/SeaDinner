@@ -163,12 +163,12 @@ func MakeKey() string {
 	return hex.EncodeToString(bytes) //encode key in bytes to string for saving
 }
 
-func PopSuccessfulOrder(s []UserChoiceWithKeyAndStatus, index int) []UserChoiceWithKeyAndStatus {
+func PopSuccessfulOrder(s []UserChoiceWithKey, index int) []UserChoiceWithKey {
 	if index >= len(s) {
 		log.Printf("PopSuccessfulOrder | index exceeds slice size | size: %v index: %v", len(s), index)
 		return nil
 	}
-	ret := make([]UserChoiceWithKeyAndStatus, 0)
+	ret := make([]UserChoiceWithKey, 0)
 	ret = append(ret, s[:index]...)
 	return append(ret, s[index+1:]...)
 }

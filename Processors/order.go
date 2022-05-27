@@ -12,7 +12,7 @@ import (
 )
 
 //DEPRECATED
-func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKeyAndStatus) OrderResponse {
+func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKey) OrderResponse {
 	var resp OrderResponse
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
@@ -44,7 +44,7 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKeyAndStatus) 
 	return resp
 }
 
-func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
+func OrderDinnerWithUpdate(u UserChoiceWithKey) (int, OrderRecord) {
 	var (
 		status  int
 		resp    OrderResponse
@@ -103,7 +103,7 @@ func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
 	return status, record
 }
 
-func BatchOrderDinnerMultiThreaded(userQueue []UserChoiceWithKeyAndStatus) {
+func BatchOrderDinnerMultiThreaded(userQueue []UserChoiceWithKey) {
 	var (
 		wg      sync.WaitGroup
 		records []OrderRecord
@@ -115,7 +115,7 @@ func BatchOrderDinnerMultiThreaded(userQueue []UserChoiceWithKeyAndStatus) {
 	for _, user := range userQueue {
 		//Increment group
 		wg.Add(1)
-		go func(u UserChoiceWithKeyAndStatus) {
+		go func(u UserChoiceWithKey) {
 			//Release group
 			defer wg.Done()
 			var record OrderRecord
@@ -133,7 +133,7 @@ func BatchOrderDinnerMultiThreaded(userQueue []UserChoiceWithKeyAndStatus) {
 }
 
 //DEPRECATED
-func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) []OrderRecord {
+func BatchOrderDinner(u *[]UserChoiceWithKey) []OrderRecord {
 	var (
 		records []OrderRecord
 		m       = make(map[int64]int)
@@ -181,7 +181,7 @@ func UpdateOrderLog(records []OrderRecord) {
 	}
 }
 
-func SendInstantNotification(u UserChoiceWithKeyAndStatus, took int64) {
+func SendInstantNotification(u UserChoiceWithKey, took int64) {
 	var (
 		msg string
 	)

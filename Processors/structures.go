@@ -138,45 +138,37 @@ type UserChoice struct {
 	Mtime      int64 `json:"mtime"`
 }
 
-type UserChoiceWithKeyAndStatus struct {
+type UserChoiceWithKey struct {
 	UserID     *int64  `json:"user_id"`
 	UserKey    *string `json:"user_key"`
 	UserChoice *string `json:"user_choice"`
 	Ctime      *int64  `json:"ctime"`
 	Mtime      *int64  `json:"mtime"`
-	IsSuccess  *bool   `json:"is_success"`
 }
 
-func (u *UserChoiceWithKeyAndStatus) GetUserID() int64 {
+func (u *UserChoiceWithKey) GetUserID() int64 {
 	if u != nil && u.UserID != nil {
 		return *u.UserID
 	}
 	return 0
 }
 
-func (u *UserChoiceWithKeyAndStatus) GetUserKey() string {
+func (u *UserChoiceWithKey) GetUserKey() string {
 	if u != nil && u.UserKey != nil {
 		return *u.UserKey
 	}
 	return ""
 }
 
-func (u *UserChoiceWithKeyAndStatus) SetUserKey(key *string) {
+func (u *UserChoiceWithKey) SetUserKey(key *string) {
 	u.UserKey = key
 }
 
-func (u *UserChoiceWithKeyAndStatus) GetUserChoice() string {
+func (u *UserChoiceWithKey) GetUserChoice() string {
 	if u != nil && u.UserChoice != nil {
 		return *u.UserChoice
 	}
 	return ""
-}
-
-func (u *UserChoiceWithKeyAndStatus) GetIsSuccess() bool {
-	if u != nil && u.IsSuccess != nil {
-		return *u.IsSuccess
-	}
-	return false
 }
 
 type OrderRecord struct {
@@ -219,6 +211,26 @@ func (o *OrderRecord) GetStatus() int64 {
 func (o *OrderRecord) GetErrorMsg() string {
 	if o != nil && o.ErrorMsg != nil {
 		return *o.ErrorMsg
+	}
+	return ""
+}
+
+type UserOrder struct {
+	Status *string `json:"status"`
+	Food   *Food   `json:"food"`
+	Error  *string `json:"error"`
+}
+
+func (u *UserOrder) GetStatus() string {
+	if u != nil && u.Status != nil {
+		return *u.Status
+	}
+	return ""
+}
+
+func (u *UserOrder) GetError() string {
+	if u != nil && u.Error != nil {
+		return *u.Error
 	}
 	return ""
 }

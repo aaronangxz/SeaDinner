@@ -239,23 +239,23 @@ func TestDecryptKey(t *testing.T) {
 
 func TestPopSuccessfulOrder(t *testing.T) {
 	type args struct {
-		s     []UserChoiceWithKeyAndStatus
+		s     []UserChoiceWithKey
 		index int
 	}
 	tests := []struct {
 		name string
 		args args
-		want []UserChoiceWithKeyAndStatus
+		want []UserChoiceWithKey
 	}{
 		{
 			name: "HappyCase_startOfSlice",
-			args: args{[]UserChoiceWithKeyAndStatus{
+			args: args{[]UserChoiceWithKey{
 				{
 					UserID: Int64(1),
 				}, {
 					UserID: Int64(2),
 				}}, 0},
-			want: []UserChoiceWithKeyAndStatus{
+			want: []UserChoiceWithKey{
 				{
 					UserID: Int64(2),
 				},
@@ -263,7 +263,7 @@ func TestPopSuccessfulOrder(t *testing.T) {
 		},
 		{
 			name: "HappyCase_middleOfSlice",
-			args: args{[]UserChoiceWithKeyAndStatus{
+			args: args{[]UserChoiceWithKey{
 				{
 					UserID: Int64(1),
 				}, {
@@ -275,7 +275,7 @@ func TestPopSuccessfulOrder(t *testing.T) {
 				}, {
 					UserID: Int64(5),
 				}}, 2},
-			want: []UserChoiceWithKeyAndStatus{
+			want: []UserChoiceWithKey{
 				{
 					UserID: Int64(1),
 				}, {
@@ -289,7 +289,7 @@ func TestPopSuccessfulOrder(t *testing.T) {
 		},
 		{
 			name: "indexExceedsLen",
-			args: args{[]UserChoiceWithKeyAndStatus{
+			args: args{[]UserChoiceWithKey{
 				{
 					UserID: Int64(1),
 				}, {
