@@ -7,8 +7,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	"github.com/go-redis/redis"
+	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -33,10 +35,34 @@ func LoadEnv() {
 	}
 }
 
+func LoadConfig() {
+	Processors.ConfigPath = "../config.toml"
+	if os.Getenv("HEROKU_DEPLOY") == "TRUE" || os.Getenv("TEST_DEPLOY") == "TRUE" {
+		Processors.ConfigPath = "config.toml"
+	}
+
+	if _, err := toml.DecodeFile(Processors.ConfigPath, &Processors.Config); err != nil {
+		log.Fatalln("Reading config failed | ", err, Processors.ConfigPath)
+		return
+	}
+	log.Println("Reading config OK", Processors.ConfigPath)
+}
+
 func InitTest() {
 	LoadEnv()
-	ConnectTestMySQL()
-	ConnectTestRedis()
+
+	if Processors.DB == nil {
+		ConnectTestMySQL()
+	}
+
+	if Processors.RedisClient == nil {
+		ConnectTestRedis()
+	}
+}
+
+func InitClient() resty.Client {
+	Processors.Client = *resty.New()
+	return Processors.Client
 }
 
 func ConnectTestMySQL() {
@@ -69,4 +95,12 @@ func ConnectTestRedis() {
 	}
 	log.Println("ConnectTestRedis: Redis connection established")
 	Processors.RedisClient = rdb
+}
+
+func GetLiveMenuDetails() []Processors.Food {
+	InitClient()
+	LoadConfig()
+	InitTest()
+	key := os.Getenv("TOKEN")
+	return Processors.GetMenu(Processors.Client, Processors.GetDayId(), key).DinnerArr
 }

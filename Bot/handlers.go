@@ -13,6 +13,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+//GetKey Retrieves user's API key with user_id.
+//Reads from cache first, then user_key_tab.
 func GetKey(id int64) string {
 	var (
 		existingRecord UserKey
@@ -64,6 +66,8 @@ func GetKey(id int64) string {
 	return existingRecord.GetUserKey()
 }
 
+//CheckKey Checks if user's API key exists.
+//Reads from cache first, then user_key_tab.
 func CheckKey(id int64) (string, bool) {
 	var (
 		existingRecord UserKey
@@ -115,6 +119,8 @@ func CheckKey(id int64) (string, bool) {
 	}
 }
 
+//UpdateKey Creates record to store user's key if not exists, or update the existing record.
+//With basic parameter verifications
 func UpdateKey(id int64, s string) (string, bool) {
 	hashedKey := Processors.EncryptKey(s, os.Getenv("AES_KEY"))
 
@@ -171,6 +177,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 	}
 }
 
+//CheckChope Retrieves the current food choice made by user.
 func CheckChope(id int64) (string, bool) {
 	var (
 		existingRecord UserChoice
@@ -200,6 +207,8 @@ func CheckChope(id int64) (string, bool) {
 	}
 }
 
+//GetChope Updates the current food choice made by user.
+//With basic parameter verifications
 func GetChope(id int64, s string) (string, bool) {
 	var (
 		existingRecord UserChoice
@@ -275,6 +284,9 @@ func GetChope(id int64, s string) (string, bool) {
 	}
 }
 
+//DEPRECATED
+//GetLatestResultByUserId Retrieves latest order status.
+//Should use ListWeeklyResultByUserId instead
 func GetLatestResultByUserId(id int64) string {
 	var (
 		res Processors.OrderRecord
@@ -302,6 +314,7 @@ func GetLatestResultByUserId(id int64) string {
 	return fmt.Sprintf("Failed to order %v today. 😔", menu[res.GetFoodID()])
 }
 
+//ListWeeklyResultByUserId
 func ListWeeklyResultByUserId(id int64) string {
 	var (
 		res []Processors.OrderRecord
@@ -325,6 +338,7 @@ func ListWeeklyResultByUserId(id int64) string {
 	return GenerateWeeklyResultTable(res)
 }
 
+//GenerateWeeklyResultTable Outputs pre-formatted weekly order status.
 func GenerateWeeklyResultTable(record []Processors.OrderRecord) string {
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 	m := MakeMenuCodeMap()
@@ -339,6 +353,7 @@ func GenerateWeeklyResultTable(record []Processors.OrderRecord) string {
 	return header + table
 }
 
+//BatchGetLatestResult Retrieves the most recent failed orders
 func BatchGetLatestResult() []Processors.OrderRecord {
 	var (
 		res []Processors.OrderRecord
@@ -356,6 +371,8 @@ func BatchGetLatestResult() []Processors.OrderRecord {
 	return res
 }
 
+//SendNotifications Sends out notifications based on order status from BatchGetLatestResult
+//Used to send failed orders only
 func SendNotifications() {
 	var (
 		msg string
@@ -384,6 +401,7 @@ func SendNotifications() {
 	}
 }
 
+//BatchGetUsersChoice Retrieves order_choice of all users
 func BatchGetUsersChoice() []UserChoice {
 	var (
 		res []UserChoice
@@ -397,6 +415,7 @@ func BatchGetUsersChoice() []UserChoice {
 	return res
 }
 
+//SendReminder Sends out daily reminder at 10.30 SGT on weekdays / working days
 func SendReminder() {
 	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
@@ -435,6 +454,7 @@ func SendReminder() {
 	}
 }
 
+//MakeMenuNameMap Returns food_id:food_name mapping of current menu
 func MakeMenuNameMap() map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
@@ -450,6 +470,7 @@ func MakeMenuNameMap() map[string]string {
 	return menuMap
 }
 
+//MakeMenuCodeMap Returns food_id:food_code mapping of current menu
 func MakeMenuCodeMap() map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
@@ -462,6 +483,7 @@ func MakeMenuCodeMap() map[string]string {
 	return menuMap
 }
 
+//CallbackQueryHandler Handles the call back result of menu buttons
 func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
 	log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack.Data)
 	return GetChope(id, callBack.Data)
