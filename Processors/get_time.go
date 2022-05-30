@@ -27,7 +27,7 @@ func GetLunchTime() time.Time {
 func GetOffWorkTime() time.Time {
 	now := time.Now().In(tz)
 	year, month, day := now.Date()
-	return time.Date(year, month, day, 19, 0, 0, 0, now.Location())
+	return time.Date(year, month, day, 19, 15, 0, 0, now.Location())
 }
 
 //time format: Mon Jan 2 15:04:05 -0700 MST 2006
