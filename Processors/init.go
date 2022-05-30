@@ -35,12 +35,13 @@ func Init() {
 	LoadEnv()
 	LoadConfig()
 	//For testing only, update in config.toml
-	if Config.Adhoc {
+	if os.Getenv("TEST_DEPLOY") == "TRUE" || Config.Adhoc {
 		ConnectTestMySQL()
+		ConnectTestRedis()
 	} else {
 		ConnectMySQL()
+		ConnectRedis()
 	}
-	ConnectRedis()
 }
 
 func ConnectMySQL() {
@@ -88,6 +89,23 @@ func ConnectRedis() {
 	if err := rdb.Ping().Err(); err != nil {
 		log.Printf("Error while establishing Redis Client: %v", err)
 	}
-	log.Println("NewRedisClient: Redis connection established")
+	log.Println("ConnectRedis: Redis connection established")
+	RedisClient = rdb
+}
+
+func ConnectTestRedis() {
+	redisAddress := fmt.Sprintf("%v:%v", os.Getenv("TEST_REDIS_URL"), os.Getenv("TEST_REDIS_PORT"))
+	redisPassword := os.Getenv("TEST_REDIS_PASSWORD")
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     redisAddress,
+		Password: redisPassword,
+		DB:       0, // use default DB
+	})
+
+	if err := rdb.Ping().Err(); err != nil {
+		log.Printf("Error while establishing Test Redis Client: %v", err)
+	}
+	log.Println("ConnectTestRedis: Redis connection established")
 	RedisClient = rdb
 }

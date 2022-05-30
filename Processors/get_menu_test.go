@@ -11,7 +11,7 @@ import (
 func TestGetMenu(t *testing.T) {
 	LoadEnv()
 	LoadConfig()
-	ConnectRedis()
+	ConnectTestRedis()
 	ConnectTestMySQL()
 	r := InitClient()
 	key := os.Getenv("TOKEN")

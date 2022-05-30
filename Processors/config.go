@@ -37,7 +37,7 @@ type tomlConfig struct {
 
 func LoadConfig() {
 	ConfigPath = "../config.toml"
-	if os.Getenv("HEROKU_DEPLOY") == "TRUE" {
+	if os.Getenv("HEROKU_DEPLOY") == "TRUE" || os.Getenv("TEST_DEPLOY") == "TRUE" {
 		ConfigPath = "config.toml"
 	}
 
