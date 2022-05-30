@@ -3,10 +3,12 @@ package Bot
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper/user_choice"
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper/user_key"
+	"github.com/aaronangxz/SeaDinner/Processors"
 )
 
 func TestGetKey(t *testing.T) {
@@ -198,6 +200,11 @@ func TestGetChope(t *testing.T) {
 	m := TestHelper.GetLiveMenuDetails()
 	u := user_choice.New().Build()
 	u1 := user_choice.New().SetUserChoice(int64(m[0].Id)).Build()
+	expected := "Okay got it. I will order %v for you today😙"
+	if time.Now().Unix() > Processors.GetLunchTime().Unix() {
+		expected = "Okay got it. I will order %v for you tomorrow😙"
+	}
+
 	defer func() {
 		u.TearDown()
 		u1.TearDown()
@@ -216,7 +223,7 @@ func TestGetChope(t *testing.T) {
 		{
 			name:  "HappyCase",
 			args:  args{id: u.GetUserID(), s: fmt.Sprint(m[0].Id)},
-			want:  fmt.Sprintf("Okay got it. I will order %v for you today😙", m[0].Name),
+			want:  fmt.Sprintf(expected, m[0].Name),
 			want1: true,
 		},
 		{
@@ -246,7 +253,7 @@ func TestGetChope(t *testing.T) {
 		{
 			name:  "UpdateEntry",
 			args:  args{id: u1.GetUserID(), s: fmt.Sprint(m[1].Id)},
-			want:  fmt.Sprintf("Okay got it. I will order %v for you today😙", m[1].Name),
+			want:  fmt.Sprintf(expected, m[1].Name),
 			want1: true,
 		},
 		{

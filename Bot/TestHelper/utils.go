@@ -50,8 +50,14 @@ func LoadConfig() {
 
 func InitTest() {
 	LoadEnv()
-	ConnectTestMySQL()
-	ConnectTestRedis()
+
+	if Processors.DB == nil {
+		ConnectTestMySQL()
+	}
+
+	if Processors.RedisClient == nil {
+		ConnectTestRedis()
+	}
 }
 
 func InitClient() resty.Client {
