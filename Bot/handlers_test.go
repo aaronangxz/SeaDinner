@@ -1,10 +1,14 @@
 package Bot
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
+	"github.com/aaronangxz/SeaDinner/Bot/TestHelper/user_choice"
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper/user_key"
+	"github.com/aaronangxz/SeaDinner/Processors"
 )
 
 func TestGetKey(t *testing.T) {
@@ -20,6 +24,11 @@ func TestGetKey(t *testing.T) {
 	}{
 		{
 			name: "HappyCase",
+			args: args{id: u.GetUserID()},
+			want: u.GetUserKey(),
+		},
+		{
+			name: "HappyCaseCached",
 			args: args{id: u.GetUserID()},
 			want: u.GetUserKey(),
 		},
@@ -52,6 +61,11 @@ func TestCheckKey(t *testing.T) {
 	}{
 		{
 			name:  "HappyCase",
+			args:  args{u.GetUserID()},
+			want1: true,
+		},
+		{
+			name:  "HappyCaseCached",
 			args:  args{u.GetUserID()},
 			want1: true,
 		},
@@ -115,4 +129,149 @@ func TestUpdateKey(t *testing.T) {
 	}
 	u.TearDown()
 	user_key.DeleteUserKey(randU)
+}
+
+func TestCheckChope(t *testing.T) {
+	m := TestHelper.GetLiveMenuDetails()
+	u := user_choice.New().SetUserChoice(int64(m[0].Id)).Build()
+	stopOrder := user_choice.New().SetUserChoice(-1).Build()
+	notInMenu := user_choice.New().SetUserChoice(999999).Build()
+
+	defer func() {
+		u.TearDown()
+		stopOrder.TearDown()
+		notInMenu.TearDown()
+	}()
+
+	type args struct {
+		id int64
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 bool
+	}{
+		{
+			name:  "HappyCase",
+			args:  args{u.GetUserID()},
+			want:  fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", m[0].Name),
+			want1: true,
+		},
+		{
+			name:  "InvalidId",
+			args:  args{id: -1},
+			want:  "",
+			want1: false,
+		},
+		{
+			name:  "NoOrder",
+			args:  args{id: 1},
+			want:  "I have yet to receive your order 🥲 You can choose from /menu",
+			want1: false,
+		},
+		{
+			name:  "StopOrder",
+			args:  args{id: stopOrder.GetUserID()},
+			want:  "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu",
+			want1: false,
+		},
+		{
+			name:  "OrderNotInMenu",
+			args:  args{id: notInMenu.GetUserID()},
+			want:  fmt.Sprintf("Your choice %v is not available today, so I will not order anything🥲 Choose a new dish from /menu", notInMenu.GetUserChoice()),
+			want1: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := CheckChope(tt.args.id)
+			if got != tt.want {
+				t.Errorf("CheckChope() got1 = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("CheckChope() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestGetChope(t *testing.T) {
+	m := TestHelper.GetLiveMenuDetails()
+	u := user_choice.New().Build()
+	u1 := user_choice.New().SetUserChoice(int64(m[0].Id)).Build()
+	expected := "Okay got it. I will order %v for you today😙"
+	if time.Now().Unix() > Processors.GetLunchTime().Unix() {
+		expected = "Okay got it. I will order %v for you tomorrow😙"
+	}
+
+	defer func() {
+		u.TearDown()
+		u1.TearDown()
+	}()
+
+	type args struct {
+		id int64
+		s  string
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 bool
+	}{
+		{
+			name:  "HappyCase",
+			args:  args{id: u.GetUserID(), s: fmt.Sprint(m[0].Id)},
+			want:  fmt.Sprintf(expected, m[0].Name),
+			want1: true,
+		},
+		{
+			name:  "InvalidId",
+			args:  args{id: -1},
+			want:  "",
+			want1: false,
+		},
+		{
+			name:  "Alphabets",
+			args:  args{id: u.GetUserID(), s: "ABCDEF"},
+			want:  "Are you sure that is a valid FoodID? Tell me another one. 😟",
+			want1: false,
+		},
+		{
+			name:  "SpecialChar",
+			args:  args{id: u.GetUserID(), s: "!@#$%^"},
+			want:  "Are you sure that is a valid FoodID? Tell me another one. 😟",
+			want1: false,
+		},
+		{
+			name:  "NotInMenu",
+			args:  args{id: u.GetUserID(), s: fmt.Sprint(6969)},
+			want:  "This dish is not available today. Tell me another one. 😟",
+			want1: false,
+		},
+		{
+			name:  "UpdateEntry",
+			args:  args{id: u1.GetUserID(), s: fmt.Sprint(m[1].Id)},
+			want:  fmt.Sprintf(expected, m[1].Name),
+			want1: true,
+		},
+		{
+			name:  "StopOrder",
+			args:  args{id: u.GetUserID(), s: fmt.Sprint(-1)},
+			want:  "Okay got it. I will order *NOTHING* for you and stop sending reminders in the morning.😀",
+			want1: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := GetChope(tt.args.id, tt.args.s)
+			if got != tt.want {
+				t.Errorf("GetChope() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("GetChope() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
 }
