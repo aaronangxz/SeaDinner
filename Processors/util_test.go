@@ -327,3 +327,45 @@ func TestOutputResultsCount(t *testing.T) {
 		})
 	}
 }
+
+func TestRandomFood(t *testing.T) {
+	m := make(map[string]string)
+	m["A"] = "1"
+	m["B"] = "2"
+	m["C"] = "3"
+	m["D"] = "4"
+	m["E"] = "5"
+	m["F"] = "6"
+
+	type args struct {
+		m map[string]string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "HappyCase",
+			args: args{m},
+			want: true,
+		},
+		{
+			name: "HappyCaseAgain",
+			args: args{m},
+			want: true,
+		},
+		{
+			name: "HappyCaseAndAgain",
+			args: args{m},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RandomFood(tt.args.m); got != "" != tt.want {
+				t.Errorf("RandomFood() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
