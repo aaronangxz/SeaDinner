@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/go-redis/redis"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -24,6 +25,7 @@ func RandomInt(max int) int64 {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return int64(r.Intn(max))
 }
+
 func LoadEnv() {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -34,6 +36,7 @@ func LoadEnv() {
 func InitTest() {
 	LoadEnv()
 	ConnectTestMySQL()
+	ConnectTestRedis()
 }
 
 func ConnectTestMySQL() {
@@ -49,4 +52,21 @@ func ConnectTestMySQL() {
 
 	log.Println("NewMySQL: Test Database connection established")
 	Processors.DB = db
+}
+
+func ConnectTestRedis() {
+	redisAddress := fmt.Sprintf("%v:%v", os.Getenv("TEST_REDIS_URL"), os.Getenv("TEST_REDIS_PORT"))
+	redisPassword := os.Getenv("TEST_REDIS_PASSWORD")
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     redisAddress,
+		Password: redisPassword,
+		DB:       0, // use default DB
+	})
+
+	if err := rdb.Ping().Err(); err != nil {
+		log.Printf("Error while establishing Test Redis Client: %v", err)
+	}
+	log.Println("ConnectTestRedis: Redis connection established")
+	Processors.RedisClient = rdb
 }

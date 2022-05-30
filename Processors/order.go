@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/go-resty/resty/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -185,7 +186,7 @@ func SendInstantNotification(u UserChoiceWithKey, took int64) {
 	var (
 		msg string
 	)
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
 	}
