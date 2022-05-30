@@ -231,8 +231,11 @@ func GetChope(id int64, s string) (string, bool) {
 	}
 
 	if Processors.IsNotNumber(s) {
-		log.Printf("Selection contains illegal character | selection: %v", s)
-		return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
+		//RAND is passed from CallBack
+		if s != "RAND" {
+			log.Printf("Selection contains illegal character | selection: %v", s)
+			return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
+		}
 	}
 	menu := MakeMenuNameMap()
 
@@ -257,6 +260,10 @@ func GetChope(id int64, s string) (string, bool) {
 				return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
 			}
 
+			if s == "RAND" {
+				return "Okay got it. I will give you a surprise 😙", true
+			}
+
 			//Orders placed before lunch time
 			if time.Now().Unix() < Processors.GetLunchTime().Unix() {
 				return fmt.Sprintf("Okay got it. I will order %v for you today😙", menu[s]), true
@@ -273,6 +280,10 @@ func GetChope(id int64, s string) (string, bool) {
 		//To stop ordering
 		if s == "-1" {
 			return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
+		}
+
+		if s == "RAND" {
+			return "Okay got it. I will give you a surprise 😙", true
 		}
 
 		//Orders placed before lunch time

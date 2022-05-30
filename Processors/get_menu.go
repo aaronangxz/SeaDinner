@@ -118,5 +118,17 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 			out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
 		}
 	}
+
+	//Follows the same conditions
+	if !skipFillButtons {
+		//Append for random
+		randomBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("I'm feeling lucky!", "RAND")}
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(randomBotton))
+
+		//Append for order skipping
+		skipBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("Nah I'm good.", "-1")}
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(skipBotton))
+	}
+
 	return texts, out
 }
