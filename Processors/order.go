@@ -203,16 +203,13 @@ func SendInstantNotification(u UserChoiceWithKeyAndStatus, took int64) {
 }
 
 func MakeMenuMap() map[string]string {
-	var (
-		key = os.Getenv("TOKEN")
-	)
+	key := os.Getenv("TOKEN")
 	menuMap := make(map[string]string)
+
 	menu := GetMenu(Client, GetDayId(), key)
+
 	for _, m := range menu.DinnerArr {
 		menuMap[fmt.Sprint(m.Id)] = m.Name
 	}
-	// Store -1 hash to menuMap
-	menuMap["-1"] = "*NOTHING*" // to be renamed
-	menuMap["RAND"] = "RAND"
 	return menuMap
 }
