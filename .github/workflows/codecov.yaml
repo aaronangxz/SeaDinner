@@ -21,6 +21,9 @@ jobs:
           TEST_DB_NAME: ${{secrets.TEST_DB_NAME}}
           AES_KEY: ${{secrets.AES_KEY}}
           TOKEN: ${{secrets.TOKEN}}
+          TEST_REDIS_URL: ${{secrets.TEST_REDIS_URL}}
+          TEST_REDIS_PORT: ${{secrets.TEST_REDIS_PORT}}
+          TEST_REDIS_PASSWORD: ${{secrets.TEST_REDIS_PASSWORD}}
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Run coverage in Bot
         working-directory: ./Bot
