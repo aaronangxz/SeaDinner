@@ -28,7 +28,7 @@ func TestGetMenu(t *testing.T) {
 		{
 			name: "HappyCase",
 			args: args{client: r, ID: 3521, key: key},
-			want: 8,
+			want: 12,
 		},
 		{
 			name: "InvalidID",

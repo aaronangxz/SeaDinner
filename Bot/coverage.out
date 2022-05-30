@@ -75,7 +75,7 @@ github.com/aaronangxz/SeaDinner/Bot/handlers.go:248.8,249.35 1 3
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:268.3,268.151 1 3
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:274.3,274.16 1 3
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:279.3,279.59 1 2
-github.com/aaronangxz/SeaDinner/Bot/handlers.go:283.3,283.89 1 2
+github.com/aaronangxz/SeaDinner/Bot/handlers.go:283.3,283.89 1 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:249.35,250.94 1 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:256.4,256.17 1 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:261.4,261.60 1 0
@@ -85,7 +85,7 @@ github.com/aaronangxz/SeaDinner/Bot/handlers.go:256.17,258.5 1 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:261.60,263.5 1 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:268.151,271.4 2 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:274.16,276.4 1 1
-github.com/aaronangxz/SeaDinner/Bot/handlers.go:279.59,281.4 1 0
+github.com/aaronangxz/SeaDinner/Bot/handlers.go:279.59,281.4 1 2
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:290.47,295.13 2 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:300.2,300.254 1 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:305.2,305.23 1 0
@@ -134,7 +134,7 @@ github.com/aaronangxz/SeaDinner/Bot/handlers.go:446.11,448.6 1 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:451.78,453.4 1 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:458.42,464.35 4 6
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:468.2,470.16 2 6
-github.com/aaronangxz/SeaDinner/Bot/handlers.go:464.35,466.3 1 48
+github.com/aaronangxz/SeaDinner/Bot/handlers.go:464.35,466.3 1 72
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:474.42,480.35 4 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:483.2,483.16 1 0
 github.com/aaronangxz/SeaDinner/Bot/handlers.go:480.35,482.3 1 0
