@@ -54,21 +54,6 @@ func ConnectTestMySQL() {
 	Processors.DB = db
 }
 
-func ConnectRedis() {
-	redisAddress := fmt.Sprintf("%v:%v", os.Getenv("REDIS_URL"), os.Getenv("REDIS_PORT"))
-	redisPassword := os.Getenv("REDIS_PASSWORD")
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisAddress,
-		Password: redisPassword,
-		DB:       0, // use default DB
-	})
-
-	if err := rdb.Ping().Err(); err != nil {
-		log.Printf("Error while establishing Redis Client: %v", err)
-	}
-	log.Println("NewRedisClient: Redis connection established")
-}
-
 func ConnectTestRedis() {
 	redisAddress := fmt.Sprintf("%v:%v", os.Getenv("TEST_REDIS_URL"), os.Getenv("TEST_REDIS_PORT"))
 	redisPassword := os.Getenv("TEST_REDIS_PASSWORD")
