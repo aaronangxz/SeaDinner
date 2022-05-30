@@ -2,10 +2,10 @@ package main
 
 import (
 	"log"
-	"os"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -16,16 +16,11 @@ var (
 )
 
 func main() {
-	Processors.Init()
 	Processors.LoadEnv()
+	Processors.Init()
 	Processors.InitClient()
-	if Processors.Config.Adhoc {
-		Processors.ConnectTestMySQL()
-	} else {
-		Processors.ConnectMySQL()
-	}
 
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
 	}

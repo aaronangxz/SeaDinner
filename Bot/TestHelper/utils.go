@@ -1,17 +1,14 @@
 package TestHelper
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
 	"os"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	"github.com/go-redis/redis"
-	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -38,19 +35,8 @@ func LoadEnv() {
 
 func InitTest() {
 	LoadEnv()
-
-	if Processors.DB == nil {
-		ConnectTestMySQL()
-	}
-
-	if Processors.RedisClient == nil {
-		ConnectRedis()
-	}
-}
-
-func InitClient() resty.Client {
-	Processors.Client = *resty.New()
-	return Processors.Client
+	ConnectTestMySQL()
+	ConnectTestRedis()
 }
 
 func ConnectTestMySQL() {
@@ -68,9 +54,9 @@ func ConnectTestMySQL() {
 	Processors.DB = db
 }
 
-func ConnectRedis() {
-	redisAddress := fmt.Sprintf("%v:%v", os.Getenv("REDIS_URL"), os.Getenv("REDIS_PORT"))
-	redisPassword := os.Getenv("REDIS_PASSWORD")
+func ConnectTestRedis() {
+	redisAddress := fmt.Sprintf("%v:%v", os.Getenv("TEST_REDIS_URL"), os.Getenv("TEST_REDIS_PORT"))
+	redisPassword := os.Getenv("TEST_REDIS_PASSWORD")
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     redisAddress,
@@ -79,50 +65,8 @@ func ConnectRedis() {
 	})
 
 	if err := rdb.Ping().Err(); err != nil {
-		log.Printf("Error while establishing Redis Client: %v", err)
+		log.Printf("Error while establishing Test Redis Client: %v", err)
 	}
-	log.Println("NewRedisClient: Redis connection established")
+	log.Println("ConnectTestRedis: Redis connection established")
 	Processors.RedisClient = rdb
-}
-
-func LoadConfig() {
-	Processors.ConfigPath = "../config.toml"
-	if os.Getenv("HEROKU_DEPLOY") == "TRUE" {
-		Processors.ConfigPath = "config.toml"
-	}
-
-	if _, err := toml.DecodeFile(Processors.ConfigPath, &Processors.Config); err != nil {
-		log.Fatalln("Reading config failed | ", err, Processors.ConfigPath)
-		return
-	}
-	log.Println("Reading config OK", Processors.ConfigPath)
-}
-
-func GetFromCache(cacheKey string, model interface{}) interface{} {
-	val, redisErr := Processors.RedisClient.Get(cacheKey).Result()
-	if redisErr != nil {
-		if redisErr == redis.Nil {
-			log.Printf("GetCache | No result of %v in Redis, reading from DB", cacheKey)
-		} else {
-			log.Printf("GetCache | Error while reading from redis: %v", redisErr.Error())
-		}
-	} else {
-		redisResp := model
-		err := json.Unmarshal([]byte(val), &redisResp)
-		if err != nil {
-			log.Printf("GetCache | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
-		} else {
-			log.Printf("GetCache | Successful | Cached %v", cacheKey)
-			return redisResp
-		}
-	}
-	return nil
-}
-
-func GetLiveMenuDetails() []Processors.Food {
-	InitClient()
-	LoadConfig()
-	InitTest()
-	key := os.Getenv("TOKEN")
-	return Processors.GetMenu(Processors.Client, Processors.GetDayId(), key).DinnerArr
 }
