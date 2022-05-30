@@ -139,11 +139,8 @@ func GetChope(id int64, s string) (string, bool) {
 	}
 
 	if Processors.IsNotNumber(s) {
-		//RAND is passed from CallBack
-		if s != "RAND" {
-			log.Printf("Selection contains illegal character | selection: %v", s)
-			return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
-		}
+		log.Printf("Selection contains illegal character | selection: %v", s)
+		return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
 	}
 	menu := MakeMenuNameMap()
 
@@ -162,9 +159,6 @@ func GetChope(id int64, s string) (string, bool) {
 				log.Println("Failed to insert DB")
 				return err.Error(), false
 			}
-			if s == "RAND" {
-				return "Okay got it. I will give you a surprise 😙", true
-			}
 			if s == "-1" {
 				return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
 			}
@@ -174,9 +168,6 @@ func GetChope(id int64, s string) (string, bool) {
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 			log.Println("Failed to update DB")
 			return err.Error(), false
-		}
-		if s == "RAND" {
-			return "Okay got it. I will give you a surprise 😙", true
 		}
 		if s == "-1" {
 			return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true

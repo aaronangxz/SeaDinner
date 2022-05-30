@@ -8,9 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
-	random "math/rand"
 	"os"
-	"time"
 	"unicode"
 )
 
@@ -173,20 +171,4 @@ func PopSuccessfulOrder(s []UserChoiceWithKeyAndStatus, index int) []UserChoiceW
 	ret := make([]UserChoiceWithKeyAndStatus, 0)
 	ret = append(ret, s[:index]...)
 	return append(ret, s[index+1:]...)
-}
-
-func RandomFood(m map[string]string) string {
-	s := []string{}
-
-	for k := range m {
-		if k == "RAND" || k == "-1" {
-			continue
-		}
-		s = append(s, k)
-	}
-
-	r := random.New(random.NewSource(time.Now().UnixNano()))
-	gen := int64(r.Intn(len(m) - 3))
-	log.Println("RandomFood | result:", s[gen])
-	return s[gen]
 }
