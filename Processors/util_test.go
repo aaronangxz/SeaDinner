@@ -336,6 +336,8 @@ func TestRandomFood(t *testing.T) {
 	m["D"] = "4"
 	m["E"] = "5"
 	m["F"] = "6"
+	m["RAND"] = "RAND"
+	m["-1"] = "-1"
 
 	type args struct {
 		m map[string]string
