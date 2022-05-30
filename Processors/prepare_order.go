@@ -18,6 +18,10 @@ func PrepOrder() ([]UserChoiceWithKeyAndStatus, bool) {
 		if e == "-1" {
 			continue
 		}
+		if e == "RAND" {
+			inQuery += "'RAND', "
+			continue
+		}
 		inQuery += e + ", "
 	}
 	inQuery += ")"
@@ -29,6 +33,13 @@ func PrepOrder() ([]UserChoiceWithKeyAndStatus, bool) {
 	if err := DB.Raw(query).Scan(&record).Error; err != nil {
 		fmt.Println(err.Error())
 		return nil, false
+	}
+
+	for _, r := range record {
+		if r.GetUserChoice() == "RAND" {
+			r.UserChoice = String(RandomFood(m))
+			log.Printf("PrepOrder | id:%v | random choice:%v", r.GetUserID(), r.GetUserChoice())
+		}
 	}
 
 	log.Println("PrepOrder | Fetched user_records:", len(record))
