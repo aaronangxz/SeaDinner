@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	"github.com/go-redis/redis"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -359,7 +360,7 @@ func SendNotifications() {
 	var (
 		msg string
 	)
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
 	}
@@ -397,7 +398,7 @@ func BatchGetUsersChoice() []UserChoice {
 }
 
 func SendReminder() {
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
 	}

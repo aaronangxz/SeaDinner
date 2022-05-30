@@ -25,6 +25,7 @@ func RandomInt(max int) int64 {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return int64(r.Intn(max))
 }
+
 func LoadEnv() {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -35,7 +36,7 @@ func LoadEnv() {
 func InitTest() {
 	LoadEnv()
 	ConnectTestMySQL()
-	ConnectRedis()
+	ConnectTestRedis()
 }
 
 func ConnectTestMySQL() {
@@ -56,7 +57,6 @@ func ConnectTestMySQL() {
 func ConnectRedis() {
 	redisAddress := fmt.Sprintf("%v:%v", os.Getenv("REDIS_URL"), os.Getenv("REDIS_PORT"))
 	redisPassword := os.Getenv("REDIS_PASSWORD")
-
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     redisAddress,
 		Password: redisPassword,
@@ -67,5 +67,21 @@ func ConnectRedis() {
 		log.Printf("Error while establishing Redis Client: %v", err)
 	}
 	log.Println("NewRedisClient: Redis connection established")
+}
+
+func ConnectTestRedis() {
+	redisAddress := fmt.Sprintf("%v:%v", os.Getenv("TEST_REDIS_URL"), os.Getenv("TEST_REDIS_PORT"))
+	redisPassword := os.Getenv("TEST_REDIS_PASSWORD")
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     redisAddress,
+		Password: redisPassword,
+		DB:       0, // use default DB
+	})
+
+	if err := rdb.Ping().Err(); err != nil {
+		log.Printf("Error while establishing Test Redis Client: %v", err)
+	}
+	log.Println("ConnectTestRedis: Redis connection established")
 	Processors.RedisClient = rdb
 }
