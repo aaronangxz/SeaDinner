@@ -35,10 +35,7 @@ func Init() {
 	LoadEnv()
 	LoadConfig()
 	//For testing only, update in config.toml
-	if os.Getenv("TEST_DEPLOY") == "TRUE" {
-		ConnectTestMySQL()
-		ConnectTestRedis()
-	} else if Config.Adhoc {
+	if os.Getenv("TEST_DEPLOY") == "TRUE" || Config.Adhoc {
 		ConnectTestMySQL()
 		ConnectTestRedis()
 	} else {

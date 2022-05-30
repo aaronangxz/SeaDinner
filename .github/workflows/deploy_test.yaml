@@ -43,4 +43,4 @@ jobs:
         run: git filter-branch -- --all
       - name: Push
         working-directory: ./
-        run: git push --force heroku master
+        run: git push --force heroku test:master
