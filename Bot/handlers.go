@@ -399,7 +399,7 @@ func SendCheckInLink() {
 		out        []tgbotapi.InlineKeyboardMarkup
 	)
 	orders := BatchGetSuccessfulOrder()
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
 	}
