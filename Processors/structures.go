@@ -15,6 +15,7 @@ const (
 	MENU_CACHE_KEY_PREFIX = "current_menu:"
 	DAY_ID_KEY_PREFIX     = "day_id:"
 	USER_KEY_PREFIX       = "user_key:"
+	USER_CHOICE_PREFIX    = "user_choice:"
 )
 
 var Constant_URL_type = map[int32]string{

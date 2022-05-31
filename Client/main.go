@@ -36,6 +36,7 @@ func main() {
 	for update := range updates {
 		if update.CallbackQuery != nil {
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+			msg.ParseMode = "MARKDOWN"
 			msg.Text, _ = Bot.CallbackQueryHandler(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
 			if _, err := bot.Send(msg); err != nil {
 				log.Println(err)
@@ -148,6 +149,8 @@ func main() {
 			}
 		case "ret":
 			return
+		case "reminder":
+			Bot.SendReminder()
 		default:
 			msg.Text = "I don't understand this command :("
 		}

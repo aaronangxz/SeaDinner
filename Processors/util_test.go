@@ -4,6 +4,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/aaronangxz/SeaDinner/Common"
 )
 
 func TestMakeToken(t *testing.T) {
@@ -46,7 +48,7 @@ func TestMakeToken(t *testing.T) {
 }
 
 func TestMakeURL(t *testing.T) {
-	Config.Prefix.UrlPrefix = "https://dinner.sea.com"
+	Common.Config.Prefix.UrlPrefix = "https://dinner.sea.com"
 	type args struct {
 		opt int
 		id  *int

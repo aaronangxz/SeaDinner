@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
@@ -36,16 +37,16 @@ func LoadEnv() {
 }
 
 func LoadConfig() {
-	Processors.ConfigPath = "../config.toml"
+	Common.ConfigPath = "../config.toml"
 	if os.Getenv("HEROKU_DEPLOY") == "TRUE" || os.Getenv("TEST_DEPLOY") == "TRUE" {
-		Processors.ConfigPath = "config.toml"
+		Common.ConfigPath = "config.toml"
 	}
 
-	if _, err := toml.DecodeFile(Processors.ConfigPath, &Processors.Config); err != nil {
-		log.Fatalln("Reading config failed | ", err, Processors.ConfigPath)
+	if _, err := toml.DecodeFile(Common.ConfigPath, &Common.Config); err != nil {
+		log.Fatalln("Reading config failed | ", err, Common.ConfigPath)
 		return
 	}
-	log.Println("Reading config OK", Processors.ConfigPath)
+	log.Println("Reading config OK", Common.ConfigPath)
 }
 
 func InitTest() {

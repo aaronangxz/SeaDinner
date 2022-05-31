@@ -12,6 +12,8 @@ import (
 	"os"
 	"time"
 	"unicode"
+
+	"github.com/aaronangxz/SeaDinner/Common"
 )
 
 func MakeToken(key string) string {
@@ -25,11 +27,11 @@ func MakeToken(key string) string {
 		log.Printf("Key length invalid | length: %v", len(decrypt))
 		return ""
 	}
-	return fmt.Sprint(Config.Prefix.TokenPrefix, decrypt)
+	return fmt.Sprint(Common.Config.Prefix.TokenPrefix, decrypt)
 }
 
 func MakeURL(opt int, id *int) string {
-	prefix := Config.Prefix.UrlPrefix
+	prefix := Common.Config.Prefix.UrlPrefix
 	switch opt {
 	case URL_CURRENT:
 		return fmt.Sprint(prefix, "/api/current")

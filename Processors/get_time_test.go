@@ -4,13 +4,15 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/aaronangxz/SeaDinner/Common"
 )
 
 func TestGetLunchTime(t *testing.T) {
 	tz, _ := time.LoadLocation(TimeZone)
 	now := time.Now().In(tz)
 	year, month, day := now.Date()
-	expectedTime := time.Date(year, month, day, Config.OrderTime.Hour, Config.OrderTime.Minutes, Config.OrderTime.Seconds, 0, now.Location())
+	expectedTime := time.Date(year, month, day, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
 	tests := []struct {
 		name string
 		want time.Time
@@ -200,7 +202,7 @@ func TestGetPreviousDayLunchTime(t *testing.T) {
 	tz, _ := time.LoadLocation(TimeZone)
 	now := time.Now().In(tz)
 	year, month, day := now.Date()
-	expectedTime := time.Date(year, month, day-1, Config.OrderTime.Hour, Config.OrderTime.Minutes, Config.OrderTime.Seconds, 0, now.Location())
+	expectedTime := time.Date(year, month, day-1, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
 	tests := []struct {
 		name string
 		want time.Time

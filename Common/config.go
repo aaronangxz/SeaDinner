@@ -1,4 +1,4 @@
-package Processors
+package Common
 
 import (
 	"log"
@@ -12,11 +12,16 @@ var (
 	ConfigPath string
 )
 
-type OrderTimeConfig struct {
+type grayScaleConfig struct {
+	Percentage int64 `toml:"percentage"`
+}
+
+type orderTimeConfig struct {
 	Hour    int `toml:"hour"`
 	Minutes int `toml:"minutes"`
 	Seconds int `toml:"seconds"`
 }
+
 type runtimeConfig struct {
 	RetryTimes                int `toml:"retry_times"`
 	RetryOffsetSeconds        int `toml:"retry_offset_seconds"`
@@ -32,7 +37,8 @@ type tomlConfig struct {
 	Adhoc     bool            `toml:"adhoc"`
 	Prefix    prefixConfig    `toml:"prefix"`
 	Runtime   runtimeConfig   `toml:"runtime"`
-	OrderTime OrderTimeConfig `toml:"order_time"`
+	OrderTime orderTimeConfig `toml:"order_time"`
+	GrayScale grayScaleConfig `toml:"grayscale"`
 }
 
 func LoadConfig() {

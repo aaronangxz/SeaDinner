@@ -232,11 +232,17 @@ func GetChope(id int64, s string) (string, bool) {
 
 	if Processors.IsNotNumber(s) {
 		//RAND is passed from CallBack
-		if s != "RAND" {
+		if s != "RAND" && s != "SAME" {
 			log.Printf("Selection contains illegal character | selection: %v", s)
 			return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
 		}
 	}
+
+	if s == "SAME" {
+		//Set back to DB using cache data (user_choice:<id>)
+		return "Okay got it. I will order the same dish 😙", true
+	}
+
 	menu := MakeMenuNameMap()
 
 	_, ok := menu[s]
@@ -421,6 +427,12 @@ func BatchGetUsersChoice() []UserChoice {
 		log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
 		return nil
 	}
+
+	//WIP: Save into cache
+	// for _, r := range res {
+	// 	key := fmt.Sprint(Processors.USER_CHOICE_PREFIX, r.GetUserID())
+	// }
+
 	log.Println("BatchGetUsersChoice | size:", len(res))
 	log.Println(res)
 	return res
@@ -428,6 +440,7 @@ func BatchGetUsersChoice() []UserChoice {
 
 //SendReminder Sends out daily reminder at 10.30 SGT on weekdays / working days
 func SendReminder() {
+
 	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
@@ -439,27 +452,53 @@ func SendReminder() {
 	log.Println("SendReminder | size:", len(res))
 
 	menu := MakeMenuNameMap()
+	code := MakeMenuCodeMap()
 
 	for _, r := range res {
 		if r.GetUserChoice() == "-1" {
 			log.Printf("SendReminder | skip -1 records | %v", r.GetUserID())
 			continue
 		}
-		var msg string
+
+		msg := tgbotapi.NewMessage(r.GetUserID(), "")
+
+		var (
+			mk     tgbotapi.InlineKeyboardMarkup
+			out    [][]tgbotapi.InlineKeyboardButton
+			rows   []tgbotapi.InlineKeyboardButton
+			msgTxt string
+		)
 		_, ok := menu[r.GetUserChoice()]
 		if !ok {
-			msg = fmt.Sprintf("Good Morning. Your previous order %v is not available today! I will not proceed to order. Choose another dish from /menu 😃 ", r.GetUserChoice())
+			msgTxt = fmt.Sprintf("Good Morning. Your previous order %v is not available today! I will not proceed to order. Choose another dish from /menu 😃 ", r.GetUserChoice())
 		} else {
 			if r.GetUserChoice() != "-1" {
 				//If choice was updated after yesterdays' lunch time
 				if r.GetMtime() > Processors.GetPreviousDayLunchTime().Unix() {
-					msg = fmt.Sprintf("Good Morning. I will order %v today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+					msgTxt = fmt.Sprintf("Good Morning. I will order %v %v today! If you changed your mind, you can choose from /menu 😋", code[r.GetUserChoice()], menu[r.GetUserChoice()])
+					if r.GetUserChoice() == "RAND" {
+						msgTxt = fmt.Sprint("Good Morning. I will order a random dish today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+					}
 				} else {
-					msg = fmt.Sprintf("Good Morning. I will order %v again, just like yesterday! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+					msgTxt = fmt.Sprintf("Good Morning. I will order %v %v again, just like yesterday! If you changed your mind, you can choose from /menu 😋", code[r.GetUserChoice()], menu[r.GetUserChoice()])
+					if r.GetUserChoice() == "RAND" {
+						msgTxt = fmt.Sprint("Good Morning. I will order a random dish again today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+					}
 				}
+
+				randomBotton := tgbotapi.NewInlineKeyboardButtonData("🎲", "RAND")
+				rows = append(rows, randomBotton)
+				ignoreBotton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v again!", code[r.GetUserChoice()]), "SAME")
+				rows = append(rows, ignoreBotton)
+				skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
+				rows = append(rows, skipBotton)
+				out = append(out, rows)
+				mk.InlineKeyboard = out
+				msg.ReplyMarkup = mk
 			}
 		}
-		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
+		msg.Text = msgTxt
+		if _, err := bot.Send(msg); err != nil {
 			log.Println(err)
 		}
 	}
@@ -477,7 +516,7 @@ func MakeMenuNameMap() map[string]string {
 	}
 	// Store -1 hash to menuMap
 	menuMap["-1"] = "*NOTHING*" // to be renamed
-
+	menuMap["RAND"] = "Random"
 	return menuMap
 }
 
@@ -491,6 +530,7 @@ func MakeMenuCodeMap() map[string]string {
 	for _, m := range menu.DinnerArr {
 		menuMap[fmt.Sprint(m.Id)] = m.Code
 	}
+	menuMap["RAND"] = "Random"
 	return menuMap
 }
 

@@ -5,12 +5,13 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/go-resty/resty/v2"
 )
 
 func TestGetMenu(t *testing.T) {
 	LoadEnv()
-	LoadConfig()
+	Common.LoadConfig()
 	ConnectTestRedis()
 	ConnectTestMySQL()
 	r := InitClient()
