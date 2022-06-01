@@ -42,7 +42,7 @@ func ConvertTimeStampMonthDay(timestamp int64) string {
 }
 
 func ConvertTimeStampDayOfWeek(timestamp int64) string {
-	return fmt.Sprint(UnixToUTC(timestamp).In(tz).Format("Mon 2/1"))
+	return fmt.Sprint(UnixToUTC(timestamp).In(tz).Format("Mon 02/01"))
 }
 
 func ConvertTimeStampTime(timestamp int64) string {
