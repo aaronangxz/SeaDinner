@@ -218,6 +218,7 @@ func GetChope(id int64, s string) (string, bool) {
 			Ctime:      Processors.Int64(time.Now().Unix()),
 			Mtime:      Processors.Int64(time.Now().Unix()),
 		}
+		key = fmt.Sprint(Processors.USER_CHOICE_PREFIX, r.GetUserID())
 	)
 
 	if id <= 0 {
@@ -238,12 +239,40 @@ func GetChope(id int64, s string) (string, bool) {
 		}
 	}
 
+	menu := MakeMenuNameMap()
+
 	if s == "SAME" {
 		//Set back to DB using cache data (user_choice:<id>)
-		return "Okay got it. I will order the same dish 😙", true
-	}
+		//To handle Morning Reminder callback
+		val, redisErr := Processors.RedisClient.Get(key).Result()
+		if redisErr != nil {
+			if redisErr == redis.Nil {
+				log.Printf("GetChope | No result of %v in Redis, reading from API", key)
+			} else {
+				log.Printf("GetChope | Error while reading from redis: %v", redisErr.Error())
+			}
+			return "The selection has expired, you can choose from /menu again😀", true
+		}
 
-	menu := MakeMenuNameMap()
+		if val == "" {
+			log.Printf("GetChope | empty in redis: %v", key)
+			return "The selection has expired, you can choose from /menu again😀", true
+		}
+
+		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", val, time.Now().Unix(), id).Error; err != nil {
+			log.Println("Failed to update DB")
+			return err.Error(), false
+		}
+
+		if val == "-1" {
+			return "Okay got it. I will not order anything for you instead.😀", true
+		}
+
+		if val == "RAND" {
+			return "Okay got it. I will give you a surprise instead😙", true
+		}
+		return fmt.Sprintf("Okay got it! I will order %v again 😙", menu[val]), true
+	}
 
 	_, ok := menu[s]
 	if !ok {
@@ -294,6 +323,13 @@ func GetChope(id int64, s string) (string, bool) {
 
 		//Orders placed before lunch time
 		if time.Now().Unix() < Processors.GetLunchTime().Unix() {
+			//Set into cache for Morning reminder callback. TTL is always until 12.30
+			if err := Processors.RedisClient.Set(key, s, time.Duration(Processors.GetLunchTime().UnixMilli()-time.Now().UnixMilli())).Err(); err != nil {
+				log.Printf("GetChope | Error while writing to redis: %v", err.Error())
+			} else {
+				log.Printf("GetChope | Successful | Written %v to redis", key)
+			}
+
 			return fmt.Sprintf("Okay got it. I will order %v for you today😙", menu[s]), true
 		}
 
@@ -421,18 +457,27 @@ func SendNotifications() {
 //BatchGetUsersChoice Retrieves order_choice of all users
 func BatchGetUsersChoice() []UserChoice {
 	var (
-		res []UserChoice
+		res    []UserChoice
+		expiry = 7200 * time.Second
 	)
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab").Scan(&res).Error; err != nil {
 		log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
 		return nil
 	}
 
-	//WIP: Save into cache
-	// for _, r := range res {
-	// 	key := fmt.Sprint(Processors.USER_CHOICE_PREFIX, r.GetUserID())
-	// }
-
+	//Save into cache
+	//For Morning Reminder callback
+	for _, r := range res {
+		//Not neccesary to cache -1 orders because we never send reminder for those
+		if r.GetUserChoice() != "-1" {
+			key := fmt.Sprint(Processors.USER_CHOICE_PREFIX, r.GetUserID())
+			if err := Processors.RedisClient.Set(key, r.GetUserChoice(), expiry).Err(); err != nil {
+				log.Printf("BatchGetUsersChoice | Error while writing to redis: %v", err.Error())
+			} else {
+				log.Printf("BatchGetUsersChoice | Successful | Written %v to redis", key)
+			}
+		}
+	}
 	log.Println("BatchGetUsersChoice | size:", len(res))
 	log.Println(res)
 	return res
@@ -477,17 +522,21 @@ func SendReminder() {
 				if r.GetMtime() > Processors.GetPreviousDayLunchTime().Unix() {
 					msgTxt = fmt.Sprintf("Good Morning. I will order %v %v today! If you changed your mind, you can choose from /menu 😋", code[r.GetUserChoice()], menu[r.GetUserChoice()])
 					if r.GetUserChoice() == "RAND" {
-						msgTxt = fmt.Sprint("Good Morning. I will order a random dish today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+						msgTxt = "Good Morning. I will order a random dish today! If you changed your mind, you can choose from /menu 😋"
 					}
 				} else {
 					msgTxt = fmt.Sprintf("Good Morning. I will order %v %v again, just like yesterday! If you changed your mind, you can choose from /menu 😋", code[r.GetUserChoice()], menu[r.GetUserChoice()])
 					if r.GetUserChoice() == "RAND" {
-						msgTxt = fmt.Sprint("Good Morning. I will order a random dish again today! If you changed your mind, you can choose from /menu 😋", menu[r.GetUserChoice()])
+						msgTxt = "Good Morning. I will order a random dish again today! If you changed your mind, you can choose from /menu 😋"
 					}
 				}
 
-				randomBotton := tgbotapi.NewInlineKeyboardButtonData("🎲", "RAND")
-				rows = append(rows, randomBotton)
+				//If choice is already RAND, don't show RAND button again
+				if r.GetUserChoice() != "RAND" {
+					randomBotton := tgbotapi.NewInlineKeyboardButtonData("🎲", "RAND")
+					rows = append(rows, randomBotton)
+				}
+
 				ignoreBotton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v again!", code[r.GetUserChoice()]), "SAME")
 				rows = append(rows, ignoreBotton)
 				skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")

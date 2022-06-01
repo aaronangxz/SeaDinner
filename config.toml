@@ -10,8 +10,8 @@ retry_offset_seconds = 180
 batch_retry_cooldown_seconds = 1
 
 [order_time]
-hour = 12
-minutes = 30
+hour = 13
+minutes = 4
 seconds = 0
 
 [grayscale]
