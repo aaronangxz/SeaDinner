@@ -119,7 +119,8 @@ func main() {
 				continue
 			}
 		case "help":
-			msg.Text = "Check the commands."
+			msg.Text = Bot.MakeHelpResponse()
+			msg.ParseMode = "MARKDOWN"
 		case "key":
 			msg.Text, _ = Bot.CheckKey(update.Message.Chat.ID)
 		case "newkey":
