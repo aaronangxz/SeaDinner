@@ -86,7 +86,7 @@ message UserChoice{
 
 message UserChoiceWithKey{
     optional int64 user_id = 1;
-    optional int64 user_key = 2;
+    optional string user_key = 2;
     optional string user_choice = 3;
     optional int64 ctime = 4;
     optional int64 mtime = 5;

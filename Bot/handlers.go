@@ -217,6 +217,10 @@ func CheckChope(id int64) (string, bool) {
 		if !ok {
 			return fmt.Sprintf("Your choice %v is not available this week, so I will not order anything 🥲 Choose a new dish from /menu", existingRecord.GetUserChoice()), true
 		}
+
+		if existingRecord.GetUserChoice() == "RAND" {
+			return "I'm tasked to snatch a random dish for you 😀 Changed your mind? You can choose from /menu", true
+		}
 		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
 	}
 }
@@ -551,7 +555,7 @@ func SendReminder() {
 					rows = append(rows, randomBotton)
 				}
 
-				ignoreBotton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v is good", code[r.GetUserChoice()]), "SAME")
+				ignoreBotton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v is good!", code[r.GetUserChoice()]), "SAME")
 				rows = append(rows, ignoreBotton)
 				skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
 				rows = append(rows, skipBotton)
@@ -614,10 +618,10 @@ func MakeHelpResponse() string {
 		"*Features*\n" +
 		"1. I will send you a daily reminder at 10.30am (If you never skip order on that day). Order can be altered easily from the quick options:\n" +
 		"🎲 to order a random dish\n" +
-		"🙅 to stpo ordering\n" +
+		"🙅 to stop ordering\n" +
 		"2. At 12.29pm, I will no longer entertain your requests, because I have better things to do! Don't even think about last minute changes.\n" +
 		"3. At 12.30pm sharp, I will begin to order your precious food.\n" +
-		"4. It is almost guranteed that I can order it in less than 300ms. Will drop you a message too!\n\n" +
+		"4. It is almost guranteed that I can order it in less than 500ms. Will drop you a message too!\n\n" +
 		"*Disclaimer*\n" +
 		"By using my services, you agree to let me store your API key. However, not to worry! Your key is encrypted with AES-256, it's very unlikely that it will be stolen.\n\n" +
 		"*Contribute*\n" +

@@ -8,8 +8,8 @@ token_prefix = "Token "
 retry_times = 5
 
 [order_time]
-hour = 12
-minutes = 30
+hour = 1
+minutes = 29
 seconds = 0
 
 [grayscale]
