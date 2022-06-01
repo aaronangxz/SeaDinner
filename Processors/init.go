@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	_ "github.com/go-sql-driver/mysql"
@@ -33,9 +34,9 @@ func InitClient() resty.Client {
 
 func Init() {
 	LoadEnv()
-	LoadConfig()
+	Common.LoadConfig()
 	//For testing only, update in config.toml
-	if os.Getenv("TEST_DEPLOY") == "TRUE" || Config.Adhoc {
+	if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
 		ConnectTestMySQL()
 		ConnectTestRedis()
 	} else {

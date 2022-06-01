@@ -6,22 +6,18 @@ import (
 	"log"
 	"time"
 
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
+func GetMenu(client resty.Client, key string) DinnerMenuArr {
 	var (
 		cacheKey   = fmt.Sprint(MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 		expiry     = 3600 * time.Second
 		currentarr DinnerMenuArr
 	)
-
-	if ID == 0 {
-		log.Println("GetMenu | Invalid id:", ID)
-		return currentarr
-	}
 
 	//check cache
 	val, redisErr := RedisClient.Get(cacheKey).Result()
@@ -45,7 +41,7 @@ func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 	_, err := client.R().
 		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentarr).
-		Get(MakeURL(URL_MENU, &ID))
+		Get(MakeURL(URL_MENU, Int(GetDayId())))
 
 	if err != nil {
 		log.Println(err)
@@ -72,14 +68,14 @@ func OutputMenu(key string) string {
 		output string
 	)
 
-	m := GetMenu(Client, GetDayId(), key)
+	m := GetMenu(Client, key)
 
 	if m.Status == nil {
 		return "There is no dinner order today! 😕"
 	}
 
 	for _, d := range m.DinnerArr {
-		output += fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
+		output += fmt.Sprintf(Common.Config.Prefix.UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
 			d.ImageURL, d.Id, d.Name, d.Quota)
 	}
 	return output
@@ -93,7 +89,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		skipFillButtons bool
 	)
 
-	m := GetMenu(Client, GetDayId(), key)
+	m := GetMenu(Client, key)
 
 	if m.Status == nil {
 		texts = append(texts, "There is no dinner order today! 😕")
@@ -110,7 +106,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 	}
 
 	for _, d := range m.DinnerArr {
-		texts = append(texts, fmt.Sprintf(Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable: %v", d.ImageURL, d.Code, d.Id, d.Name, d.Quota))
+		texts = append(texts, fmt.Sprintf(Common.Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable: %v", d.ImageURL, d.Code, d.Id, d.Name, d.Quota))
 
 		if !skipFillButtons {
 			var buttons []tgbotapi.InlineKeyboardButton
@@ -118,5 +114,19 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 			out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
 		}
 	}
+
+	//Follows the same conditions
+	if !skipFillButtons {
+		//Append for random
+		texts = append(texts, "Can't decide?👇🏻")
+		randomBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("I'm feeling lucky!", "RAND")}
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(randomBotton))
+
+		//Append for order skipping
+		texts = append(texts, "Don't need a dinner today?👇🏻")
+		skipBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("Nah I'm good.", "-1")}
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(skipBotton))
+	}
+
 	return texts, out
 }

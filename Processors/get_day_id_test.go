@@ -1,9 +1,13 @@
 package Processors
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/aaronangxz/SeaDinner/Common"
+)
 
 func AdhocTestGetDayId(t *testing.T) {
-	Config.Adhoc = true
+	Common.Config.Adhoc = true
 	Init()
 	tests := []struct {
 		name   string

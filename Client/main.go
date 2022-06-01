@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
@@ -36,6 +37,7 @@ func main() {
 	for update := range updates {
 		if update.CallbackQuery != nil {
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+			msg.ParseMode = "MARKDOWN"
 			msg.Text, _ = Bot.CallbackQueryHandler(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
 			if _, err := bot.Send(msg); err != nil {
 				log.Println(err)
@@ -146,8 +148,11 @@ func main() {
 			} else {
 				msg.Text, _ = Bot.CheckChope(update.Message.Chat.ID)
 			}
-		case "ret":
-			return
+		case "reminder":
+			//Backdoor for test env
+			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
+				Bot.SendReminder()
+			}
 		default:
 			msg.Text = "I don't understand this command :("
 		}
