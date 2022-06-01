@@ -85,7 +85,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 	var (
 		texts           []string
 		out             []tgbotapi.InlineKeyboardMarkup
-		buttonText      string = "Snatch %v today"
+		dayText         string = "today"
 		skipFillButtons bool
 	)
 
@@ -99,7 +99,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 	tz, _ := time.LoadLocation(TimeZone)
 	if time.Now().In(tz).Unix() > GetLunchTime().Unix() {
 		if IsNotEOW(time.Now().In(tz)) {
-			buttonText = "Snatch %v tomorrow"
+			dayText = "tomorrow"
 		} else {
 			skipFillButtons = true
 		}
@@ -110,7 +110,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 
 		if !skipFillButtons {
 			var buttons []tgbotapi.InlineKeyboardButton
-			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf(buttonText, d.Code), fmt.Sprint(d.Id)))
+			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("Snatch %v %v", d.Code, dayText), fmt.Sprint(d.Id)))
 			out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
 		}
 	}
@@ -123,7 +123,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		out = append(out, tgbotapi.NewInlineKeyboardMarkup(randomBotton))
 
 		//Append for order skipping
-		texts = append(texts, "Don't need a dinner today?👇🏻")
+		texts = append(texts, fmt.Sprintf("Don't need a dinner %v?👇🏻", dayText))
 		skipBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("Nah I'm good.", "-1")}
 		out = append(out, tgbotapi.NewInlineKeyboardMarkup(skipBotton))
 	}

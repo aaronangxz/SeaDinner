@@ -181,6 +181,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 func CheckChope(id int64) (string, bool) {
 	var (
 		existingRecord UserChoice
+		dayText        = "today"
 	)
 
 	if id <= 0 {
@@ -194,16 +195,26 @@ func CheckChope(id int64) (string, bool) {
 		if existingRecord.UserChoice == nil {
 			return "I have yet to receive your order 🥲 You can choose from /menu", false
 		} else if existingRecord.GetUserChoice() == "-1" {
-			return "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu", false
+			//Dynamic text based on time - shows tomorrow if current time is past lunch
+			tz, _ := time.LoadLocation(Processors.TimeZone)
+			if time.Now().In(tz).Unix() > Processors.GetLunchTime().Unix() {
+				if Processors.IsNotEOW(time.Now().In(tz)) {
+					dayText = "tomorrow"
+				} else {
+					//On fridays ~ sundays
+					return "We are done for this week! You can tell me your order again next week😀", false
+				}
+			}
+			return fmt.Sprintf("Not placing dinner order for you %v 🙅 Changed your mind? You can choose from /menu", dayText), false
 		}
 		menu := MakeMenuNameMap()
 
 		_, ok := menu[existingRecord.GetUserChoice()]
 
 		if !ok {
-			return fmt.Sprintf("Your choice %v is not available today, so I will not order anything🥲 Choose a new dish from /menu", existingRecord.GetUserChoice()), true
+			return fmt.Sprintf("Your choice %v is not available this week, so I will not order anything🥲 Choose a new dish from /menu", existingRecord.GetUserChoice()), true
 		}
-		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
+		return fmt.Sprintf("I'm tasked to snatch %v for you😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
 	}
 }
 
@@ -228,7 +239,7 @@ func GetChope(id int64, s string) (string, bool) {
 
 	//When it is Friday after 12.30pm, we don't accept any orders (except -1) because we don't know next week's menu yet
 	if !Processors.IsNotEOW(time.Now()) && time.Now().Unix() > Processors.GetLunchTime().Unix() && s != "-1" {
-		return "TGIF! You can tell me your order again next week!😀", false
+		return "We are done for this week! You can tell me your order again next week😀", false
 	}
 
 	if Processors.IsNotNumber(s) {
