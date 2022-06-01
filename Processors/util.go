@@ -14,6 +14,7 @@ import (
 	"unicode"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
 
 func MakeToken(key string) string {
@@ -30,17 +31,17 @@ func MakeToken(key string) string {
 	return fmt.Sprint(Common.Config.Prefix.TokenPrefix, decrypt)
 }
 
-func MakeURL(opt int, id *int) string {
+func MakeURL(opt int, id *int64) string {
 	prefix := Common.Config.Prefix.UrlPrefix
 	switch opt {
-	case URL_CURRENT:
+	case int(sea_dinner.URLType_URL_CURRENT):
 		return fmt.Sprint(prefix, "/api/current")
-	case URL_MENU:
+	case int(sea_dinner.URLType_URL_MENU):
 		if id == nil {
 			return ""
 		}
 		return fmt.Sprint(prefix, "/api/menu/", *id)
-	case URL_ORDER:
+	case int(sea_dinner.URLType_URL_ORDER):
 		if id == nil {
 			return ""
 		}
@@ -57,12 +58,12 @@ func OutputResultsCount(total int, failed int) {
 	fmt.Println("*************************")
 }
 
-func OutputResults(resultMap map[int64]int) {
+func OutputResults(resultMap map[int64]int64) {
 	var (
 		passed int
 	)
 	for _, m := range resultMap {
-		if m == ORDER_STATUS_OK {
+		if m == int64(sea_dinner.OrderStatus_ORDER_STATUS_OK) {
 			passed++
 		}
 	}
@@ -165,16 +166,6 @@ func MakeKey() string {
 		panic(err.Error())
 	}
 	return hex.EncodeToString(bytes) //encode key in bytes to string for saving
-}
-
-func PopSuccessfulOrder(s []UserChoiceWithKeyAndStatus, index int) []UserChoiceWithKeyAndStatus {
-	if index >= len(s) {
-		log.Printf("PopSuccessfulOrder | index exceeds slice size | size: %v index: %v", len(s), index)
-		return nil
-	}
-	ret := make([]UserChoiceWithKeyAndStatus, 0)
-	ret = append(ret, s[:index]...)
-	return append(ret, s[index+1:]...)
 }
 
 func RandomFood(m map[string]string) string {

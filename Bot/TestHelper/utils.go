@@ -10,6 +10,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
@@ -98,10 +99,10 @@ func ConnectTestRedis() {
 	Processors.RedisClient = rdb
 }
 
-func GetLiveMenuDetails() []Processors.Food {
+func GetLiveMenuDetails() []*sea_dinner.Food {
 	InitClient()
 	LoadConfig()
 	InitTest()
 	key := os.Getenv("TOKEN")
-	return Processors.GetMenu(Processors.Client, key).DinnerArr
+	return Processors.GetMenu(Processors.Client, key).GetFood()
 }

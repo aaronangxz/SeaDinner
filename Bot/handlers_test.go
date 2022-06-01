@@ -133,7 +133,7 @@ func TestUpdateKey(t *testing.T) {
 
 func TestCheckChope(t *testing.T) {
 	m := TestHelper.GetLiveMenuDetails()
-	u := user_choice.New().SetUserChoice(int64(m[0].Id)).Build()
+	u := user_choice.New().SetUserChoice(int64(m[0].GetId())).Build()
 	stopOrder := user_choice.New().SetUserChoice(-1).Build()
 	notInMenu := user_choice.New().SetUserChoice(999999).Build()
 
@@ -155,7 +155,7 @@ func TestCheckChope(t *testing.T) {
 		{
 			name:  "HappyCase",
 			args:  args{u.GetUserID()},
-			want:  fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", m[0].Name),
+			want:  fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", m[0].GetName()),
 			want1: true,
 		},
 		{
@@ -199,7 +199,7 @@ func TestCheckChope(t *testing.T) {
 func TestGetChope(t *testing.T) {
 	m := TestHelper.GetLiveMenuDetails()
 	u := user_choice.New().Build()
-	u1 := user_choice.New().SetUserChoice(int64(m[0].Id)).Build()
+	u1 := user_choice.New().SetUserChoice(int64(m[0].GetId())).Build()
 	expected := "Okay got it. I will order %v for you today😙"
 	if time.Now().Unix() > Processors.GetLunchTime().Unix() {
 		expected = "Okay got it. I will order %v for you tomorrow😙"
@@ -222,8 +222,8 @@ func TestGetChope(t *testing.T) {
 	}{
 		{
 			name:  "HappyCase",
-			args:  args{id: u.GetUserID(), s: fmt.Sprint(m[0].Id)},
-			want:  fmt.Sprintf(expected, m[0].Name),
+			args:  args{id: u.GetUserID(), s: fmt.Sprint(m[0].GetId())},
+			want:  fmt.Sprintf(expected, m[0].GetName()),
 			want1: true,
 		},
 		{
@@ -252,8 +252,8 @@ func TestGetChope(t *testing.T) {
 		},
 		{
 			name:  "UpdateEntry",
-			args:  args{id: u1.GetUserID(), s: fmt.Sprint(m[1].Id)},
-			want:  fmt.Sprintf(expected, m[1].Name),
+			args:  args{id: u1.GetUserID(), s: fmt.Sprint(m[1].GetId())},
+			want:  fmt.Sprintf(expected, m[1].GetName()),
 			want1: true,
 		},
 		{

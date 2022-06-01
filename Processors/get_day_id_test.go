@@ -6,16 +6,16 @@ import (
 	"github.com/aaronangxz/SeaDinner/Common"
 )
 
-func AdhocTestGetDayId(t *testing.T) {
+func AdHocTestGetDayId(t *testing.T) {
 	Common.Config.Adhoc = true
 	Init()
 	tests := []struct {
 		name   string
-		wantID int
+		wantID int64
 	}{
 		{
 			name:   "HappyCase",
-			wantID: 3556,
+			wantID: 3654,
 		},
 	}
 	for _, tt := range tests {

@@ -6,12 +6,15 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
 	defaultOrderTime    = time.Now().Unix()
-	defaultStatus       = int64(Processors.ORDER_STATUS_OK)
+	defaultStatus       = int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)
 	defaultErrorMessage = "Default Error Message"
 )
 
@@ -50,7 +53,7 @@ func (ul *UserLog) FillDefaults() *UserLog {
 		ul.SetStatus(defaultStatus)
 	}
 
-	if ul.UserLog.GetStatus() == Processors.ORDER_STATUS_FAIL && ul.UserLog.ErrorMsg == nil {
+	if ul.UserLog.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL) && ul.UserLog.ErrorMsg == nil {
 		ul.SetErrorMsg(defaultErrorMessage)
 	}
 
@@ -59,7 +62,7 @@ func (ul *UserLog) FillDefaults() *UserLog {
 
 func (ul *UserLog) Build() *UserLog {
 	ul.FillDefaults()
-	if err := Processors.DB.Table(Processors.DB_ORDER_LOG_TAB).Create(&ul).Error; err != nil {
+	if err := Processors.DB.Table(Common.DB_ORDER_LOG_TAB).Create(&ul).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", ul.GetUserID(), err.Error())
 		return nil
 	}
@@ -68,27 +71,27 @@ func (ul *UserLog) Build() *UserLog {
 }
 
 func (ul *UserLog) SetUserId(userId int64) *UserLog {
-	ul.UserLog.UserID = Processors.Int64(userId)
+	ul.UserLog.UserID = proto.Int64(userId)
 	return ul
 }
 
 func (ul *UserLog) SetFoodId(foodId string) *UserLog {
-	ul.UserLog.FoodID = Processors.String(foodId)
+	ul.UserLog.FoodID = proto.String(foodId)
 	return ul
 }
 
 func (ul *UserLog) SetOrderTime(orderTime int64) *UserLog {
-	ul.UserLog.OrderTime = Processors.Int64(orderTime)
+	ul.UserLog.OrderTime = proto.Int64(orderTime)
 	return ul
 }
 
 func (ul *UserLog) SetStatus(status int64) *UserLog {
-	ul.UserLog.Status = Processors.Int64(status)
+	ul.UserLog.Status = proto.Int64(status)
 	return ul
 }
 
 func (ul *UserLog) SetErrorMsg(errorMsg string) *UserLog {
-	ul.UserLog.ErrorMsg = Processors.String(errorMsg)
+	ul.UserLog.ErrorMsg = proto.String(errorMsg)
 	return ul
 }
 

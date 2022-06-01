@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -50,7 +52,7 @@ func (uk *UserChoice) FillDefaults() *UserChoice {
 
 func (uc *UserChoice) Build() *UserChoice {
 	uc.FillDefaults()
-	if err := Processors.DB.Table(Processors.DB_USER_CHOICE_TAB).Create(&uc).Error; err != nil {
+	if err := Processors.DB.Table(Common.DB_USER_CHOICE_TAB).Create(&uc).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", uc.GetUserID(), err.Error())
 		return nil
 	}
@@ -59,22 +61,22 @@ func (uc *UserChoice) Build() *UserChoice {
 }
 
 func (uc *UserChoice) SetUserId(userId int64) *UserChoice {
-	uc.UserChoice.UserID = Processors.Int64(userId)
+	uc.UserChoice.UserID = proto.Int64(userId)
 	return uc
 }
 
 func (uc *UserChoice) SetUserChoice(userChoice int64) *UserChoice {
-	uc.UserChoice.UserChoice = Processors.Int64(userChoice)
+	uc.UserChoice.UserChoice = proto.Int64(userChoice)
 	return uc
 }
 
 func (uc *UserChoice) SetCtime(ctime int64) *UserChoice {
-	uc.UserChoice.Ctime = Processors.Int64(ctime)
+	uc.UserChoice.Ctime = proto.Int64(ctime)
 	return uc
 }
 
 func (uc *UserChoice) SetMtime(mtime int64) *UserChoice {
-	uc.UserChoice.Mtime = Processors.Int64(mtime)
+	uc.UserChoice.Mtime = proto.Int64(mtime)
 	return uc
 }
 

@@ -33,8 +33,8 @@ func TestGetMenu(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetMenu(tt.args.client, tt.args.key); !reflect.DeepEqual(len(got.DinnerArr), tt.want) {
-				t.Errorf("GetMenu() = %v, want %v", len(got.DinnerArr), tt.want)
+			if got := GetMenu(tt.args.client, tt.args.key); !reflect.DeepEqual(len(got.GetFood()), tt.want) {
+				t.Errorf("GetMenu() = %v, want %v", len(got.GetFood()), tt.want)
 			}
 		})
 	}

@@ -7,16 +7,18 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"google.golang.org/protobuf/proto"
 )
 
-func GetMenu(client resty.Client, key string) DinnerMenuArr {
+func GetMenu(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 	var (
-		cacheKey   = fmt.Sprint(MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
+		cacheKey   = fmt.Sprint(Common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 		expiry     = 3600 * time.Second
-		currentarr DinnerMenuArr
+		currentarr *sea_dinner.DinnerMenuArray
 	)
 
 	//check cache
@@ -28,7 +30,7 @@ func GetMenu(client resty.Client, key string) DinnerMenuArr {
 			log.Printf("GetMenu | Error while reading from redis: %v", redisErr.Error())
 		}
 	} else {
-		redisResp := DinnerMenuArr{}
+		redisResp := &sea_dinner.DinnerMenuArray{}
 		err := json.Unmarshal([]byte(val), &redisResp)
 		if err != nil {
 			log.Printf("GetMenu | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
@@ -41,7 +43,7 @@ func GetMenu(client resty.Client, key string) DinnerMenuArr {
 	_, err := client.R().
 		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentarr).
-		Get(MakeURL(URL_MENU, Int(GetDayId())))
+		Get(MakeURL(int(sea_dinner.URLType_URL_MENU), proto.Int64(GetDayId())))
 
 	if err != nil {
 		log.Println(err)
@@ -74,9 +76,9 @@ func OutputMenu(key string) string {
 		return "There is no dinner order today! 😕"
 	}
 
-	for _, d := range m.DinnerArr {
+	for _, d := range m.GetFood() {
 		output += fmt.Sprintf(Common.Config.Prefix.UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
-			d.ImageURL, d.Id, d.Name, d.Quota)
+			d.GetImageUrl(), d.GetId(), d.GetName(), d.GetQuota())
 	}
 	return output
 }
@@ -105,12 +107,12 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		}
 	}
 
-	for _, d := range m.DinnerArr {
-		texts = append(texts, fmt.Sprintf(Common.Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable: %v", d.ImageURL, d.Code, d.Id, d.Name, d.Quota))
+	for _, d := range m.GetFood() {
+		texts = append(texts, fmt.Sprintf(Common.Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable: %v", d.GetImageUrl(), d.GetCode(), d.GetId(), d.GetName(), d.GetQuota()))
 
 		if !skipFillButtons {
 			var buttons []tgbotapi.InlineKeyboardButton
-			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf(buttonText, d.Code), fmt.Sprint(d.Id)))
+			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf(buttonText, d.GetCode()), fmt.Sprint(d.GetId())))
 			out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
 		}
 	}

@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -52,7 +54,7 @@ func (uk *UserKey) FillDefaults() *UserKey {
 
 func (uk *UserKey) Build() *UserKey {
 	uk.FillDefaults()
-	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Create(&uk).Error; err != nil {
+	if err := Processors.DB.Table(Common.DB_USER_KEY_TAB).Create(&uk).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", uk.GetUserID(), err.Error())
 		return nil
 	}
@@ -61,22 +63,22 @@ func (uk *UserKey) Build() *UserKey {
 }
 
 func (uk *UserKey) SetUserId(userId int64) *UserKey {
-	uk.UserKey.UserID = Processors.Int64(userId)
+	uk.UserKey.UserID = proto.Int64(userId)
 	return uk
 }
 
 func (uk *UserKey) SetKey(userKey string) *UserKey {
-	uk.UserKey.UserKey = Processors.String(userKey)
+	uk.UserKey.UserKey = proto.String(userKey)
 	return uk
 }
 
 func (uk *UserKey) SetCtime(ctime int64) *UserKey {
-	uk.UserKey.Ctime = Processors.Int64(ctime)
+	uk.UserKey.Ctime = proto.Int64(ctime)
 	return uk
 }
 
 func (uk *UserKey) SetMtime(mtime int64) *UserKey {
-	uk.UserKey.Mtime = Processors.Int64(mtime)
+	uk.UserKey.Mtime = proto.Int64(mtime)
 	return uk
 }
 
