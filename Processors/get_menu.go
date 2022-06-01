@@ -117,15 +117,23 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 
 	//Follows the same conditions
 	if !skipFillButtons {
-		//Append for random
-		texts = append(texts, "Can't decide?👇🏻")
-		randomBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("I'm feeling lucky!", "RAND")}
-		out = append(out, tgbotapi.NewInlineKeyboardMarkup(randomBotton))
+		// //Append for random
+		// texts = append(texts, "Can't decide?👇🏻")
+		// randomBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("I'm feeling lucky!", "RAND")}
+		// out = append(out, tgbotapi.NewInlineKeyboardMarkup(randomBotton))
 
-		//Append for order skipping
-		texts = append(texts, fmt.Sprintf("Don't need a dinner %v?👇🏻", dayText))
-		skipBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("Nah I'm good.", "-1")}
-		out = append(out, tgbotapi.NewInlineKeyboardMarkup(skipBotton))
+		// //Append for order skipping
+		// texts = append(texts, fmt.Sprintf("Don't need a dinner %v?👇🏻", dayText))
+		// skipBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("Nah I'm good.", "-1")}
+		// out = append(out, tgbotapi.NewInlineKeyboardMarkup(skipBotton))
+
+		var rows []tgbotapi.InlineKeyboardButton
+		texts = append(texts, "Other Options👇🏻\n🎲 If you're feeling lucky\n🙅 If you don't need it today")
+		randomBotton := tgbotapi.NewInlineKeyboardButtonData("🎲", "RAND")
+		rows = append(rows, randomBotton)
+		skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
+		rows = append(rows, skipBotton)
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
 	}
 
 	return texts, out
