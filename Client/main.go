@@ -136,15 +136,6 @@ func main() {
 			}
 		case "chope":
 			msg.Text = "This command is deprecated. Choose from /menu instead!😋"
-			/*
-				s, ok := Bot.CheckKey(update.Message.Chat.ID)
-				if !ok {
-					msg.Text = s
-				} else {
-					msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅"
-					startListenChope = true
-				}
-			*/
 		case "choice":
 			s, ok := Bot.CheckKey(update.Message.Chat.ID)
 			if !ok {

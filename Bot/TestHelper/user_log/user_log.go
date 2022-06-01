@@ -19,16 +19,16 @@ var (
 )
 
 type UserLog struct {
-	*TestHelper.UserLog
+	*sea_dinner.OrderRecord
 }
 
 func New() *UserLog {
 	TestHelper.InitTest()
 	return &UserLog{
-		UserLog: &TestHelper.UserLog{
-			ID:        new(int64),
-			UserID:    new(int64),
-			FoodID:    new(string),
+		OrderRecord: &sea_dinner.OrderRecord{
+			Id:        new(int64),
+			UserId:    new(int64),
+			FoodId:    new(string),
 			OrderTime: new(int64),
 			Status:    new(int64),
 			ErrorMsg:  new(string),
@@ -37,23 +37,23 @@ func New() *UserLog {
 }
 
 func (ul *UserLog) FillDefaults() *UserLog {
-	if ul.UserLog.UserID == nil {
+	if ul.OrderRecord.UserId == nil {
 		ul.SetUserId(TestHelper.RandomInt(99999))
 	}
 
-	if ul.UserLog.FoodID == nil {
+	if ul.OrderRecord.FoodId == nil {
 		ul.SetFoodId(fmt.Sprint(TestHelper.RandomInt(99999)))
 	}
 
-	if ul.UserLog.OrderTime == nil {
+	if ul.OrderRecord.OrderTime == nil {
 		ul.SetOrderTime(defaultOrderTime)
 	}
 
-	if ul.UserLog.Status == nil {
+	if ul.OrderRecord.Status == nil {
 		ul.SetStatus(defaultStatus)
 	}
 
-	if ul.UserLog.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL) && ul.UserLog.ErrorMsg == nil {
+	if ul.OrderRecord.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL) && ul.OrderRecord.ErrorMsg == nil {
 		ul.SetErrorMsg(defaultErrorMessage)
 	}
 
@@ -63,44 +63,44 @@ func (ul *UserLog) FillDefaults() *UserLog {
 func (ul *UserLog) Build() *UserLog {
 	ul.FillDefaults()
 	if err := Processors.DB.Table(Common.DB_ORDER_LOG_TAB).Create(&ul).Error; err != nil {
-		log.Printf("Failed to insert to DB | user_id:%v | %v", ul.GetUserID(), err.Error())
+		log.Printf("Failed to insert to DB | user_id:%v | %v", ul.GetUserId(), err.Error())
 		return nil
 	}
-	log.Printf("Sulcessfully inserted to DB | user_id:%v", ul.GetUserID())
+	log.Printf("Sulcessfully inserted to DB | user_id:%v", ul.GetUserId())
 	return ul
 }
 
 func (ul *UserLog) SetUserId(userId int64) *UserLog {
-	ul.UserLog.UserID = proto.Int64(userId)
+	ul.OrderRecord.UserId = proto.Int64(userId)
 	return ul
 }
 
 func (ul *UserLog) SetFoodId(foodId string) *UserLog {
-	ul.UserLog.FoodID = proto.String(foodId)
+	ul.OrderRecord.FoodId = proto.String(foodId)
 	return ul
 }
 
 func (ul *UserLog) SetOrderTime(orderTime int64) *UserLog {
-	ul.UserLog.OrderTime = proto.Int64(orderTime)
+	ul.OrderRecord.OrderTime = proto.Int64(orderTime)
 	return ul
 }
 
 func (ul *UserLog) SetStatus(status int64) *UserLog {
-	ul.UserLog.Status = proto.Int64(status)
+	ul.OrderRecord.Status = proto.Int64(status)
 	return ul
 }
 
 func (ul *UserLog) SetErrorMsg(errorMsg string) *UserLog {
-	ul.UserLog.ErrorMsg = proto.String(errorMsg)
+	ul.OrderRecord.ErrorMsg = proto.String(errorMsg)
 	return ul
 }
 
 func (ul *UserLog) TearDown() error {
-	if err := Processors.DB.Exec("DELETE FROM user_log_tab WHERE user_id = ?", ul.GetUserID()).Error; err != nil {
-		log.Printf("Failed to delete from DB | user_id:%v", ul.GetUserID())
+	if err := Processors.DB.Exec("DELETE FROM user_log_tab WHERE user_id = ?", ul.GetUserId()).Error; err != nil {
+		log.Printf("Failed to delete from DB | user_id:%v", ul.GetUserId())
 		return err
 	}
-	log.Printf("Sulcessfully deleted from DB | user_id:%v", ul.GetUserID())
+	log.Printf("Sulcessfully deleted from DB | user_id:%v", ul.GetUserId())
 	return nil
 }
 

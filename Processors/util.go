@@ -50,14 +50,6 @@ func MakeURL(opt int, id *int64) string {
 	return ""
 }
 
-func OutputResultsCount(total int, failed int) {
-	fmt.Println("*************************")
-	fmt.Println("Total Order: ", total)
-	fmt.Println("Total Success: ", total-failed)
-	fmt.Println("Total Failures: ", failed)
-	fmt.Println("*************************")
-}
-
 func OutputResults(resultMap map[int64]int64) {
 	var (
 		passed int
