@@ -407,11 +407,11 @@ func GenerateWeeklyResultTable(record []Processors.OrderRecord) string {
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 	m := MakeMenuCodeMap()
 	status := map[int64]string{Processors.ORDER_STATUS_OK: "✅", Processors.ORDER_STATUS_FAIL: "❌"}
-	header := fmt.Sprintf("Your orders from %v to %v\n\n", Processors.ConvertTimeStampMonthDay(start), Processors.ConvertTimeStampMonthDay(end))
-	table := "<pre>\n     Day    Code  Status\n"
+	header := fmt.Sprintf("Your orders from %v to %v\n", Processors.ConvertTimeStampMonthDay(start), Processors.ConvertTimeStampMonthDay(end))
+	table := "<pre>\n    Day     Code  Status\n"
 	table += "-------------------------\n"
 	for _, r := range record {
-		table += fmt.Sprintf("  %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), m[r.GetFoodID()], status[r.GetStatus()])
+		table += fmt.Sprintf(" %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), m[r.GetFoodID()], status[r.GetStatus()])
 	}
 	table += "</pre>"
 	return header + table
