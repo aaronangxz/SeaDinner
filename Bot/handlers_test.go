@@ -161,7 +161,7 @@ func TestCheckChope(t *testing.T) {
 		{
 			name:  "HappyCase",
 			args:  args{u.GetUserID()},
-			want:  fmt.Sprintf("I'm tasked to snatch %v for you😀 Changed your mind? You can choose from /menu", m[0].Name),
+			want:  fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", m[0].Name),
 			want1: true,
 		},
 		{
@@ -185,7 +185,7 @@ func TestCheckChope(t *testing.T) {
 		{
 			name:  "OrderNotInMenu",
 			args:  args{id: notInMenu.GetUserID()},
-			want:  fmt.Sprintf("Your choice %v is not available this week, so I will not order anything🥲 Choose a new dish from /menu", notInMenu.GetUserChoice()),
+			want:  fmt.Sprintf("Your choice %v is not available this week, so I will not order anything 🥲 Choose a new dish from /menu", notInMenu.GetUserChoice()),
 			want1: true,
 		},
 	}
@@ -206,9 +206,9 @@ func TestGetChope(t *testing.T) {
 	m := TestHelper.GetLiveMenuDetails()
 	u := user_choice.New().Build()
 	u1 := user_choice.New().SetUserChoice(int64(m[0].Id)).Build()
-	expected := "Okay got it. I will order %v for you today😙"
+	expected := "Okay got it. I will order %v for you today 😙"
 	if time.Now().Unix() > Processors.GetLunchTime().Unix() {
-		expected = "Okay got it. I will order %v for you tomorrow😙"
+		expected = "Okay got it. I will order %v for you tomorrow 😙"
 	}
 
 	defer func() {
@@ -253,7 +253,7 @@ func TestGetChope(t *testing.T) {
 		{
 			name:  "NotInMenu",
 			args:  args{id: u.GetUserID(), s: fmt.Sprint(6969)},
-			want:  "This dish is not available today. Tell me another one. 😟",
+			want:  "This dish is not available today. Tell me another one.😟",
 			want1: false,
 		},
 		{
