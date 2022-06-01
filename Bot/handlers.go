@@ -227,6 +227,7 @@ func CheckChope(id int64) (string, bool) {
 
 //GetChope Updates the current food choice made by user.
 //With basic parameter verifications
+//Supports Button Callbacks
 func GetChope(id int64, s string) (string, bool) {
 	var (
 		existingRecord sea_dinner.UserChoice
@@ -355,37 +356,7 @@ func GetChope(id int64, s string) (string, bool) {
 	}
 }
 
-//DEPRECATED
-//GetLatestResultByUserId Retrieves latest order status.
-//Should use ListWeeklyResultByUserId instead
-func GetLatestResultByUserId(id int64) string {
-	var (
-		res sea_dinner.OrderRecord
-	)
-
-	if id <= 0 {
-		log.Println("Id must be > 1.")
-		return ""
-	}
-
-	if err := Processors.DB.Raw("SELECT * FROM order_log_tab WHERE user_id = ? AND order_time BETWEEN ? AND ? ORDER BY order_time DESC LIMIT 1", id, Processors.GetLunchTime().Unix()-3600, Processors.GetLunchTime().Unix()+3600).Scan(&res).Error; err != nil {
-		log.Printf("id : %v | Failed to retrieve record.", id)
-		return "I have yet to order anything today 😕"
-	}
-
-	if res.Status == nil {
-		return "I have yet to order anything today 😕"
-	}
-
-	menu := MakeMenuNameMap()
-
-	if res.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_OK) {
-		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", menu[res.GetFoodId()], Processors.ConvertTimeStampTime(res.GetOrderTime()))
-	}
-	return fmt.Sprintf("Failed to order %v today. 😔", menu[res.GetFoodId()])
-}
-
-//ListWeeklyResultByUserId
+//ListWeeklyResultByUserId Returns the order records of a user in the current week
 func ListWeeklyResultByUserId(id int64) string {
 	var (
 		res []*sea_dinner.OrderRecord
@@ -607,6 +578,7 @@ func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, b
 	return GetChope(id, callBack.Data)
 }
 
+//MakeHelpResponse Prints out Introduction
 func MakeHelpResponse() string {
 	return "*Welcome to SeaHungerGamesBot!*\n\n" +
 		"The goal of my existence is to help you snatch that dinner in milliseconds. And also we all know that you are too lazy to open up SeaTalk.\n\n" +

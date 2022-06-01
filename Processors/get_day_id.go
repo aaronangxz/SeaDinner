@@ -12,6 +12,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
+//GetDayId Calls Sea API, retrieves the current day's id
 func GetDayId() (ID int64) {
 	var (
 		key      = os.Getenv("TOKEN")

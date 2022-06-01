@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+//GetDayId Calls Sea API, retrieves the current day's menu. Supports cache with TTL of 60 mins
 func GetMenu(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 	var (
 		cacheKey   = fmt.Sprint(Common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
@@ -65,24 +66,7 @@ func GetMenu(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 	return currentarr
 }
 
-func OutputMenu(key string) string {
-	var (
-		output string
-	)
-
-	m := GetMenu(Client, key)
-
-	if m.Status == nil {
-		return "There is no dinner order today! 😕"
-	}
-
-	for _, d := range m.GetFood() {
-		output += fmt.Sprintf(Common.Config.Prefix.UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
-			d.GetImageUrl(), d.GetId(), d.GetName(), d.GetQuota())
-	}
-	return output
-}
-
+//OutputMenuWithButton Sends menu and callback buttons
 func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyboardMarkup) {
 	var (
 		texts           []string
