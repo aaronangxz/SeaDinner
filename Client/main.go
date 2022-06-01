@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
@@ -147,10 +148,11 @@ func main() {
 			} else {
 				msg.Text, _ = Bot.CheckChope(update.Message.Chat.ID)
 			}
-		case "ret":
-			return
 		case "reminder":
-			Bot.SendReminder()
+			//Backdoor for test env
+			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
+				Bot.SendReminder()
+			}
 		default:
 			msg.Text = "I don't understand this command :("
 		}

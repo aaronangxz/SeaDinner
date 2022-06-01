@@ -207,7 +207,7 @@ func MakeMenuMap() map[string]string {
 		key = os.Getenv("TOKEN")
 	)
 	menuMap := make(map[string]string)
-	menu := GetMenu(Client, GetDayId(), key)
+	menu := GetMenu(Client, key)
 	for _, m := range menu.DinnerArr {
 		menuMap[fmt.Sprint(m.Id)] = m.Name
 	}

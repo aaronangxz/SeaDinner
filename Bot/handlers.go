@@ -559,7 +559,7 @@ func MakeMenuNameMap() map[string]string {
 		key = os.Getenv("TOKEN")
 	)
 	menuMap := make(map[string]string)
-	menu := Processors.GetMenu(Processors.Client, Processors.GetDayId(), key)
+	menu := Processors.GetMenu(Processors.Client, key)
 	for _, m := range menu.DinnerArr {
 		menuMap[fmt.Sprint(m.Id)] = m.Name
 	}
@@ -575,7 +575,7 @@ func MakeMenuCodeMap() map[string]string {
 		key = os.Getenv("TOKEN")
 	)
 	menuMap := make(map[string]string)
-	menu := Processors.GetMenu(Processors.Client, Processors.GetDayId(), key)
+	menu := Processors.GetMenu(Processors.Client, key)
 	for _, m := range menu.DinnerArr {
 		menuMap[fmt.Sprint(m.Id)] = m.Code
 	}

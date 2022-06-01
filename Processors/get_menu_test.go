@@ -18,7 +18,6 @@ func TestGetMenu(t *testing.T) {
 	key := os.Getenv("TOKEN")
 	type args struct {
 		client resty.Client
-		ID     int
 		key    string
 	}
 	tests := []struct {
@@ -28,18 +27,13 @@ func TestGetMenu(t *testing.T) {
 	}{
 		{
 			name: "HappyCase",
-			args: args{client: r, ID: 3521, key: key},
+			args: args{client: r, key: key},
 			want: 12,
-		},
-		{
-			name: "InvalidID",
-			args: args{client: r, ID: 0, key: key},
-			want: 0,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetMenu(tt.args.client, tt.args.ID, tt.args.key); !reflect.DeepEqual(len(got.DinnerArr), tt.want) {
+			if got := GetMenu(tt.args.client, tt.args.key); !reflect.DeepEqual(len(got.DinnerArr), tt.want) {
 				t.Errorf("GetMenu() = %v, want %v", len(got.DinnerArr), tt.want)
 			}
 		})

@@ -12,17 +12,12 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
+func GetMenu(client resty.Client, key string) DinnerMenuArr {
 	var (
 		cacheKey   = fmt.Sprint(MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 		expiry     = 3600 * time.Second
 		currentarr DinnerMenuArr
 	)
-
-	if ID == 0 {
-		log.Println("GetMenu | Invalid id:", ID)
-		return currentarr
-	}
 
 	//check cache
 	val, redisErr := RedisClient.Get(cacheKey).Result()
@@ -46,7 +41,7 @@ func GetMenu(client resty.Client, ID int, key string) DinnerMenuArr {
 	_, err := client.R().
 		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentarr).
-		Get(MakeURL(URL_MENU, &ID))
+		Get(MakeURL(URL_MENU, Int(GetDayId())))
 
 	if err != nil {
 		log.Println(err)
@@ -73,7 +68,7 @@ func OutputMenu(key string) string {
 		output string
 	)
 
-	m := GetMenu(Client, GetDayId(), key)
+	m := GetMenu(Client, key)
 
 	if m.Status == nil {
 		return "There is no dinner order today! 😕"
@@ -94,7 +89,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		skipFillButtons bool
 	)
 
-	m := GetMenu(Client, GetDayId(), key)
+	m := GetMenu(Client, key)
 
 	if m.Status == nil {
 		texts = append(texts, "There is no dinner order today! 😕")

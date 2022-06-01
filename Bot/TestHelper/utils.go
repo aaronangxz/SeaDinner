@@ -103,5 +103,5 @@ func GetLiveMenuDetails() []Processors.Food {
 	LoadConfig()
 	InitTest()
 	key := os.Getenv("TOKEN")
-	return Processors.GetMenu(Processors.Client, Processors.GetDayId(), key).DinnerArr
+	return Processors.GetMenu(Processors.Client, key).DinnerArr
 }
