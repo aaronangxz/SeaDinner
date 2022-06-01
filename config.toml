@@ -1,4 +1,4 @@
-adhoc = true
+adhoc = false
 
 [prefix]
 url_prefix = "https://dinner.sea.com"
@@ -8,8 +8,8 @@ token_prefix = "Token "
 retry_times = 5
 
 [order_time]
-hour = 1
-minutes = 29
+hour = 12
+minutes = 30
 seconds = 0
 
 [grayscale]
