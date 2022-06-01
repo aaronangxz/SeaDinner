@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"google.golang.org/protobuf/proto"
 )
 
-func PrepOrder() ([]UserChoiceWithKeyAndStatus, bool) {
+func PrepOrder() ([]*sea_dinner.UserChoiceWithKey, bool) {
 	var (
-		record []UserChoiceWithKeyAndStatus
+		record []*sea_dinner.UserChoiceWithKey
 	)
 
 	m := MakeMenuMap()
@@ -37,8 +40,8 @@ func PrepOrder() ([]UserChoiceWithKeyAndStatus, bool) {
 
 	for _, r := range record {
 		if r.GetUserChoice() == "RAND" {
-			r.UserChoice = String(RandomFood(m))
-			log.Printf("PrepOrder | id:%v | random choice:%v", r.GetUserID(), r.GetUserChoice())
+			r.UserChoice = proto.String(RandomFood(m))
+			log.Printf("PrepOrder | id:%v | random choice:%v", r.GetUserId(), r.GetUserChoice())
 		}
 	}
 

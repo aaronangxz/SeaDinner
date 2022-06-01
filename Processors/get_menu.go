@@ -7,16 +7,19 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"google.golang.org/protobuf/proto"
 )
 
-func GetMenu(client resty.Client, key string) DinnerMenuArr {
+//GetDayId Calls Sea API, retrieves the current day's menu. Supports cache with TTL of 60 mins
+func GetMenu(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 	var (
-		cacheKey   = fmt.Sprint(MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
+		cacheKey   = fmt.Sprint(Common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 		expiry     = 3600 * time.Second
-		currentarr DinnerMenuArr
+		currentarr *sea_dinner.DinnerMenuArray
 	)
 
 	//check cache
@@ -28,7 +31,7 @@ func GetMenu(client resty.Client, key string) DinnerMenuArr {
 			log.Printf("GetMenu | Error while reading from redis: %v", redisErr.Error())
 		}
 	} else {
-		redisResp := DinnerMenuArr{}
+		redisResp := &sea_dinner.DinnerMenuArray{}
 		err := json.Unmarshal([]byte(val), &redisResp)
 		if err != nil {
 			log.Printf("GetMenu | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
@@ -41,7 +44,7 @@ func GetMenu(client resty.Client, key string) DinnerMenuArr {
 	_, err := client.R().
 		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentarr).
-		Get(MakeURL(URL_MENU, Int(GetDayId())))
+		Get(MakeURL(int(sea_dinner.URLType_URL_MENU), proto.Int64(GetDayId())))
 
 	if err != nil {
 		log.Println(err)
@@ -63,29 +66,12 @@ func GetMenu(client resty.Client, key string) DinnerMenuArr {
 	return currentarr
 }
 
-func OutputMenu(key string) string {
-	var (
-		output string
-	)
-
-	m := GetMenu(Client, key)
-
-	if m.Status == nil {
-		return "There is no dinner order today! 😕"
-	}
-
-	for _, d := range m.DinnerArr {
-		output += fmt.Sprintf(Common.Config.Prefix.UrlPrefix+"%v\nFood ID: %v\nName: %v\nQuota: %v\n\n",
-			d.ImageURL, d.Id, d.Name, d.Quota)
-	}
-	return output
-}
-
+//OutputMenuWithButton Sends menu and callback buttons
 func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyboardMarkup) {
 	var (
 		texts           []string
 		out             []tgbotapi.InlineKeyboardMarkup
-		buttonText      string = "Snatch %v today"
+		dayText         string = "today"
 		skipFillButtons bool
 	)
 
@@ -99,33 +85,31 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 	tz, _ := time.LoadLocation(TimeZone)
 	if time.Now().In(tz).Unix() > GetLunchTime().Unix() {
 		if IsNotEOW(time.Now().In(tz)) {
-			buttonText = "Snatch %v tomorrow"
+			dayText = "tomorrow"
 		} else {
 			skipFillButtons = true
 		}
 	}
 
-	for _, d := range m.DinnerArr {
-		texts = append(texts, fmt.Sprintf(Common.Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable: %v", d.ImageURL, d.Code, d.Id, d.Name, d.Quota))
+	for _, d := range m.GetFood() {
+		texts = append(texts, fmt.Sprintf(Common.Config.Prefix.UrlPrefix+"%v\n%v(%v) %v\nAvailable: %v", d.GetImageUrl(), d.GetCode(), d.GetId(), d.GetName(), d.GetQuota()))
 
 		if !skipFillButtons {
 			var buttons []tgbotapi.InlineKeyboardButton
-			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf(buttonText, d.Code), fmt.Sprint(d.Id)))
+			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("Snatch %v %v", d.GetCode(), dayText), fmt.Sprint(d.GetId())))
 			out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
 		}
 	}
 
 	//Follows the same conditions
 	if !skipFillButtons {
-		//Append for random
-		texts = append(texts, "Can't decide?👇🏻")
-		randomBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("I'm feeling lucky!", "RAND")}
-		out = append(out, tgbotapi.NewInlineKeyboardMarkup(randomBotton))
-
-		//Append for order skipping
-		texts = append(texts, "Don't need a dinner today?👇🏻")
-		skipBotton := []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData("Nah I'm good.", "-1")}
-		out = append(out, tgbotapi.NewInlineKeyboardMarkup(skipBotton))
+		var rows []tgbotapi.InlineKeyboardButton
+		texts = append(texts, fmt.Sprintf("Other Options👇🏻\n\n🎲 If you're feeling lucky\n🙅 If you don't need it / not coming to office %v", dayText))
+		randomBotton := tgbotapi.NewInlineKeyboardButtonData("🎲", "RAND")
+		rows = append(rows, randomBotton)
+		skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
+		rows = append(rows, skipBotton)
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
 	}
 
 	return texts, out

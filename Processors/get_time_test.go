@@ -154,7 +154,7 @@ func TestConvertTimeStampMonthDay(t *testing.T) {
 func TestConvertTimeStampDayOfWeek(t *testing.T) {
 	timeNow := time.Unix(time.Now().Unix(), 0).Local().UTC()
 	tz, _ := time.LoadLocation(TimeZone)
-	s := (timeNow.In(tz).Format("Mon 2/1"))
+	s := (timeNow.In(tz).Format("Mon 02/01"))
 
 	type args struct {
 		timestamp int64
