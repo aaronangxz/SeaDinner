@@ -136,7 +136,13 @@ func TestCheckChope(t *testing.T) {
 	u := user_choice.New().SetUserChoice(fmt.Sprint(m[0].GetId())).Build()
 	stopOrder := user_choice.New().SetUserChoice(fmt.Sprint(-1)).Build()
 	notInMenu := user_choice.New().SetUserChoice(fmt.Sprint(999999)).Build()
-
+	tz, _ := time.LoadLocation(Processors.TimeZone)
+	var dayText string = "today"
+	if time.Now().In(tz).Unix() > Processors.GetLunchTime().Unix() {
+		if Processors.IsNotEOW(time.Now().In(tz)) {
+			dayText = "tomorrow"
+		}
+	}
 	defer func() {
 		u.TearDown()
 		stopOrder.TearDown()
@@ -173,13 +179,13 @@ func TestCheckChope(t *testing.T) {
 		{
 			name:  "StopOrder",
 			args:  args{id: stopOrder.GetUserId()},
-			want:  "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu",
+			want:  fmt.Sprintf("Not placing dinner order for you %v 🙅 Changed your mind? You can choose from /menu", dayText),
 			want1: false,
 		},
 		{
 			name:  "OrderNotInMenu",
 			args:  args{id: notInMenu.GetUserId()},
-			want:  fmt.Sprintf("Your choice %v is not available today, so I will not order anything🥲 Choose a new dish from /menu", notInMenu.GetUserChoice()),
+			want:  fmt.Sprintf("Your choice %v is not available this week, so I will not order anything 🥲 Choose a new dish from /menu", notInMenu.GetUserChoice()),
 			want1: true,
 		},
 	}
@@ -200,9 +206,9 @@ func TestGetChope(t *testing.T) {
 	m := TestHelper.GetLiveMenuDetails()
 	u := user_choice.New().Build()
 	u1 := user_choice.New().SetUserChoice(fmt.Sprint(m[0].GetId())).Build()
-	expected := "Okay got it. I will order %v for you today😙"
+	expected := "Okay got it. I will order %v for you today 😙"
 	if time.Now().Unix() > Processors.GetLunchTime().Unix() {
-		expected = "Okay got it. I will order %v for you tomorrow😙"
+		expected = "Okay got it. I will order %v for you tomorrow 😙"
 	}
 
 	defer func() {
@@ -247,7 +253,7 @@ func TestGetChope(t *testing.T) {
 		{
 			name:  "NotInMenu",
 			args:  args{id: u.GetUserId(), s: fmt.Sprint(6969)},
-			want:  "This dish is not available today. Tell me another one. 😟",
+			want:  "This dish is not available today. Tell me another one.😟",
 			want1: false,
 		},
 		{

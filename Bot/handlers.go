@@ -97,7 +97,8 @@ func CheckKey(id int64) (string, bool) {
 			log.Printf("CheckKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
 		} else {
 			log.Printf("CheckKey | Successful | Cached %v", cacheKey)
-			return fmt.Sprintf("I have your key that you told me on %v! But I won't leak it 😀", Processors.ConvertTimeStamp(redisResp.GetMtime())), true
+			decrypt := Processors.DecryptKey(redisResp.GetUserKey(), os.Getenv("AES_KEY"))
+			return fmt.Sprintf("I have your key %v***** that you told me on %v! But I won't leak it 😀", decrypt[:5], Processors.ConvertTimeStamp(redisResp.GetMtime())), true
 		}
 	}
 
@@ -116,8 +117,8 @@ func CheckKey(id int64) (string, bool) {
 		} else {
 			log.Printf("CheckKey | Successful | Written %v to redis", cacheKey)
 		}
-
-		return fmt.Sprintf("I have your key that you told me on %v! But I won't leak it 😀", Processors.ConvertTimeStamp(existingRecord.GetMtime())), true
+		decrypt := Processors.DecryptKey(existingRecord.GetUserKey(), os.Getenv("AES_KEY"))
+		return fmt.Sprintf("I have your key %v***** that you told me on %v! But I won't leak it 😀", decrypt[:5], Processors.ConvertTimeStamp(existingRecord.GetMtime())), true
 	}
 }
 
@@ -161,7 +162,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 				log.Println("UpdateKey | Failed to insert DB")
 				return err.Error(), false
 			}
-			return "Okay got it. I remember your key now! 😙", true
+			return "Okay got it. I remember your key now! 😙\n Disclaimer: I will never disclose your key. Your key is safely encrypted.", true
 		}
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_key_tab SET user_key = ?, mtime = ? WHERE user_id = ?", hashedKey, time.Now().Unix(), id).Error; err != nil {
@@ -183,6 +184,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 func CheckChope(id int64) (string, bool) {
 	var (
 		existingRecord sea_dinner.UserChoice
+		dayText        = "today"
 	)
 
 	if id <= 0 {
@@ -196,14 +198,24 @@ func CheckChope(id int64) (string, bool) {
 		if existingRecord.UserChoice == nil {
 			return "I have yet to receive your order 🥲 You can choose from /menu", false
 		} else if existingRecord.GetUserChoice() == "-1" {
-			return "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu", false
+			//Dynamic text based on time - shows tomorrow if current time is past lunch
+			tz, _ := time.LoadLocation(Processors.TimeZone)
+			if time.Now().In(tz).Unix() > Processors.GetLunchTime().Unix() {
+				if Processors.IsNotEOW(time.Now().In(tz)) {
+					dayText = "tomorrow"
+				} else {
+					//On fridays ~ sundays
+					return "We are done for this week! You can tell me your order again next week 😀", false
+				}
+			}
+			return fmt.Sprintf("Not placing dinner order for you %v 🙅 Changed your mind? You can choose from /menu", dayText), false
 		}
 		menu := MakeMenuNameMap()
 
 		_, ok := menu[existingRecord.GetUserChoice()]
 
 		if !ok {
-			return fmt.Sprintf("Your choice %v is not available today, so I will not order anything🥲 Choose a new dish from /menu", existingRecord.GetUserChoice()), true
+			return fmt.Sprintf("Your choice %v is not available this week, so I will not order anything 🥲 Choose a new dish from /menu", existingRecord.GetUserChoice()), true
 		}
 		return fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", menu[existingRecord.GetUserChoice()]), true
 	}
@@ -230,7 +242,7 @@ func GetChope(id int64, s string) (string, bool) {
 
 	//When it is Friday after 12.30pm, we don't accept any orders (except -1) because we don't know next week's menu yet
 	if !Processors.IsNotEOW(time.Now()) && time.Now().Unix() > Processors.GetLunchTime().Unix() && s != "-1" {
-		return "TGIF! You can tell me your order again next week!😀", false
+		return "We are done for this week! You can tell me your order again next week 😀", false
 	}
 
 	if Processors.IsNotNumber(s) {
@@ -253,12 +265,12 @@ func GetChope(id int64, s string) (string, bool) {
 			} else {
 				log.Printf("GetChope | Error while reading from redis: %v", redisErr.Error())
 			}
-			return "The selection has expired, you can choose from /menu again😀", true
+			return "The selection has expired, you can choose from /menu again 😀", true
 		}
 
 		if val == "" {
 			log.Printf("GetChope | empty in redis: %v", key)
-			return "The selection has expired, you can choose from /menu again😀", true
+			return "The selection has expired, you can choose from /menu again 😀", true
 		}
 
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", val, time.Now().Unix(), id).Error; err != nil {
@@ -271,15 +283,15 @@ func GetChope(id int64, s string) (string, bool) {
 		}
 
 		if val == "RAND" {
-			return "Okay got it. I will give you a surprise instead😙", true
+			return "Okay got it. I will give you a surprise 😙", true
 		}
-		return fmt.Sprintf("Okay got it! I will order %v again 😙", menu[val]), true
+		return fmt.Sprintf("Okay got it! I will order %v 😙", menu[val]), true
 	}
 
 	_, ok := menu[s]
 	if !ok {
 		log.Printf("Selection is invalid | selection: %v", s)
-		return "This dish is not available today. Tell me another one. 😟", false
+		return "This dish is not available today. Tell me another one.😟", false
 	}
 
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
@@ -298,15 +310,15 @@ func GetChope(id int64, s string) (string, bool) {
 			}
 
 			if s == "RAND" {
-				return "Okay got it. I will give you a surprise 😙", true
+				return "Okay got it. I will give you a surprise😙", true
 			}
 
 			//Orders placed before lunch time
 			if time.Now().Unix() < Processors.GetLunchTime().Unix() {
-				return fmt.Sprintf("Okay got it. I will order %v for you today😙", menu[s]), true
+				return fmt.Sprintf("Okay got it. I will order %v for you today 😙", menu[s]), true
 			}
 
-			return fmt.Sprintf("Okay got it. I will order %v for you tomorrow😙", menu[s]), true
+			return fmt.Sprintf("Okay got it. I will order %v for you tomorrow 😙", menu[s]), true
 		}
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
@@ -332,10 +344,10 @@ func GetChope(id int64, s string) (string, bool) {
 				log.Printf("GetChope | Successful | Written %v to redis", key)
 			}
 
-			return fmt.Sprintf("Okay got it. I will order %v for you today😙", menu[s]), true
+			return fmt.Sprintf("Okay got it. I will order %v for you today 😙", menu[s]), true
 		}
 
-		return fmt.Sprintf("Okay got it. I will order %v for you tomorrow😙", menu[s]), true
+		return fmt.Sprintf("Okay got it. I will order %v for you tomorrow 😙", menu[s]), true
 	}
 }
 
@@ -398,11 +410,11 @@ func GenerateWeeklyResultTable(record []*sea_dinner.OrderRecord) string {
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 	m := MakeMenuCodeMap()
 	status := map[int64]string{int64(sea_dinner.OrderStatus_ORDER_STATUS_OK): "✅", int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL): "❌"}
-	header := fmt.Sprintf("Your orders from %v to %v\n\n", Processors.ConvertTimeStampMonthDay(start), Processors.ConvertTimeStampMonthDay(end))
+	header := fmt.Sprintf("Your orders from %v to %v\n", Processors.ConvertTimeStampMonthDay(start), Processors.ConvertTimeStampMonthDay(end))
 	table := "<pre>\n     Day    Code  Status\n"
 	table += "-------------------------\n"
 	for _, r := range record {
-		table += fmt.Sprintf("  %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), m[r.GetFoodId()], status[r.GetStatus()])
+		table += fmt.Sprintf(" %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), m[r.GetFoodId()], status[r.GetStatus()])
 	}
 	table += "</pre>"
 	return header + table
@@ -447,7 +459,7 @@ func SendNotifications() {
 		if r.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_OK) {
 			msg = fmt.Sprintf("Successfully ordered %v! 🥳", menu[r.GetFoodId()])
 		} else {
-			msg = fmt.Sprintf("Failed to order %v today. %v😔", menu[r.GetFoodId()], r.GetErrorMsg())
+			msg = fmt.Sprintf("Failed to order %v today. %v 😔", menu[r.GetFoodId()], r.GetErrorMsg())
 		}
 
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserId(), msg)); err != nil {
@@ -539,7 +551,7 @@ func SendReminder() {
 					rows = append(rows, randomBotton)
 				}
 
-				ignoreBotton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v again!", code[r.GetUserChoice()]), "SAME")
+				ignoreBotton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v is good", code[r.GetUserChoice()]), "SAME")
 				rows = append(rows, ignoreBotton)
 				skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
 				rows = append(rows, skipBotton)
@@ -592,7 +604,7 @@ func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, b
 }
 
 func MakeHelpResponse() string {
-	return "Welcome to SeaHungerGamesBot!\n" +
+	return "*Welcome to SeaHungerGamesBot!*\n\n" +
 		"The goal of my existence is to help you snatch that dinner in milliseconds. And also we all know that you are too lazy to open up SeaTalk.\n\n" +
 		"*Get started*\n" +
 		"1. /key to tell me your Sea API key. This is important because without the key, I'm basically useless. When you refresh your key, remember to let me know in /newkey\n" +
@@ -600,9 +612,11 @@ func MakeHelpResponse() string {
 		"3. /choice to check the current dish I'm tasked to order.\n" +
 		"4. /status to see what you have ordered this week, and the order status.\n\n" +
 		"*Features*\n" +
-		"1. I will send you a daily reminder at 10.30am (If you never skip order on that day). Order can be altered easily from the quick options.\n" +
-		"2. At 12.29pm, I will no longer entertain your requests, because I have better things to do!\n" +
-		"3. At 12.30pm sharp, I will begin to order your precious food\n" +
+		"1. I will send you a daily reminder at 10.30am (If you never skip order on that day). Order can be altered easily from the quick options:\n" +
+		"🎲 to order a random dish\n" +
+		"🙅 to stpo ordering\n" +
+		"2. At 12.29pm, I will no longer entertain your requests, because I have better things to do! Don't even think about last minute changes.\n" +
+		"3. At 12.30pm sharp, I will begin to order your precious food.\n" +
 		"4. It is almost guranteed that I can order it in less than 300ms. Will drop you a message too!\n\n" +
 		"*Disclaimer*\n" +
 		"By using my services, you agree to let me store your API key. However, not to worry! Your key is encrypted with AES-256, it's very unlikely that it will be stolen.\n\n" +
