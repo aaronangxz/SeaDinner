@@ -9,16 +9,18 @@ import (
 
 	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-redis/redis"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"google.golang.org/protobuf/proto"
 )
 
 //GetKey Retrieves user's API key with user_id.
 //Reads from cache first, then user_key_tab.
 func GetKey(id int64) string {
 	var (
-		existingRecord UserKey
-		cacheKey       = fmt.Sprint(Processors.USER_KEY_PREFIX, id)
+		existingRecord *sea_dinner.UserKey
+		cacheKey       = fmt.Sprint(Common.USER_KEY_PREFIX, id)
 		expiry         = 604800 * time.Second
 	)
 
@@ -36,7 +38,7 @@ func GetKey(id int64) string {
 			log.Printf("GetKey | Error while reading from redis: %v", redisErr.Error())
 		}
 	} else {
-		redisResp := UserKey{}
+		redisResp := &sea_dinner.UserKey{}
 		err := json.Unmarshal([]byte(val), &redisResp)
 		if err != nil {
 			log.Printf("GetKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
@@ -47,7 +49,7 @@ func GetKey(id int64) string {
 	}
 
 	//Read from DB
-	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Table(Common.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return ""
 	}
 
@@ -70,8 +72,8 @@ func GetKey(id int64) string {
 //Reads from cache first, then user_key_tab.
 func CheckKey(id int64) (string, bool) {
 	var (
-		existingRecord UserKey
-		cacheKey       = fmt.Sprint(Processors.USER_KEY_PREFIX, id)
+		existingRecord *sea_dinner.UserKey
+		cacheKey       = fmt.Sprint(Common.USER_KEY_PREFIX, id)
 		expiry         = 604800 * time.Second
 	)
 
@@ -89,7 +91,7 @@ func CheckKey(id int64) (string, bool) {
 			log.Printf("CheckKey | Error while reading from redis: %v", redisErr.Error())
 		}
 	} else {
-		redisResp := UserKey{}
+		redisResp := &sea_dinner.UserKey{}
 		err := json.Unmarshal([]byte(val), &redisResp)
 		if err != nil {
 			log.Printf("CheckKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
@@ -101,7 +103,7 @@ func CheckKey(id int64) (string, bool) {
 	}
 
 	//Read from DB
-	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
+	if err := Processors.DB.Table(Common.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		return "I don't have your key, let me know in /newkey 😊", false
 	} else {
 		//set back into cache
@@ -126,13 +128,13 @@ func UpdateKey(id int64, s string) (string, bool) {
 	hashedKey := Processors.EncryptKey(s, os.Getenv("AES_KEY"))
 
 	var (
-		cacheKey       = fmt.Sprint(Processors.USER_KEY_PREFIX, id)
-		existingRecord UserKey
-		r              = UserKey{
-			UserID:  Processors.Int64(id),
-			UserKey: Processors.String(hashedKey),
-			Ctime:   Processors.Int64(time.Now().Unix()),
-			Mtime:   Processors.Int64(time.Now().Unix()),
+		cacheKey       = fmt.Sprint(Common.USER_KEY_PREFIX, id)
+		existingRecord sea_dinner.UserKey
+		r              = &sea_dinner.UserKey{
+			UserId:  proto.Int64(id),
+			UserKey: proto.String(hashedKey),
+			Ctime:   proto.Int64(time.Now().Unix()),
+			Mtime:   proto.Int64(time.Now().Unix()),
 		}
 	)
 
@@ -155,8 +157,8 @@ func UpdateKey(id int64, s string) (string, bool) {
 		log.Printf("UpdateKey | %v", err.Error())
 		return err.Error(), false
 	} else {
-		if existingRecord.UserID == nil {
-			if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Create(&r).Error; err != nil {
+		if existingRecord.UserId == nil {
+			if err := Processors.DB.Table(Common.DB_USER_KEY_TAB).Create(&r).Error; err != nil {
 				log.Println("UpdateKey | Failed to insert DB")
 				return err.Error(), false
 			}
@@ -181,7 +183,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 //CheckChope Retrieves the current food choice made by user.
 func CheckChope(id int64) (string, bool) {
 	var (
-		existingRecord UserChoice
+		existingRecord sea_dinner.UserChoice
 		dayText        = "today"
 	)
 
@@ -223,14 +225,14 @@ func CheckChope(id int64) (string, bool) {
 //With basic parameter verifications
 func GetChope(id int64, s string) (string, bool) {
 	var (
-		existingRecord UserChoice
-		r              = UserChoice{
-			UserID:     Processors.Int64(id),
-			UserChoice: Processors.String(s),
-			Ctime:      Processors.Int64(time.Now().Unix()),
-			Mtime:      Processors.Int64(time.Now().Unix()),
+		existingRecord sea_dinner.UserChoice
+		r              = &sea_dinner.UserChoice{
+			UserId:     proto.Int64(id),
+			UserChoice: proto.String(s),
+			Ctime:      proto.Int64(time.Now().Unix()),
+			Mtime:      proto.Int64(time.Now().Unix()),
 		}
-		key = fmt.Sprint(Processors.USER_CHOICE_PREFIX, r.GetUserID())
+		key = fmt.Sprint(Common.USER_CHOICE_PREFIX, r.GetUserId())
 	)
 
 	if id <= 0 {
@@ -296,8 +298,8 @@ func GetChope(id int64, s string) (string, bool) {
 		log.Printf("GetChope | %v", err.Error())
 		return err.Error(), false
 	} else {
-		if existingRecord.UserID == nil {
-			if err := Processors.DB.Table(Processors.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
+		if existingRecord.UserId == nil {
+			if err := Processors.DB.Table(Common.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
 				log.Println("Failed to insert DB")
 				return err.Error(), false
 			}
@@ -354,7 +356,7 @@ func GetChope(id int64, s string) (string, bool) {
 //Should use ListWeeklyResultByUserId instead
 func GetLatestResultByUserId(id int64) string {
 	var (
-		res Processors.OrderRecord
+		res sea_dinner.OrderRecord
 	)
 
 	if id <= 0 {
@@ -373,16 +375,16 @@ func GetLatestResultByUserId(id int64) string {
 
 	menu := MakeMenuNameMap()
 
-	if res.GetStatus() == Processors.ORDER_STATUS_OK {
-		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", menu[res.GetFoodID()], Processors.ConvertTimeStampTime(res.GetOrderTime()))
+	if res.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_OK) {
+		return fmt.Sprintf("Successfully ordered %v at %v! 🥳", menu[res.GetFoodId()], Processors.ConvertTimeStampTime(res.GetOrderTime()))
 	}
-	return fmt.Sprintf("Failed to order %v today. 😔", menu[res.GetFoodID()])
+	return fmt.Sprintf("Failed to order %v today. 😔", menu[res.GetFoodId()])
 }
 
 //ListWeeklyResultByUserId
 func ListWeeklyResultByUserId(id int64) string {
 	var (
-		res []Processors.OrderRecord
+		res []*sea_dinner.OrderRecord
 	)
 
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
@@ -404,30 +406,30 @@ func ListWeeklyResultByUserId(id int64) string {
 }
 
 //GenerateWeeklyResultTable Outputs pre-formatted weekly order status.
-func GenerateWeeklyResultTable(record []Processors.OrderRecord) string {
+func GenerateWeeklyResultTable(record []*sea_dinner.OrderRecord) string {
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 	m := MakeMenuCodeMap()
-	status := map[int64]string{Processors.ORDER_STATUS_OK: "✅", Processors.ORDER_STATUS_FAIL: "❌"}
+	status := map[int64]string{int64(sea_dinner.OrderStatus_ORDER_STATUS_OK): "✅", int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL): "❌"}
 	header := fmt.Sprintf("Your orders from %v to %v\n", Processors.ConvertTimeStampMonthDay(start), Processors.ConvertTimeStampMonthDay(end))
-	table := "<pre>\n    Day     Code  Status\n"
+	table := "<pre>\n     Day    Code  Status\n"
 	table += "-------------------------\n"
 	for _, r := range record {
-		table += fmt.Sprintf(" %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), m[r.GetFoodID()], status[r.GetStatus()])
+		table += fmt.Sprintf(" %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), m[r.GetFoodId()], status[r.GetStatus()])
 	}
 	table += "</pre>"
 	return header + table
 }
 
 //BatchGetLatestResult Retrieves the most recent failed orders
-func BatchGetLatestResult() []Processors.OrderRecord {
+func BatchGetLatestResult() []*sea_dinner.OrderRecord {
 	var (
-		res []Processors.OrderRecord
+		res []*sea_dinner.OrderRecord
 	)
 
 	if err := Processors.DB.Raw("SELECT ol.* FROM order_log_tab ol INNER JOIN "+
 		"(SELECT MAX(order_time) AS max_order_time FROM order_log_tab WHERE status <> ? AND order_time BETWEEN ? AND ? GROUP BY user_id) nestedQ "+
 		"ON ol.order_time = nestedQ.max_order_time GROUP BY user_id",
-		Processors.ORDER_STATUS_OK, Processors.GetLunchTime().Unix()-300, Processors.GetLunchTime().Unix()+300).
+		sea_dinner.OrderStatus_ORDER_STATUS_OK, Processors.GetLunchTime().Unix()-300, Processors.GetLunchTime().Unix()+300).
 		Scan(&res).Error; err != nil {
 		log.Println("Failed to retrieve record.")
 		return nil
@@ -454,22 +456,22 @@ func SendNotifications() {
 	log.Println("SendNotifications | size:", len(res))
 
 	for _, r := range res {
-		if r.GetStatus() == Processors.ORDER_STATUS_OK {
-			msg = fmt.Sprintf("Successfully ordered %v! 🥳", menu[r.GetFoodID()])
+		if r.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_OK) {
+			msg = fmt.Sprintf("Successfully ordered %v! 🥳", menu[r.GetFoodId()])
 		} else {
-			msg = fmt.Sprintf("Failed to order %v today. %v 😔", menu[r.GetFoodID()], r.GetErrorMsg())
+			msg = fmt.Sprintf("Failed to order %v today. %v 😔", menu[r.GetFoodId()], r.GetErrorMsg())
 		}
 
-		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserID(), msg)); err != nil {
+		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserId(), msg)); err != nil {
 			log.Println(err)
 		}
 	}
 }
 
 //BatchGetUsersChoice Retrieves order_choice of all users
-func BatchGetUsersChoice() []UserChoice {
+func BatchGetUsersChoice() []*sea_dinner.UserChoice {
 	var (
-		res    []UserChoice
+		res    []*sea_dinner.UserChoice
 		expiry = 7200 * time.Second
 	)
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab").Scan(&res).Error; err != nil {
@@ -482,7 +484,7 @@ func BatchGetUsersChoice() []UserChoice {
 	for _, r := range res {
 		//Not neccesary to cache -1 orders because we never send reminder for those
 		if r.GetUserChoice() != "-1" {
-			key := fmt.Sprint(Processors.USER_CHOICE_PREFIX, r.GetUserID())
+			key := fmt.Sprint(Common.USER_CHOICE_PREFIX, r.GetUserId())
 			if err := Processors.RedisClient.Set(key, r.GetUserChoice(), expiry).Err(); err != nil {
 				log.Printf("BatchGetUsersChoice | Error while writing to redis: %v", err.Error())
 			} else {
@@ -513,11 +515,11 @@ func SendReminder() {
 
 	for _, r := range res {
 		if r.GetUserChoice() == "-1" {
-			log.Printf("SendReminder | skip -1 records | %v", r.GetUserID())
+			log.Printf("SendReminder | skip -1 records | %v", r.GetUserId())
 			continue
 		}
 
-		msg := tgbotapi.NewMessage(r.GetUserID(), "")
+		msg := tgbotapi.NewMessage(r.GetUserId(), "")
 
 		var (
 			mk     tgbotapi.InlineKeyboardMarkup
@@ -572,8 +574,8 @@ func MakeMenuNameMap() map[string]string {
 	)
 	menuMap := make(map[string]string)
 	menu := Processors.GetMenu(Processors.Client, key)
-	for _, m := range menu.DinnerArr {
-		menuMap[fmt.Sprint(m.Id)] = m.Name
+	for _, m := range menu.GetFood() {
+		menuMap[fmt.Sprint(m.GetId())] = m.GetName()
 	}
 	// Store -1 hash to menuMap
 	menuMap["-1"] = "*NOTHING*" // to be renamed
@@ -588,8 +590,8 @@ func MakeMenuCodeMap() map[string]string {
 	)
 	menuMap := make(map[string]string)
 	menu := Processors.GetMenu(Processors.Client, key)
-	for _, m := range menu.DinnerArr {
-		menuMap[fmt.Sprint(m.Id)] = m.Code
+	for _, m := range menu.GetFood() {
+		menuMap[fmt.Sprint(m.GetId())] = m.GetCode()
 	}
 	menuMap["RAND"] = "Random"
 	return menuMap

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
 
 const (
@@ -70,20 +71,20 @@ func IsNotEOW(t time.Time) bool {
 
 func IsPollStart() bool {
 	var (
-		status Current
+		status *sea_dinner.Current
 		key    = os.Getenv("TOKEN")
 	)
 
 	_, err := Client.R().
 		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&status).
-		Get(MakeURL(URL_CURRENT, nil))
+		Get(MakeURL(int(sea_dinner.URLType_URL_CURRENT), nil))
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	return status.Menu.GetActive()
+	return status.GetMenu().GetActive()
 }
 
 func WeekStartEndDate(timestamp int64) (int64, int64) {
