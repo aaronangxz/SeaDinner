@@ -136,7 +136,13 @@ func TestCheckChope(t *testing.T) {
 	u := user_choice.New().SetUserChoice(int64(m[0].Id)).Build()
 	stopOrder := user_choice.New().SetUserChoice(-1).Build()
 	notInMenu := user_choice.New().SetUserChoice(999999).Build()
-
+	tz, _ := time.LoadLocation(Processors.TimeZone)
+	var dayText string = "today"
+	if time.Now().In(tz).Unix() > Processors.GetLunchTime().Unix() {
+		if Processors.IsNotEOW(time.Now().In(tz)) {
+			dayText = "tomorrow"
+		}
+	}
 	defer func() {
 		u.TearDown()
 		stopOrder.TearDown()
@@ -155,7 +161,7 @@ func TestCheckChope(t *testing.T) {
 		{
 			name:  "HappyCase",
 			args:  args{u.GetUserID()},
-			want:  fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", m[0].Name),
+			want:  fmt.Sprintf("I'm tasked to snatch %v for you😀 Changed your mind? You can choose from /menu", m[0].Name),
 			want1: true,
 		},
 		{
@@ -173,13 +179,13 @@ func TestCheckChope(t *testing.T) {
 		{
 			name:  "StopOrder",
 			args:  args{id: stopOrder.GetUserID()},
-			want:  "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu",
+			want:  fmt.Sprintf("Not placing dinner order for you %v 🙅 Changed your mind? You can choose from /menu", dayText),
 			want1: false,
 		},
 		{
 			name:  "OrderNotInMenu",
 			args:  args{id: notInMenu.GetUserID()},
-			want:  fmt.Sprintf("Your choice %v is not available today, so I will not order anything🥲 Choose a new dish from /menu", notInMenu.GetUserChoice()),
+			want:  fmt.Sprintf("Your choice %v is not available this week, so I will not order anything🥲 Choose a new dish from /menu", notInMenu.GetUserChoice()),
 			want1: true,
 		},
 	}
