@@ -8,8 +8,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	random "math/rand"
 	"os"
+	"time"
 	"unicode"
+
+	"github.com/aaronangxz/SeaDinner/Common"
 )
 
 func MakeToken(key string) string {
@@ -23,11 +27,11 @@ func MakeToken(key string) string {
 		log.Printf("Key length invalid | length: %v", len(decrypt))
 		return ""
 	}
-	return fmt.Sprint(Config.Prefix.TokenPrefix, decrypt)
+	return fmt.Sprint(Common.Config.Prefix.TokenPrefix, decrypt)
 }
 
 func MakeURL(opt int, id *int) string {
-	prefix := Config.Prefix.UrlPrefix
+	prefix := Common.Config.Prefix.UrlPrefix
 	switch opt {
 	case URL_CURRENT:
 		return fmt.Sprint(prefix, "/api/current")
@@ -171,4 +175,20 @@ func PopSuccessfulOrder(s []UserChoiceWithKeyAndStatus, index int) []UserChoiceW
 	ret := make([]UserChoiceWithKeyAndStatus, 0)
 	ret = append(ret, s[:index]...)
 	return append(ret, s[index+1:]...)
+}
+
+func RandomFood(m map[string]string) string {
+	s := []string{}
+
+	for k := range m {
+		if k == "RAND" || k == "-1" {
+			continue
+		}
+		s = append(s, k)
+	}
+
+	r := random.New(random.NewSource(time.Now().UnixNano()))
+	gen := int64(r.Intn(len(m) - 3))
+	log.Println("RandomFood | result:", s[gen])
+	return s[gen]
 }

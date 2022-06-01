@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/aaronangxz/SeaDinner/Common"
 )
 
 const (
@@ -21,7 +23,13 @@ func UnixToUTC(timestamp int64) time.Time {
 func GetLunchTime() time.Time {
 	now := time.Now().In(tz)
 	year, month, day := now.Date()
-	return time.Date(year, month, day, Config.OrderTime.Hour, Config.OrderTime.Minutes, Config.OrderTime.Seconds, 0, now.Location())
+	return time.Date(year, month, day, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
+}
+
+func GetPreviousDayLunchTime() time.Time {
+	now := time.Now().In(tz)
+	year, month, day := now.Add(time.Duration(-1*24) * time.Hour).Date()
+	return time.Date(year, month, day, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
 }
 
 //time format: Mon Jan 2 15:04:05 -0700 MST 2006

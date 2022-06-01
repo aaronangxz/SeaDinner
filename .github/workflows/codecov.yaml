@@ -21,6 +21,9 @@ jobs:
           TEST_DB_NAME: ${{secrets.TEST_DB_NAME}}
           AES_KEY: ${{secrets.AES_KEY}}
           TOKEN: ${{secrets.TOKEN}}
+          TEST_REDIS_URL: ${{secrets.TEST_REDIS_URL}}
+          TEST_REDIS_PORT: ${{secrets.TEST_REDIS_PORT}}
+          TEST_REDIS_PASSWORD: ${{secrets.TEST_REDIS_PASSWORD}}
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Run coverage in Bot
         working-directory: ./Bot
@@ -30,6 +33,12 @@ jobs:
           TEST_DB_URL: ${{secrets.TEST_DB_URL}}
           TEST_DB_NAME: ${{secrets.TEST_DB_NAME}}
           AES_KEY: ${{secrets.AES_KEY}}
+          REDIS_URL: ${{secrets.REDIS_URL}}
+          REDIS_PORT: ${{secrets.REDIS_PORT}}
+          REDIS_PASSWORD: ${{secrets.REDIS_PASSWORD}}
+          TEST_REDIS_URL: ${{secrets.TEST_REDIS_URL}}
+          TEST_REDIS_PORT: ${{secrets.TEST_REDIS_PORT}}
+          TEST_REDIS_PASSWORD: ${{secrets.TEST_REDIS_PASSWORD}}
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2

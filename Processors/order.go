@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/go-resty/resty/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -17,7 +18,7 @@ func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKeyAndStatus) 
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
 
-	for i := 1; i <= Config.Runtime.RetryTimes; i++ {
+	for i := 1; i <= Common.Config.Runtime.RetryTimes; i++ {
 		log.Printf("id: %v | OrderDinner | Attempt %v", u.GetUserID(), i)
 
 		_, err := client.R().
@@ -54,7 +55,7 @@ func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
 
-	for i := 1; i <= Config.Runtime.RetryTimes; i++ {
+	for i := 1; i <= Common.Config.Runtime.RetryTimes; i++ {
 		log.Printf("id: %v | OrderDinner | Attempt %v", u.GetUserID(), i)
 		apiResp, err = Client.R().
 			SetHeader("Authorization", MakeToken(u.GetUserKey())).
@@ -185,7 +186,7 @@ func SendInstantNotification(u UserChoiceWithKeyAndStatus, took int64) {
 	var (
 		msg string
 	)
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
 	}
@@ -202,13 +203,16 @@ func SendInstantNotification(u UserChoiceWithKeyAndStatus, took int64) {
 }
 
 func MakeMenuMap() map[string]string {
-	key := os.Getenv("TOKEN")
+	var (
+		key = os.Getenv("TOKEN")
+	)
 	menuMap := make(map[string]string)
-
-	menu := GetMenu(Client, GetDayId(), key)
-
+	menu := GetMenu(Client, key)
 	for _, m := range menu.DinnerArr {
 		menuMap[fmt.Sprint(m.Id)] = m.Name
 	}
+	// Store -1 hash to menuMap
+	menuMap["-1"] = "*NOTHING*" // to be renamed
+	menuMap["RAND"] = "RAND"
 	return menuMap
 }

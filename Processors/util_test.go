@@ -4,6 +4,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/aaronangxz/SeaDinner/Common"
 )
 
 func TestMakeToken(t *testing.T) {
@@ -46,7 +48,7 @@ func TestMakeToken(t *testing.T) {
 }
 
 func TestMakeURL(t *testing.T) {
-	Config.Prefix.UrlPrefix = "https://dinner.sea.com"
+	Common.Config.Prefix.UrlPrefix = "https://dinner.sea.com"
 	type args struct {
 		opt int
 		id  *int
@@ -324,6 +326,50 @@ func TestOutputResultsCount(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			OutputResultsCount(tt.args.total, tt.args.failed)
+		})
+	}
+}
+
+func TestRandomFood(t *testing.T) {
+	m := make(map[string]string)
+	m["A"] = "1"
+	m["B"] = "2"
+	m["C"] = "3"
+	m["D"] = "4"
+	m["E"] = "5"
+	m["F"] = "6"
+	m["RAND"] = "RAND"
+	m["-1"] = "-1"
+
+	type args struct {
+		m map[string]string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "HappyCase",
+			args: args{m},
+			want: true,
+		},
+		{
+			name: "HappyCaseAgain",
+			args: args{m},
+			want: true,
+		},
+		{
+			name: "HappyCaseAndAgain",
+			args: args{m},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RandomFood(tt.args.m); got != "" != tt.want {
+				t.Errorf("RandomFood() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

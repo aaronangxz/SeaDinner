@@ -13,3 +13,6 @@ batch_retry_cooldown_seconds = 1
 hour = 12
 minutes = 30
 seconds = 0
+
+[grayscale]
+percentage = 50
