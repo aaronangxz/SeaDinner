@@ -4,13 +4,15 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/aaronangxz/SeaDinner/Common"
 )
 
 func TestGetLunchTime(t *testing.T) {
 	tz, _ := time.LoadLocation(TimeZone)
 	now := time.Now().In(tz)
 	year, month, day := now.Date()
-	expectedTime := time.Date(year, month, day, Config.OrderTime.Hour, Config.OrderTime.Minutes, Config.OrderTime.Seconds, 0, now.Location())
+	expectedTime := time.Date(year, month, day, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
 	tests := []struct {
 		name string
 		want time.Time
@@ -152,7 +154,7 @@ func TestConvertTimeStampMonthDay(t *testing.T) {
 func TestConvertTimeStampDayOfWeek(t *testing.T) {
 	timeNow := time.Unix(time.Now().Unix(), 0).Local().UTC()
 	tz, _ := time.LoadLocation(TimeZone)
-	s := (timeNow.In(tz).Format("Mon 2/1"))
+	s := (timeNow.In(tz).Format("Mon 02/01"))
 
 	type args struct {
 		timestamp int64
@@ -191,6 +193,29 @@ func AdhocTestIsWeekDay(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsWeekDay(); got != tt.want {
 				t.Errorf("IsWeekDay() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetPreviousDayLunchTime(t *testing.T) {
+	tz, _ := time.LoadLocation(TimeZone)
+	now := time.Now().In(tz)
+	year, month, day := now.Date()
+	expectedTime := time.Date(year, month, day-1, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
+	tests := []struct {
+		name string
+		want time.Time
+	}{
+		{
+			name: "HappyCase",
+			want: expectedTime,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetPreviousDayLunchTime(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetPreviousDayLunchTime() = %v, want %v", got, tt.want)
 			}
 		})
 	}

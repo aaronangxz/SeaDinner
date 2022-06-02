@@ -7,13 +7,16 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-redis/redis"
 )
 
-func GetDayId() (ID int) {
+//GetDayId Calls Sea API, retrieves the current day's id
+func GetDayId() (ID int64) {
 	var (
 		key      = os.Getenv("TOKEN")
-		cacheKey = fmt.Sprint(DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
+		cacheKey = fmt.Sprint(Common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 		expiry   = 86400 * time.Second
 	)
 
@@ -27,27 +30,27 @@ func GetDayId() (ID int) {
 		}
 	} else {
 		redisRespInt, _ := strconv.Atoi(redisResp)
-		return redisRespInt
+		return int64(redisRespInt)
 	}
 
 	var (
-		currentMenu Current
-		currentId   int
+		currentMenu sea_dinner.Current
+		currentId   int64
 	)
 
 	_, err := Client.R().
 		SetHeader("Authorization", MakeToken(key)).
 		SetResult(&currentMenu).
-		Get(MakeURL(URL_CURRENT, nil))
+		Get(MakeURL(int(sea_dinner.URLType_URL_CURRENT), nil))
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	currentId = currentMenu.Menu.GetId()
+	currentId = currentMenu.GetMenu().GetId()
 
-	if currentMenu.Menu.GetPollStart() != fmt.Sprint(ConvertTimeStamp(time.Now().Unix()), "T04:30:00Z") {
-		log.Println("GetDayId | Today's ID not found:", currentMenu.Menu.GetPollStart())
+	if currentMenu.GetMenu().GetPollStart() != fmt.Sprint(ConvertTimeStamp(time.Now().Unix()), "T04:30:00Z") {
+		log.Println("GetDayId | Today's ID not found:", currentMenu.GetMenu().GetPollStart())
 		currentId = 0
 	}
 

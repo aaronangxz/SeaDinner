@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -16,16 +17,11 @@ var (
 )
 
 func main() {
-	Processors.Init()
 	Processors.LoadEnv()
+	Processors.Init()
 	Processors.InitClient()
-	if Processors.Config.Adhoc {
-		Processors.ConnectTestMySQL()
-	} else {
-		Processors.ConnectMySQL()
-	}
 
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
 	}
@@ -41,6 +37,7 @@ func main() {
 	for update := range updates {
 		if update.CallbackQuery != nil {
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+			msg.ParseMode = "MARKDOWN"
 			msg.Text, _ = Bot.CallbackQueryHandler(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
 			if _, err := bot.Send(msg); err != nil {
 				log.Println(err)
@@ -48,7 +45,9 @@ func main() {
 			continue
 		}
 
-		if time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 && time.Now().Unix() <= Processors.GetLunchTime().Unix()+210 {
+		//Stop responding from 12.29pm to 12.31pm or until dinner order has started (For occasional weird order timings)
+		if time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
+			(time.Now().Unix() <= Processors.GetLunchTime().Unix()+60 && !Processors.IsPollStart()) {
 			if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Omw to order, wait for my good news! 🏃")); err != nil {
 				log.Println(err)
 			}
@@ -120,7 +119,8 @@ func main() {
 				continue
 			}
 		case "help":
-			msg.Text = "Check the commands."
+			msg.Text = Bot.MakeHelpResponse()
+			msg.ParseMode = "MARKDOWN"
 		case "key":
 			msg.Text, _ = Bot.CheckKey(update.Message.Chat.ID)
 		case "newkey":
@@ -135,13 +135,7 @@ func main() {
 				msg.ParseMode = "HTML"
 			}
 		case "chope":
-			s, ok := Bot.CheckKey(update.Message.Chat.ID)
-			if !ok {
-				msg.Text = s
-			} else {
-				msg.Text = "What do you want to order? \nTell me the Food ID 😋 \nEnter -1 to cancel dinner ordering 🙅"
-				startListenChope = true
-			}
+			msg.Text = "This command is deprecated. Choose from /menu instead!😋"
 		case "choice":
 			s, ok := Bot.CheckKey(update.Message.Chat.ID)
 			if !ok {
@@ -149,8 +143,11 @@ func main() {
 			} else {
 				msg.Text, _ = Bot.CheckChope(update.Message.Chat.ID)
 			}
-		case "ret":
-			return
+		case "reminder":
+			//Backdoor for test env
+			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
+				Bot.SendReminder()
+			}
 		default:
 			msg.Text = "I don't understand this command :("
 		}

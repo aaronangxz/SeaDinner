@@ -2,8 +2,11 @@ package Processors
 
 import (
 	"os"
-	"reflect"
 	"testing"
+
+	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestMakeToken(t *testing.T) {
@@ -46,10 +49,10 @@ func TestMakeToken(t *testing.T) {
 }
 
 func TestMakeURL(t *testing.T) {
-	Config.Prefix.UrlPrefix = "https://dinner.sea.com"
+	Common.Config.Prefix.UrlPrefix = "https://dinner.sea.com"
 	type args struct {
 		opt int
-		id  *int
+		id  *int64
 	}
 	tests := []struct {
 		name string
@@ -58,23 +61,23 @@ func TestMakeURL(t *testing.T) {
 	}{
 		{
 			name: "DayId_happy_case",
-			args: args{opt: URL_CURRENT, id: nil},
+			args: args{opt: int(sea_dinner.URLType_URL_CURRENT), id: nil},
 			want: "https://dinner.sea.com/api/current",
 		}, {
 			name: "Menu_happy_case",
-			args: args{opt: URL_MENU, id: Int(1)},
+			args: args{opt: int(sea_dinner.URLType_URL_MENU), id: proto.Int64(1)},
 			want: "https://dinner.sea.com/api/menu/1",
 		}, {
 			name: "Menu_no_id",
-			args: args{opt: URL_MENU, id: nil},
+			args: args{opt: int(sea_dinner.URLType_URL_MENU), id: nil},
 			want: "",
 		}, {
 			name: "Order_happy_case",
-			args: args{opt: URL_ORDER, id: Int(1)},
+			args: args{opt: int(sea_dinner.URLType_URL_ORDER), id: proto.Int64(1)},
 			want: "https://dinner.sea.com/api/order/1",
 		}, {
 			name: "Order_no_id",
-			args: args{opt: URL_MENU, id: nil},
+			args: args{opt: int(sea_dinner.URLType_URL_MENU), id: nil},
 			want: "",
 		},
 		{
@@ -93,11 +96,11 @@ func TestMakeURL(t *testing.T) {
 }
 
 func TestOutputResults(t *testing.T) {
-	m := make(map[int64]int)
-	m[1] = ORDER_STATUS_OK
-	m[2] = ORDER_STATUS_FAIL
+	m := make(map[int64]int64)
+	m[1] = int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)
+	m[2] = int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL)
 	type args struct {
-		resultMap map[int64]int
+		resultMap map[int64]int64
 	}
 	tests := []struct {
 		name string
@@ -237,93 +240,46 @@ func TestDecryptKey(t *testing.T) {
 	}
 }
 
-func TestPopSuccessfulOrder(t *testing.T) {
-	type args struct {
-		s     []UserChoiceWithKeyAndStatus
-		index int
-	}
-	tests := []struct {
-		name string
-		args args
-		want []UserChoiceWithKeyAndStatus
-	}{
-		{
-			name: "HappyCase_startOfSlice",
-			args: args{[]UserChoiceWithKeyAndStatus{
-				{
-					UserID: Int64(1),
-				}, {
-					UserID: Int64(2),
-				}}, 0},
-			want: []UserChoiceWithKeyAndStatus{
-				{
-					UserID: Int64(2),
-				},
-			},
-		},
-		{
-			name: "HappyCase_middleOfSlice",
-			args: args{[]UserChoiceWithKeyAndStatus{
-				{
-					UserID: Int64(1),
-				}, {
-					UserID: Int64(2),
-				}, {
-					UserID: Int64(3),
-				}, {
-					UserID: Int64(4),
-				}, {
-					UserID: Int64(5),
-				}}, 2},
-			want: []UserChoiceWithKeyAndStatus{
-				{
-					UserID: Int64(1),
-				}, {
-					UserID: Int64(2),
-				}, {
-					UserID: Int64(4),
-				}, {
-					UserID: Int64(5),
-				},
-			},
-		},
-		{
-			name: "indexExceedsLen",
-			args: args{[]UserChoiceWithKeyAndStatus{
-				{
-					UserID: Int64(1),
-				}, {
-					UserID: Int64(2),
-				}}, 2},
-			want: nil,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := PopSuccessfulOrder(tt.args.s, tt.args.index); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PopSuccessfulOrder() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+func TestRandomFood(t *testing.T) {
+	m := make(map[string]string)
+	m["A"] = "1"
+	m["B"] = "2"
+	m["C"] = "3"
+	m["D"] = "4"
+	m["E"] = "5"
+	m["F"] = "6"
+	m["RAND"] = "RAND"
+	m["-1"] = "-1"
 
-func TestOutputResultsCount(t *testing.T) {
 	type args struct {
-		total  int
-		failed int
+		m map[string]string
 	}
 	tests := []struct {
 		name string
 		args args
+		want bool
 	}{
 		{
 			name: "HappyCase",
-			args: args{10, 5},
+			args: args{m},
+			want: true,
+		},
+		{
+			name: "HappyCaseAgain",
+			args: args{m},
+			want: true,
+		},
+		{
+			name: "HappyCaseAndAgain",
+			args: args{m},
+			want: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			OutputResultsCount(tt.args.total, tt.args.failed)
+			if got := RandomFood(tt.args.m); got != "" != tt.want {
+				t.Errorf("RandomFood() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
