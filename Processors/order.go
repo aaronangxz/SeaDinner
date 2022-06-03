@@ -23,6 +23,18 @@ func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.
 		apiResp *resty.Response
 		err     error
 	)
+
+	if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
+		log.Println("OrderDinnerWithUpdate | TEST | return dummy result.")
+		return int64(sea_dinner.OrderStatus_ORDER_STATUS_OK), &sea_dinner.OrderRecord{
+			UserId:    proto.Int64(u.GetUserId()),
+			FoodId:    proto.String(u.GetUserChoice()),
+			OrderTime: proto.Int64(time.Now().Unix()),
+			Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)),
+			ErrorMsg:  proto.String("TEST"),
+		}
+	}
+
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
 
