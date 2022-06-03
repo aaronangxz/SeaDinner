@@ -1,0 +1,102 @@
+// See README.txt for information and build instructions.
+//
+// Note: START and END tags are used in comments to define sections used in
+// tutorials.  They are not part of the syntax for Protocol Buffers.
+//
+// To get an in-depth walkthrough of this file and the related examples, see:
+// https://developers.google.com/protocol-buffers/docs/tutorials
+
+//protoc --proto_path=. --go_out=. sea_dinner.proto
+
+// [START declaration]
+syntax = "proto3";
+package sea_dinner;
+option go_package = "/;sea_dinner";
+// [END declaration]
+
+enum URLType{
+    URL_CURRENT = 0;
+	URL_MENU    = 1;
+	URL_ORDER   = 2;
+}
+
+enum OrderStatus{
+    ORDER_STATUS_OK   = 0;
+	ORDER_STATUS_FAIL = 1;
+}
+
+message OrderResponse{
+    optional string status = 1;
+    optional int64 status_code = 2;
+    optional int64 selected = 3;
+    optional string error = 4;
+}
+
+message DinnerMenu{
+    optional string status = 1;
+    optional Food food = 2;
+}
+
+message DinnerMenuArray{
+    optional string status = 1;
+    repeated Food food = 2;
+}
+
+message Current{
+    optional string status = 1;
+    optional Details menu = 2;
+}
+
+message Food{
+    optional string code = 1;
+    optional int64 id = 2;
+    optional string name = 3;
+    optional string description = 4;
+    optional string image_url = 5;
+    optional int64 ordered = 6;
+    optional int64 quota = 7;
+    optional bool disabled = 8;
+    optional int64 remaining = 9;
+}
+
+message Details{
+    optional int64 id = 1;
+    optional string name = 2;
+    optional string comment = 3;
+    optional string poll_start = 4;
+    optional string poll_end = 5;
+    optional string serving_time = 6;
+    optional bool active = 7;
+    optional int64 venue_id = 8;
+}
+
+message UserKey{
+    optional int64 user_id = 1;
+    optional string user_key = 2;
+    optional int64 ctime = 3;
+    optional int64 mtime = 4;
+}
+
+message UserChoice{
+    optional int64 user_id = 1;
+    optional string user_choice = 2;
+    optional int64 ctime = 3;
+    optional int64 mtime = 4;
+}
+
+message UserChoiceWithKey{
+    optional int64 user_id = 1;
+    optional string user_key = 2;
+    optional string user_choice = 3;
+    optional int64 ctime = 4;
+    optional int64 mtime = 5;
+}
+
+message OrderRecord{
+    optional int64 id = 1;
+    optional int64 user_id = 2;
+    optional string food_id = 3;
+    optional int64 order_time = 4;
+    optional int64 status = 5;
+    optional string error_msg = 6;
+}

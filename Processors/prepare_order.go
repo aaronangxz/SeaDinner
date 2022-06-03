@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"google.golang.org/protobuf/proto"
 )
 
-func PrepOrder() ([]UserChoiceWithKeyAndStatus, bool) {
+func PrepOrder() ([]*sea_dinner.UserChoiceWithKey, bool) {
 	var (
-		record []UserChoiceWithKeyAndStatus
+		record []*sea_dinner.UserChoiceWithKey
 	)
 
 	m := MakeMenuMap()
@@ -16,6 +19,10 @@ func PrepOrder() ([]UserChoiceWithKeyAndStatus, bool) {
 	for e := range m {
 		// Skip menu id: -1
 		if e == "-1" {
+			continue
+		}
+		if e == "RAND" {
+			inQuery += "'RAND', "
 			continue
 		}
 		inQuery += e + ", "
@@ -29,6 +36,13 @@ func PrepOrder() ([]UserChoiceWithKeyAndStatus, bool) {
 	if err := DB.Raw(query).Scan(&record).Error; err != nil {
 		fmt.Println(err.Error())
 		return nil, false
+	}
+
+	for _, r := range record {
+		if r.GetUserChoice() == "RAND" {
+			r.UserChoice = proto.String(RandomFood(m))
+			log.Printf("PrepOrder | id:%v | random choice:%v", r.GetUserId(), r.GetUserChoice())
+		}
 	}
 
 	log.Println("PrepOrder | Fetched user_records:", len(record))

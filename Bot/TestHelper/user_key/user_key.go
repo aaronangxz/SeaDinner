@@ -6,7 +6,10 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
+	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -16,14 +19,14 @@ var (
 )
 
 type UserKey struct {
-	*TestHelper.UserKey
+	*sea_dinner.UserKey
 }
 
 func New() *UserKey {
 	TestHelper.InitTest()
 	return &UserKey{
-		UserKey: &TestHelper.UserKey{
-			UserID:  new(int64),
+		UserKey: &sea_dinner.UserKey{
+			UserId:  new(int64),
 			UserKey: new(string),
 			Ctime:   new(int64),
 			Mtime:   new(int64),
@@ -32,7 +35,7 @@ func New() *UserKey {
 }
 
 func (uk *UserKey) FillDefaults() *UserKey {
-	if uk.UserKey.GetUserID() == 0 {
+	if uk.UserKey.GetUserId() == 0 {
 		uk.SetUserId(TestHelper.RandomInt(99999))
 	}
 
@@ -52,40 +55,40 @@ func (uk *UserKey) FillDefaults() *UserKey {
 
 func (uk *UserKey) Build() *UserKey {
 	uk.FillDefaults()
-	if err := Processors.DB.Table(Processors.DB_USER_KEY_TAB).Create(&uk).Error; err != nil {
-		log.Printf("Failed to insert to DB | user_id:%v | %v", uk.GetUserID(), err.Error())
+	if err := Processors.DB.Table(Common.DB_USER_KEY_TAB).Create(&uk).Error; err != nil {
+		log.Printf("Failed to insert to DB | user_id:%v | %v", uk.GetUserId(), err.Error())
 		return nil
 	}
-	log.Printf("Successfully inserted to DB | user_id:%v", uk.GetUserID())
+	log.Printf("Successfully inserted to DB | user_id:%v", uk.GetUserId())
 	return uk
 }
 
 func (uk *UserKey) SetUserId(userId int64) *UserKey {
-	uk.UserKey.UserID = Processors.Int64(userId)
+	uk.UserKey.UserId = proto.Int64(userId)
 	return uk
 }
 
 func (uk *UserKey) SetKey(userKey string) *UserKey {
-	uk.UserKey.UserKey = Processors.String(userKey)
+	uk.UserKey.UserKey = proto.String(userKey)
 	return uk
 }
 
 func (uk *UserKey) SetCtime(ctime int64) *UserKey {
-	uk.UserKey.Ctime = Processors.Int64(ctime)
+	uk.UserKey.Ctime = proto.Int64(ctime)
 	return uk
 }
 
 func (uk *UserKey) SetMtime(mtime int64) *UserKey {
-	uk.UserKey.Mtime = Processors.Int64(mtime)
+	uk.UserKey.Mtime = proto.Int64(mtime)
 	return uk
 }
 
 func (uk *UserKey) TearDown() error {
-	if err := Processors.DB.Exec("DELETE FROM user_key_tab WHERE user_id = ?", uk.GetUserID()).Error; err != nil {
-		log.Printf("Failed to delete from DB | user_id:%v", uk.GetUserID())
+	if err := Processors.DB.Exec("DELETE FROM user_key_tab WHERE user_id = ?", uk.GetUserId()).Error; err != nil {
+		log.Printf("Failed to delete from DB | user_id:%v", uk.GetUserId())
 		return err
 	}
-	log.Printf("Successfully deleted from DB | user_id:%v", uk.GetUserID())
+	log.Printf("Successfully deleted from DB | user_id:%v", uk.GetUserId())
 	return nil
 }
 

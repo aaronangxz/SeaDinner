@@ -6,11 +6,12 @@ import (
 
 	"github.com/aaronangxz/SeaDinner/Bot"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
 
 var (
 	donePrep = false
-	r        []Processors.UserChoiceWithKeyAndStatus
+	r        []*sea_dinner.UserChoiceWithKey
 	start    int64
 	elapsed  int64
 )

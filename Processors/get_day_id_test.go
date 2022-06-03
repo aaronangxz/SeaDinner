@@ -1,17 +1,21 @@
 package Processors
 
-import "testing"
+import (
+	"testing"
 
-func AdhocTestGetDayId(t *testing.T) {
-	Config.Adhoc = true
+	"github.com/aaronangxz/SeaDinner/Common"
+)
+
+func AdHocTestGetDayId(t *testing.T) {
+	Common.Config.Adhoc = true
 	Init()
 	tests := []struct {
 		name   string
-		wantID int
+		wantID int64
 	}{
 		{
 			name:   "HappyCase",
-			wantID: 3556,
+			wantID: 3654,
 		},
 	}
 	for _, tt := range tests {

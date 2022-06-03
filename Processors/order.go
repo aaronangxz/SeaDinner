@@ -7,124 +7,93 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-resty/resty/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"google.golang.org/protobuf/proto"
 )
 
-//DEPRECATED
-func OrderDinner(client resty.Client, menuID int, u UserChoiceWithKeyAndStatus) OrderResponse {
-	var resp OrderResponse
-	fData := make(map[string]string)
-	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
-
-	for i := 1; i <= Config.Runtime.RetryTimes; i++ {
-		log.Printf("id: %v | OrderDinner | Attempt %v", u.GetUserID(), i)
-
-		_, err := client.R().
-			SetHeader("Authorization", MakeToken(u.GetUserKey())).
-			SetFormData(fData).
-			SetResult(&resp).
-			Post(MakeURL(URL_ORDER, &menuID))
-
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-
-		if resp.Status != nil && resp.GetStatus() == "error" {
-			log.Printf("id: %v | %v : %v : %v : %v", u.GetUserID(), resp.GetError(), resp.GetStatus(), resp.GetStatusCode(), resp.GetSelected())
-		}
-
-		if resp.GetSelected() != 0 {
-			log.Printf("id: %v | Dinner Selected: %d. Successful in %v try.\n", u.GetUserID(), resp.GetSelected(), i)
-			break
-		}
-		log.Printf("id: %v | Dinner Not Selected. Retrying.\n", u.GetUserID())
-	}
-	return resp
-}
-
-func OrderDinnerWithUpdate(u UserChoiceWithKeyAndStatus) (int, OrderRecord) {
+func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.OrderRecord) {
 	var (
-		status    int
-		resp      OrderResponse
-		apiResp   *resty.Response
-		err       error
-		timeTaken int64 = 0
+		status  int64
+		resp    sea_dinner.OrderResponse
+		apiResp *resty.Response
+		err     error
 	)
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
 
-	for i := 1; i <= Config.Runtime.RetryTimes; i++ {
-		log.Printf("id: %v | OrderDinner | Attempt %v", u.GetUserID(), i)
+	for i := 1; i <= Common.Config.Runtime.RetryTimes; i++ {
+		log.Printf("id: %v | OrderDinner | Attempt %v", u.GetUserId(), i)
 		apiResp, err = Client.R().
-			SetHeader("Authorization", MakeToken(u.GetUserKey())).
+			SetHeader("Authorization", MakeToken(fmt.Sprint(u.GetUserKey()))).
 			SetFormData(fData).
 			SetResult(&resp).
 			EnableTrace().
-			Post(MakeURL(URL_ORDER, Int(GetDayId())))
+			Post(MakeURL(int(sea_dinner.URLType_URL_ORDER), proto.Int64(GetDayId())))
 
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		timeTaken += apiResp.Request.TraceInfo().TotalTime.Milliseconds()
 
 		if resp.Status != nil && resp.GetStatus() == "error" {
-			log.Printf("id: %v | %v : %v : %v : %v", u.GetUserID(), resp.GetError(), resp.GetStatus(), resp.GetStatusCode(), resp.GetSelected())
+			log.Printf("id: %v | %v : %v : %v : %v", u.GetUserId(), resp.GetError(), resp.GetStatus(), resp.GetStatusCode(), resp.GetSelected())
 		}
 
 		if resp.GetSelected() != 0 {
-			log.Printf("id: %v | Dinner Selected: %d. Successful in %v try.\n", u.GetUserID(), resp.GetSelected(), i)
+			log.Printf("id: %v | Dinner Selected: %d. Successful in %v try.\n", u.GetUserId(), resp.GetSelected(), i)
 			break
 		}
-		log.Printf("id: %v | Dinner Not Selected. Retrying.\n", u.GetUserID())
+		log.Printf("id: %v | Dinner Not Selected. Retrying.\n", u.GetUserId())
 	}
 
-	record := OrderRecord{
-		UserID:    Int64(u.GetUserID()),
-		FoodID:    String(u.GetUserChoice()),
-		OrderTime: Int64(time.Now().Unix()),
+	record := &sea_dinner.OrderRecord{
+		UserId:    proto.Int64(u.GetUserId()),
+		FoodId:    proto.String(u.GetUserChoice()),
+		OrderTime: proto.Int64(time.Now().Unix()),
 	}
 
-	if resp.GetSelected() != 0 {
-		status = ORDER_STATUS_FAIL
+	if resp.GetSelected() == 0 {
+		status = int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL)
 		if resp.Error == nil {
-			record.ErrorMsg = String("Unknown Error")
+			record.ErrorMsg = proto.String("Unknown Error")
 		} else {
-			record.ErrorMsg = String(resp.GetError())
+			record.ErrorMsg = proto.String(resp.GetError())
 		}
-		record.Status = Int64(int64(status))
+		record.Status = proto.Int64(int64(status))
 	} else {
-		status = ORDER_STATUS_OK
-		record.Status = Int64(int64(status))
+		status = int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)
+		record.Status = proto.Int64(int64(status))
 
-		SendInstantNotification(u, timeTaken)
+		trace := apiResp.Request.TraceInfo()
+		SendInstantNotification(u, trace.TotalTime.Milliseconds())
 	}
 	return status, record
 }
 
-func BatchOrderDinnerMultiThreaded(userQueue []UserChoiceWithKeyAndStatus) {
+func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 	var (
 		wg      sync.WaitGroup
-		records []OrderRecord
+		records []*sea_dinner.OrderRecord
 	)
 
-	m := make(map[int64]int)
+	m := make(map[int64]int64)
 	log.Printf("BatchOrderDinnerMultiThreaded | Begin | size: %v", len(userQueue))
 
 	for _, user := range userQueue {
 		//Skip 291235864
-		if user.GetUserID() == 291235864 {
+		if user.GetUserId() == 291235864 {
 			continue
 		}
 		//Increment group
 		wg.Add(1)
-		go func(u UserChoiceWithKeyAndStatus) {
+		go func(u *sea_dinner.UserChoiceWithKey) {
 			//Release group
 			defer wg.Done()
-			var record OrderRecord
-			m[u.GetUserID()], record = OrderDinnerWithUpdate(u)
+			var record *sea_dinner.OrderRecord
+			m[u.GetUserId()], record = OrderDinnerWithUpdate(u)
 			records = append(records, record)
 		}(user)
 	}
@@ -137,28 +106,28 @@ func BatchOrderDinnerMultiThreaded(userQueue []UserChoiceWithKeyAndStatus) {
 	OutputResults(m)
 }
 
-func BatchOrderDinnerMultiThreadedWithWait(userQueue []UserChoiceWithKeyAndStatus) {
+func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWithKey) {
 	var (
 		wg      sync.WaitGroup
-		records []OrderRecord
+		records []*sea_dinner.OrderRecord
 	)
 
-	m := make(map[int64]int)
+	m := make(map[int64]int64)
 
 	for _, user := range userQueue {
-		if user.GetUserID() != 291235864 {
+		if user.GetUserId() != 291235864 {
 			continue
 		}
 		//Increment group
 		wg.Add(1)
-		go func(u UserChoiceWithKeyAndStatus) {
+		go func(u *sea_dinner.UserChoiceWithKey) {
 			//Release group
 			defer wg.Done()
-			var record OrderRecord
+			var record *sea_dinner.OrderRecord
 			for {
 				if IsOrderTime() && IsPollStart() {
 					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | size: %v", len(userQueue))
-					m[u.GetUserID()], record = OrderDinnerWithUpdate(u)
+					m[u.GetUserId()], record = OrderDinnerWithUpdate(u)
 					records = append(records, record)
 					break
 				}
@@ -174,60 +143,17 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []UserChoiceWithKeyAndStatu
 	OutputResults(m)
 }
 
-//DEPRECATED
-func BatchOrderDinner(u *[]UserChoiceWithKeyAndStatus) []OrderRecord {
-	var (
-		records []OrderRecord
-		m       = make(map[int64]int)
-	)
-
-	for i := 0; i < len(*u); i++ {
-		r := (*u)[i]
-		log.Printf("id: %v | BatchOrderDinner | Ordering\n", r.GetUserID())
-		start := time.Now().UnixMilli()
-
-		resp := OrderDinner(Client, GetDayId(), r)
-
-		record := OrderRecord{
-			UserID:    Int64(r.GetUserID()),
-			FoodID:    String(r.GetUserChoice()),
-			OrderTime: Int64(time.Now().Unix()),
-		}
-
-		if resp.GetSelected() == 0 {
-			m[r.GetUserID()] = ORDER_STATUS_FAIL
-			if resp.Error == nil {
-				record.ErrorMsg = String("Unknown Error")
-			} else {
-				record.ErrorMsg = String(resp.GetError())
-			}
-			record.Status = Int64(int64(m[r.GetUserID()]))
-		} else {
-			elapsed := time.Now().UnixMilli() - start
-			m[r.GetUserID()] = ORDER_STATUS_OK
-			record.Status = Int64(int64(m[r.GetUserID()]))
-			SendInstantNotification(r, elapsed)
-			//Truncate successful orders so it won't be repeated next round
-			*u = PopSuccessfulOrder(*u, i)
-			i--
-		}
-		records = append(records, record)
-	}
-	log.Println("BatchOrderDinner | Records:", len(records))
-	return records
-}
-
-func UpdateOrderLog(records []OrderRecord) {
-	if err := DB.Table(DB_ORDER_LOG_TAB).Create(&records).Error; err != nil {
+func UpdateOrderLog(records []*sea_dinner.OrderRecord) {
+	if err := DB.Table(Common.DB_ORDER_LOG_TAB).Create(&records).Error; err != nil {
 		log.Printf("UpdateOrderLog | Failed to update records.")
 	}
 }
 
-func SendInstantNotification(u UserChoiceWithKeyAndStatus, took int64) {
+func SendInstantNotification(u *sea_dinner.UserChoiceWithKey, took int64) {
 	var (
 		msg string
 	)
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
 	}
@@ -237,20 +163,23 @@ func SendInstantNotification(u UserChoiceWithKeyAndStatus, took int64) {
 	menu := MakeMenuMap()
 	msg = fmt.Sprintf("Successfully ordered %v in %vms! 🥳", menu[u.GetUserChoice()], took)
 
-	if _, err := bot.Send(tgbotapi.NewMessage(u.GetUserID(), msg)); err != nil {
+	if _, err := bot.Send(tgbotapi.NewMessage(u.GetUserId(), msg)); err != nil {
 		log.Println(err)
 	}
-	log.Printf("SendInstantNotification | user_id:%v | msg: %v", u.GetUserID(), msg)
+	log.Printf("SendInstantNotification | user_id:%v | msg: %v", u.GetUserId(), msg)
 }
 
 func MakeMenuMap() map[string]string {
-	key := os.Getenv("TOKEN")
+	var (
+		key = os.Getenv("TOKEN")
+	)
 	menuMap := make(map[string]string)
-
-	menu := GetMenu(Client, GetDayId(), key)
-
-	for _, m := range menu.DinnerArr {
-		menuMap[fmt.Sprint(m.Id)] = m.Name
+	menu := GetMenu(Client, key)
+	for _, m := range menu.GetFood() {
+		menuMap[fmt.Sprint(m.GetId())] = m.GetName()
 	}
+	// Store -1 hash to menuMap
+	menuMap["-1"] = "*NOTHING*" // to be renamed
+	menuMap["RAND"] = "RAND"
 	return menuMap
 }
