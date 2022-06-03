@@ -14,6 +14,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+//OrderDinnerWithUpdate Orders dinner by calling Sea API, retry times determined in Config.
+//Instantly sends notifications to user if order is successful.
 func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.OrderRecord) {
 	var (
 		status  int64
@@ -73,6 +75,8 @@ func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.
 	return status, record
 }
 
+//BatchOrderDinnerMultiThreaded Spawns multiple Order goroutines, and update order_log_tab with the respective results.
+//Guranteed to execute goroutines for all users in the queue.
 func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 	var (
 		wg      sync.WaitGroup
@@ -102,12 +106,14 @@ func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 	OutputResults(m)
 }
 
+//UpdateOrderLog Batch insert new order records into order_log_tab
 func UpdateOrderLog(records []*sea_dinner.OrderRecord) {
 	if err := DB.Table(Common.DB_ORDER_LOG_TAB).Create(&records).Error; err != nil {
 		log.Printf("UpdateOrderLog | Failed to update records.")
 	}
 }
 
+//SendInstantNotification Spawns a one-time telegram bot instance and send notification to user
 func SendInstantNotification(u *sea_dinner.UserChoiceWithKey, took int64) {
 	var (
 		msg string
@@ -128,6 +134,7 @@ func SendInstantNotification(u *sea_dinner.UserChoiceWithKey, took int64) {
 	log.Printf("SendInstantNotification | user_id:%v | msg: %v", u.GetUserId(), msg)
 }
 
+//MakeMenuMap Returns food_id:food_name mapping of current menu
 func MakeMenuMap() map[string]string {
 	var (
 		key = os.Getenv("TOKEN")

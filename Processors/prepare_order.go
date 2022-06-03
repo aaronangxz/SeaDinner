@@ -9,6 +9,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+//PrepOrder Retrieves all the user's key and choice, where the user's choice is in the current menu / RAND.
+//If choice is RAND, generates a random food id.
+//Returns UserChoiceWithKey
 func PrepOrder() ([]*sea_dinner.UserChoiceWithKey, bool) {
 	var (
 		record []*sea_dinner.UserChoiceWithKey

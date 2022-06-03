@@ -27,7 +27,6 @@ func main() {
 	}
 
 	bot.Debug = true
-
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
@@ -54,11 +53,11 @@ func main() {
 			continue
 		}
 
-		if update.Message == nil { // ignore any non-Message updates
+		if update.Message == nil {
 			continue
 		}
 
-		if !update.Message.IsCommand() { // ignore any non-command Messages
+		if !update.Message.IsCommand() {
 			if startListenKey {
 				//Capture key
 				msg, _ := Bot.UpdateKey(update.Message.Chat.ID, update.Message.Text)
@@ -89,10 +88,7 @@ func main() {
 			}
 		}
 
-		// Create a new MessageConfig. We don't have text yet,
-		// so we leave it empty.
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-		// Extract the command from the Message.
 		switch update.Message.Command() {
 		case "start":
 			s, ok := Bot.CheckKey(update.Message.Chat.ID)

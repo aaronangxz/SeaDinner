@@ -17,6 +17,7 @@ import (
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
 
+//MakeToken Decrypts the encrypted key with AES and appends the token prefix
 func MakeToken(key string) string {
 	if key == "" {
 		log.Println("Key is invalid:", key)
@@ -31,6 +32,7 @@ func MakeToken(key string) string {
 	return fmt.Sprint(Common.Config.Prefix.TokenPrefix, decrypt)
 }
 
+//MakeURL Returns the corresponding API URL appended with Id, if needed
 func MakeURL(opt int, id *int64) string {
 	prefix := Common.Config.Prefix.UrlPrefix
 	switch opt {
@@ -50,6 +52,7 @@ func MakeURL(opt int, id *int64) string {
 	return ""
 }
 
+//OutputResults Prints out the total success and failure cases
 func OutputResults(resultMap map[int64]int64) {
 	var (
 		passed int
@@ -67,6 +70,7 @@ func OutputResults(resultMap map[int64]int64) {
 	fmt.Println("*************************")
 }
 
+//IsNotNumber Verifiy whether a string contains non-numeric characters
 func IsNotNumber(a string) bool {
 	if a == "" {
 		return true
@@ -90,6 +94,7 @@ func IsNotNumber(a string) bool {
 	return false
 }
 
+//EncryptKey Encrypts a string using the provided encryption key
 func EncryptKey(stringToEncrypt string, keyString string) (encryptedString string) {
 
 	//Since the key is in string, we need to convert decode it to bytes
@@ -121,6 +126,7 @@ func EncryptKey(stringToEncrypt string, keyString string) (encryptedString strin
 	return fmt.Sprintf("%x", ciphertext)
 }
 
+//DecryptKey Decrypts a string using the provided encryption key
 func DecryptKey(encryptedString string, keyString string) (decryptedString string) {
 
 	key, _ := hex.DecodeString(keyString)
@@ -152,6 +158,7 @@ func DecryptKey(encryptedString string, keyString string) (decryptedString strin
 	return string(plaintext)
 }
 
+//MakeKey Creates a random AES key
 func MakeKey() string {
 	bytes := make([]byte, 16) //generate a random 32 byte key for AES-256
 	if _, err := rand.Read(bytes); err != nil {
@@ -160,6 +167,7 @@ func MakeKey() string {
 	return hex.EncodeToString(bytes) //encode key in bytes to string for saving
 }
 
+//RandomFood Returns a random element in the provided menu map, excluding RAND and -1
 func RandomFood(m map[string]string) string {
 	s := []string{}
 
