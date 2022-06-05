@@ -99,6 +99,10 @@ func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 	log.Printf("BatchOrderDinnerMultiThreaded | Begin | size: %v", len(userQueue))
 
 	for _, user := range userQueue {
+		//Skip 291235864
+		if user.GetUserId() == 291235864 {
+			continue
+		}
 		//Increment group
 		wg.Add(1)
 		go func(u *sea_dinner.UserChoiceWithKey) {
@@ -114,6 +118,43 @@ func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 	wg.Wait()
 
 	log.Printf("BatchOrderDinnerMultiThreaded | Done")
+	UpdateOrderLog(records)
+	OutputResults(m)
+}
+
+func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWithKey) {
+	var (
+		wg      sync.WaitGroup
+		records []*sea_dinner.OrderRecord
+	)
+
+	m := make(map[int64]int64)
+
+	for _, user := range userQueue {
+		if user.GetUserId() != 291235864 {
+			continue
+		}
+		//Increment group
+		wg.Add(1)
+		go func(u *sea_dinner.UserChoiceWithKey) {
+			//Release group
+			defer wg.Done()
+			var record *sea_dinner.OrderRecord
+			for {
+				if IsOrderTime() && IsPollStart() {
+					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | user_id: %v", record.GetUserId())
+					m[u.GetUserId()], record = OrderDinnerWithUpdate(u)
+					records = append(records, record)
+					break
+				}
+			}
+		}(user)
+	}
+
+	//Wait for all groups to release
+	wg.Wait()
+
+	log.Printf("BatchOrderDinnerMultiThreadedWithWait | Done")
 	UpdateOrderLog(records)
 	OutputResults(m)
 }
