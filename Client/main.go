@@ -151,6 +151,7 @@ func main() {
 				txt, kb := Bot.CheckMute(update.Message.Chat.ID)
 				msg.Text = txt
 				msg.ReplyMarkup = kb
+				msg.ParseMode = "MARKDOWN"
 			}
 		default:
 			msg.Text = "I don't understand this command :("

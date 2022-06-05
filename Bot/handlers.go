@@ -449,7 +449,7 @@ func BatchGetUsersChoice() []*sea_dinner.UserChoice {
 		res    []*sea_dinner.UserChoice
 		expiry = 7200 * time.Second
 	)
-	if err := Processors.DB.Raw("SELECT uc.* FROM user_choice_tab uc, user_key_tab uk WHERE uk.is_mute <> ?", sea_dinner.MuteStatus_MUTE_STATUS_YES).Scan(&res).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT uc.* FROM user_choice_tab uc, user_key_tab uk WHERE uc.user_id = uk.user_id AND uk.is_mute <> ?", sea_dinner.MuteStatus_MUTE_STATUS_YES).Scan(&res).Error; err != nil {
 		log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
 		return nil
 	}
@@ -633,13 +633,13 @@ func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 		muteBotton := tgbotapi.NewInlineKeyboardButtonData("Turn OFF 🔕", "MUTE")
 		rows = append(rows, muteBotton)
 		out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
-		return "Daily reminder notifications are ON. Do you want to turn it OFF?", out
+		return "Daily reminder notifications are *ON*. Do you want to turn it OFF?", out
 	}
 	var rows []tgbotapi.InlineKeyboardButton
 	unmuteBotton := tgbotapi.NewInlineKeyboardButtonData("Turn ON 🔔", "UNMUTE")
 	rows = append(rows, unmuteBotton)
 	out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
-	return "Daily reminder notifications are OFF. Do you want to turn it ON?", out
+	return "Daily reminder notifications are *OFF*. Do you want to turn it ON?", out
 }
 
 func UpdateMute(id int64, callback string) (string, bool) {
