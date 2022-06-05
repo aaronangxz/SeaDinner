@@ -28,7 +28,6 @@ func main() {
 
 	bot.Debug = true
 	log.Printf("Authorized on account %s", bot.Self.UserName)
-
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
@@ -143,6 +142,15 @@ func main() {
 			//Backdoor for test env
 			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
 				Bot.SendReminder()
+			}
+		case "mute":
+			s, ok := Bot.CheckKey(update.Message.Chat.ID)
+			if !ok {
+				msg.Text = s
+			} else {
+				txt, kb := Bot.CheckMute(update.Message.Chat.ID)
+				msg.Text = txt
+				msg.ReplyMarkup = kb
 			}
 		default:
 			msg.Text = "I don't understand this command :("
