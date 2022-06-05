@@ -138,7 +138,7 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 			var record *sea_dinner.OrderRecord
 			for {
 				if IsOrderTime() && IsPollStart() {
-					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | size: %v", len(userQueue))
+					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | user_id: %v", record.GetUserId())
 					m[u.GetUserId()], record = OrderDinnerWithUpdate(u)
 					records = append(records, record)
 					break
