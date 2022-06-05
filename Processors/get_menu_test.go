@@ -9,7 +9,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-func TestGetMenu(t *testing.T) {
+func AdhocTestGetMenu(t *testing.T) {
 	LoadEnv()
 	Common.LoadConfig()
 	ConnectTestRedis()

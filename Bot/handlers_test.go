@@ -140,12 +140,15 @@ func TestCheckChope(t *testing.T) {
 	notInMenu := user_choice.New().SetUserChoice(fmt.Sprint(999999)).Build()
 	randOrder := user_choice.New().SetUserChoice("RAND").Build()
 	tz, _ := time.LoadLocation(Processors.TimeZone)
-	var dayText string = "today"
+	var expected string = "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu"
 	if time.Now().In(tz).Unix() > Processors.GetLunchTime().Unix() {
 		if Processors.IsNotEOW(time.Now().In(tz)) {
-			dayText = "tomorrow"
+			expected = "Not placing dinner order for you tomorrow 🙅 Changed your mind? You can choose from /menu"
+		} else {
+			expected = "We are done for this week! You can tell me your order again next week 😀"
 		}
 	}
+
 	defer func() {
 		u.TearDown()
 		stopOrder.TearDown()
@@ -183,7 +186,7 @@ func TestCheckChope(t *testing.T) {
 		{
 			name:  "StopOrder",
 			args:  args{id: stopOrder.GetUserId()},
-			want:  fmt.Sprintf("Not placing dinner order for you %v 🙅 Changed your mind? You can choose from /menu", dayText),
+			want:  expected,
 			want1: false,
 		},
 		{
@@ -213,6 +216,12 @@ func TestCheckChope(t *testing.T) {
 }
 
 func TestGetChope(t *testing.T) {
+	tz, _ := time.LoadLocation(Processors.TimeZone)
+	if !Processors.IsNotEOW(time.Now().In(tz)) {
+		log.Printf("TestGetChope | Skipping")
+		return
+	}
+
 	expiry := 60 * time.Second
 	m := TestHelper.GetLiveMenuDetails()
 	u := user_choice.New().Build()
