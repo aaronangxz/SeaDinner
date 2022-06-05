@@ -22,7 +22,7 @@ enum URLType{
 }
 
 enum MuteStatus{
-    MUTE_STATUS_NO   = 0;
+    MUTE_STATUS_NO  = 0;
 	MUTE_STATUS_YES = 1;
 }
 
