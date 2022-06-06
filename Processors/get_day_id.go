@@ -19,6 +19,8 @@ func GetDayId() (ID int64) {
 		cacheKey = fmt.Sprint(Common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 		expiry   = 86400 * time.Second
 	)
+	txn := App.StartTransaction("get_day_id")
+	defer txn.End()
 
 	//check cache
 	redisResp, redisErr := RedisClient.Get(cacheKey).Result()

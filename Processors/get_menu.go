@@ -76,6 +76,8 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		dayText         string = "today"
 		skipFillButtons bool
 	)
+	txn := App.StartTransaction("output_menu_with_button")
+	defer txn.End()
 
 	m := GetMenu(Client, key)
 
