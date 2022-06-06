@@ -24,6 +24,7 @@ jobs:
           TEST_REDIS_URL: ${{secrets.TEST_REDIS_URL}}
           TEST_REDIS_PORT: ${{secrets.TEST_REDIS_PORT}}
           TEST_REDIS_PASSWORD: ${{secrets.TEST_REDIS_PASSWORD}}
+          TEST_NEWRELIC_KEY: ${{secrets.TEST_NEWRELIC_KEY}}
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Run coverage in Bot
         working-directory: ./Bot
@@ -40,6 +41,7 @@ jobs:
           TEST_REDIS_URL: ${{secrets.TEST_REDIS_URL}}
           TEST_REDIS_PORT: ${{secrets.TEST_REDIS_PORT}}
           TEST_REDIS_PASSWORD: ${{secrets.TEST_REDIS_PASSWORD}}
+          TEST_NEWRELIC_KEY: ${{secrets.TEST_NEWRELIC_KEY}}
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
