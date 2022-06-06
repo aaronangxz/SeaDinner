@@ -104,5 +104,10 @@ func GetLiveMenuDetails() []*sea_dinner.Food {
 	LoadConfig()
 	InitTest()
 	key := os.Getenv("TOKEN")
+	if key == "" {
+		log.Println("GetLiveMenuDetails | unable to fetch TOKEN from env")
+		return nil
+	}
+	log.Println("GetLiveMenuDetails | Success")
 	return Processors.GetMenu(Processors.Client, key).GetFood()
 }
