@@ -94,7 +94,8 @@ func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 		wg      sync.WaitGroup
 		records []*sea_dinner.OrderRecord
 	)
-
+	txn := App.StartTransaction("batch_order_dinner_multi_threaded")
+	defer txn.End()
 	m := make(map[int64]int64)
 	log.Printf("BatchOrderDinnerMultiThreaded | Begin | size: %v", len(userQueue))
 
@@ -127,7 +128,8 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 		wg      sync.WaitGroup
 		records []*sea_dinner.OrderRecord
 	)
-
+	txn := App.StartTransaction("batch_order_dinner_multi_threaded_with_wait")
+	defer txn.End()
 	m := make(map[int64]int64)
 
 	for _, user := range userQueue {
