@@ -23,6 +23,8 @@ func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.
 		apiResp *resty.Response
 		err     error
 	)
+	txn := App.StartTransaction("order_dinner_with_update")
+	defer txn.End()
 
 	if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
 		log.Println("OrderDinnerWithUpdate | TEST | return dummy result.")
@@ -96,6 +98,7 @@ func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 	)
 	txn := App.StartTransaction("batch_order_dinner_multi_threaded")
 	defer txn.End()
+
 	m := make(map[int64]int64)
 	log.Printf("BatchOrderDinnerMultiThreaded | Begin | size: %v", len(userQueue))
 
@@ -130,6 +133,7 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 	)
 	txn := App.StartTransaction("batch_order_dinner_multi_threaded_with_wait")
 	defer txn.End()
+
 	m := make(map[int64]int64)
 
 	for _, user := range userQueue {
@@ -164,6 +168,9 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 
 //UpdateOrderLog Batch insert new order records into order_log_tab
 func UpdateOrderLog(records []*sea_dinner.OrderRecord) {
+	txn := App.StartTransaction("update_order_log")
+	defer txn.End()
+
 	if records == nil {
 		log.Printf("UpdateOrderLog | No record to update.")
 		return
@@ -178,6 +185,9 @@ func SendInstantNotification(u *sea_dinner.UserChoiceWithKey, took int64) {
 	var (
 		msg string
 	)
+	txn := App.StartTransaction("send_instant_notifications")
+	defer txn.End()
+
 	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
@@ -199,6 +209,9 @@ func MakeMenuMap() map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
 	)
+	txn := App.StartTransaction("make_menu_map")
+	defer txn.End()
+
 	menuMap := make(map[string]string)
 	menu := GetMenu(Client, key)
 	for _, m := range menu.GetFood() {

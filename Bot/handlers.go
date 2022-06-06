@@ -23,6 +23,8 @@ func GetKey(id int64) string {
 		cacheKey       = fmt.Sprint(Common.USER_KEY_PREFIX, id)
 		expiry         = 604800 * time.Second
 	)
+	txn := Processors.App.StartTransaction("get_key")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("GetKey | Id must be > 1.")
@@ -76,6 +78,8 @@ func CheckKey(id int64) (string, bool) {
 		cacheKey       = fmt.Sprint(Common.USER_KEY_PREFIX, id)
 		expiry         = 604800 * time.Second
 	)
+	txn := Processors.App.StartTransaction("check_key")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("CheckKey | Id must be > 1.")
@@ -137,6 +141,8 @@ func UpdateKey(id int64, s string) (string, bool) {
 			Mtime:   proto.Int64(time.Now().Unix()),
 		}
 	)
+	txn := Processors.App.StartTransaction("update_key")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("UpdateKey | Id must be > 1.")
@@ -186,6 +192,9 @@ func CheckChope(id int64) (string, bool) {
 		existingRecord sea_dinner.UserChoice
 		dayText        = "today"
 	)
+
+	txn := Processors.App.StartTransaction("check_chope")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("Id must be > 1.")
@@ -363,6 +372,8 @@ func ListWeeklyResultByUserId(id int64) string {
 	var (
 		res []*sea_dinner.OrderRecord
 	)
+	txn := Processors.App.StartTransaction("list_weekly_result_by_user_id")
+	defer txn.End()
 
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 
@@ -384,6 +395,9 @@ func ListWeeklyResultByUserId(id int64) string {
 
 //GenerateWeeklyResultTable Outputs pre-formatted weekly order status.
 func GenerateWeeklyResultTable(record []*sea_dinner.OrderRecord) string {
+	txn := Processors.App.StartTransaction("generate_weekly_result_table")
+	defer txn.End()
+
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 	m := MakeMenuCodeMap()
 	status := map[int64]string{int64(sea_dinner.OrderStatus_ORDER_STATUS_OK): "✅", int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL): "❌"}
@@ -402,6 +416,8 @@ func BatchGetLatestResult() []*sea_dinner.OrderRecord {
 	var (
 		res []*sea_dinner.OrderRecord
 	)
+	txn := Processors.App.StartTransaction("batch_get_latest_result")
+	defer txn.End()
 
 	if err := Processors.DB.Raw("SELECT ol.* FROM order_log_tab ol INNER JOIN "+
 		"(SELECT MAX(order_time) AS max_order_time FROM order_log_tab WHERE status <> ? AND order_time BETWEEN ? AND ? GROUP BY user_id) nestedQ "+
@@ -421,6 +437,9 @@ func SendNotifications() {
 	var (
 		msg string
 	)
+	txn := Processors.App.StartTransaction("send_notifications")
+	defer txn.End()
+
 	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
@@ -451,6 +470,9 @@ func BatchGetUsersChoice() []*sea_dinner.UserChoice {
 		res    []*sea_dinner.UserChoice
 		expiry = 7200 * time.Second
 	)
+	txn := Processors.App.StartTransaction("batch_get_user_choice")
+	defer txn.End()
+
 	if err := Processors.DB.Raw("SELECT uc.* FROM user_choice_tab uc, user_key_tab uk WHERE uc.user_id = uk.user_id AND uk.is_mute <> ?", sea_dinner.MuteStatus_MUTE_STATUS_YES).Scan(&res).Error; err != nil {
 		log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
 		return nil
@@ -565,6 +587,9 @@ func MakeMenuNameMap() map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
 	)
+	txn := Processors.App.StartTransaction("make_menu_name_map")
+	defer txn.End()
+
 	menuMap := make(map[string]string)
 	menu := Processors.GetMenu(Processors.Client, key)
 	for _, m := range menu.GetFood() {
@@ -581,6 +606,9 @@ func MakeMenuCodeMap() map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
 	)
+	txn := Processors.App.StartTransaction("make_menu_code_map")
+	defer txn.End()
+
 	menuMap := make(map[string]string)
 	menu := Processors.GetMenu(Processors.Client, key)
 	for _, m := range menu.GetFood() {
@@ -592,6 +620,8 @@ func MakeMenuCodeMap() map[string]string {
 
 //CallbackQueryHandler Handles the call back result of menu buttons
 func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
+	txn := Processors.App.StartTransaction("call_back_query_handler")
+	defer txn.End()
 	log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack.Data)
 
 	if callBack.Data == "MUTE" || callBack.Data == "UNMUTE" {
@@ -603,6 +633,8 @@ func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, b
 
 //MakeHelpResponse Prints out Introduction
 func MakeHelpResponse() string {
+	txn := Processors.App.StartTransaction("make_help_response")
+	defer txn.End()
 	return "*Welcome to SeaHungerGamesBot!*\n\n" +
 		"The goal of my existence is to help you snatch that dinner in milliseconds. And also we all know that you are too lazy to open up SeaTalk.\n\n" +
 		"*Get started*\n" +
@@ -630,6 +662,9 @@ func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 		res *sea_dinner.UserKey
 		out []tgbotapi.InlineKeyboardMarkup
 	)
+	txn := Processors.App.StartTransaction("check_mute")
+	defer txn.End()
+
 	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&res).Error; err != nil {
 		log.Println("CheckMute | Failed to retrieve record:", err.Error())
 		return "", nil
@@ -660,6 +695,8 @@ func UpdateMute(id int64, callback string) (string, bool) {
 		returnMsg  = "Daily reminder notifications are *OFF*.\nDo you want to turn it ON?"
 		returnBool = true
 	)
+	txn := Processors.App.StartTransaction("update_mute")
+	defer txn.End()
 
 	if callback == "UNMUTE" {
 		toUdate = int64(sea_dinner.MuteStatus_MUTE_STATUS_NO)

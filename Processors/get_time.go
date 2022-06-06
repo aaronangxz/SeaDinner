@@ -93,6 +93,8 @@ func IsPollStart() bool {
 		status *sea_dinner.Current
 		key    = os.Getenv("TOKEN")
 	)
+	txn := App.StartTransaction("is_poll_start")
+	defer txn.End()
 
 	_, err := Client.R().
 		SetHeader("Authorization", MakeToken(key)).
