@@ -142,7 +142,7 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 			var record *sea_dinner.OrderRecord
 			for {
 				if IsOrderTime() && IsPollStart() {
-					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | user_id: %v", record.GetUserId())
+					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | user_id: %v", u.GetUserId())
 					m[u.GetUserId()], record = OrderDinnerWithUpdate(u)
 					records = append(records, record)
 					break
@@ -161,6 +161,10 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 
 //UpdateOrderLog Batch insert new order records into order_log_tab
 func UpdateOrderLog(records []*sea_dinner.OrderRecord) {
+	if records == nil {
+		log.Printf("UpdateOrderLog | No record to update.")
+		return
+	}
 	if err := DB.Table(Common.DB_ORDER_LOG_TAB).Create(&records).Error; err != nil {
 		log.Printf("UpdateOrderLog | Failed to update records.")
 	}
