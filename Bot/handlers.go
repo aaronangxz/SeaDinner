@@ -239,6 +239,8 @@ func GetChope(id int64, s string) (string, bool) {
 		}
 		key = fmt.Sprint(Common.USER_CHOICE_PREFIX, r.GetUserId())
 	)
+	txn := Processors.App.StartTransaction("get_chope")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("Id must be > 1.")
