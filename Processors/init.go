@@ -67,6 +67,7 @@ func InitRelic() {
 	if err != nil {
 		log.Printf("Error initializing newRelic | %v", err.Error())
 	}
+	log.Printf("Successfuly initialized newRelic | %v", appName)
 	App = app
 }
 
