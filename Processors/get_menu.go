@@ -21,6 +21,8 @@ func GetMenu(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 		expiry     = 3600 * time.Second
 		currentarr *sea_dinner.DinnerMenuArray
 	)
+	txn := App.StartTransaction("get_menu")
+	defer txn.End()
 
 	//check cache
 	val, redisErr := RedisClient.Get(cacheKey).Result()
