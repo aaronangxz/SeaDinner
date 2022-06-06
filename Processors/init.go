@@ -48,7 +48,7 @@ func Init() {
 
 	app, err := newrelic.NewApplication(
 		newrelic.ConfigAppName("sea-dinner"),
-		newrelic.ConfigLicense("76e67ea9ce3c0608c6a45dcf35496190fed8NRAL"),
+		newrelic.ConfigLicense(os.Getenv("NEWRELIC_KEY")),
 		newrelic.ConfigDistributedTracerEnabled(true),
 	)
 	if err != nil {
