@@ -53,7 +53,7 @@ func MakeURL(opt int, id *int64) string {
 }
 
 //OutputResults Prints out the total success and failure cases
-func OutputResults(resultMap map[int64]int64) {
+func OutputResults(resultMap map[int64]int64, service string) {
 	var (
 		passed int
 	)
@@ -63,6 +63,7 @@ func OutputResults(resultMap map[int64]int64) {
 		}
 	}
 
+	fmt.Println(service)
 	fmt.Println("*************************")
 	fmt.Println("Total Order: ", len(resultMap))
 	fmt.Println("Total Success: ", passed)

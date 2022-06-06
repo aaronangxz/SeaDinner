@@ -99,8 +99,8 @@ func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 	log.Printf("BatchOrderDinnerMultiThreaded | Begin | size: %v", len(userQueue))
 
 	for _, user := range userQueue {
-		//Skip 291235864
-		if user.GetUserId() == 291235864 {
+		if Common.IsInGrayScale(user.GetUserId()) {
+			log.Printf("BatchOrderDinnerMultiThreaded | In grayscale, skipping | user_id:%v", user.GetUserId())
 			continue
 		}
 		//Increment group
@@ -119,7 +119,7 @@ func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 
 	log.Printf("BatchOrderDinnerMultiThreaded | Done")
 	UpdateOrderLog(records)
-	OutputResults(m)
+	OutputResults(m, "BatchOrderDinnerMultiThreaded")
 }
 
 func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWithKey) {
@@ -131,7 +131,8 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 	m := make(map[int64]int64)
 
 	for _, user := range userQueue {
-		if user.GetUserId() != 291235864 {
+		if !Common.IsInGrayScale(user.GetUserId()) {
+			log.Printf("BatchOrderDinnerMultiThreadedWithWait | Not in grayscale, skipping | user_id:%v", user.GetUserId())
 			continue
 		}
 		//Increment group
@@ -156,7 +157,7 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 
 	log.Printf("BatchOrderDinnerMultiThreadedWithWait | Done")
 	UpdateOrderLog(records)
-	OutputResults(m)
+	OutputResults(m, "BatchOrderDinnerMultiThreadedWithWait")
 }
 
 //UpdateOrderLog Batch insert new order records into order_log_tab

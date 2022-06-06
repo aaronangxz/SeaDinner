@@ -99,6 +99,7 @@ func TestOutputResults(t *testing.T) {
 	m := make(map[int64]int64)
 	m[1] = int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)
 	m[2] = int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL)
+	s := "ServiceName"
 	type args struct {
 		resultMap map[int64]int64
 	}
@@ -113,7 +114,7 @@ func TestOutputResults(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			OutputResults(tt.args.resultMap)
+			OutputResults(tt.args.resultMap, s)
 		})
 	}
 }
