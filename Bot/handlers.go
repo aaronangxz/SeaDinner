@@ -311,7 +311,7 @@ func GetChope(id int64, s string) (string, bool) {
 
 			//To stop ordering
 			if s == "-1" {
-				return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
+				return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning for the rest of the week.😀", menu[s]), true
 			}
 
 			if s == "RAND" {
@@ -333,7 +333,7 @@ func GetChope(id int64, s string) (string, bool) {
 
 		//To stop ordering
 		if s == "-1" {
-			return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
+			return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning for the rest of the week.😀", menu[s]), true
 		}
 
 		if s == "RAND" {
@@ -489,11 +489,6 @@ func SendReminder() {
 	code := MakeMenuCodeMap()
 
 	for _, r := range res {
-		if r.GetUserChoice() == "-1" {
-			log.Printf("SendReminder | skip -1 records | %v", r.GetUserId())
-			continue
-		}
-
 		msg := tgbotapi.NewMessage(r.GetUserId(), "")
 
 		var (
@@ -504,6 +499,7 @@ func SendReminder() {
 		)
 
 		if Processors.IsSOW(time.Now()) {
+			//Everyone exceot "MUTE" will receive weekly reminders
 			msgTxt = "Good Morning! It's a brand new week with a brand new menu! Check it out at /menu 😋"
 			randomBotton := tgbotapi.NewInlineKeyboardButtonData("🎲", "RAND")
 			rows = append(rows, randomBotton)
@@ -513,6 +509,12 @@ func SendReminder() {
 			mk.InlineKeyboard = out
 			msg.ReplyMarkup = mk
 		} else {
+			//Only skips on non-mondays
+			if r.GetUserChoice() == "-1" {
+				log.Printf("SendReminder | skip -1 records | %v", r.GetUserId())
+				continue
+			}
+
 			_, ok := menu[r.GetUserChoice()]
 			if !ok {
 				msgTxt = fmt.Sprintf("Good Morning. Your previous order %v is not available today! I will not proceed to order. Choose another dish from /menu 😃 ", r.GetUserChoice())
@@ -623,7 +625,7 @@ func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 		res *sea_dinner.UserKey
 		out []tgbotapi.InlineKeyboardMarkup
 	)
-	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?").Scan(&res).Error; err != nil {
+	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&res).Error; err != nil {
 		log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
 		return "", nil
 	}
@@ -651,7 +653,7 @@ func UpdateMute(id int64, callback string) (string, bool) {
 		toUdate = int64(sea_dinner.MuteStatus_MUTE_STATUS_NO)
 	}
 
-	if err := Processors.DB.Exec("UPDATE user_key_tab SET is_mute = ?", toUdate).Error; err != nil {
+	if err := Processors.DB.Exec("UPDATE user_key_tab SET is_mute = ? WHERE user_id = ?", toUdate, id).Error; err != nil {
 		log.Println("Failed to update DB")
 		return err.Error(), false
 	}

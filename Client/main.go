@@ -150,7 +150,9 @@ func main() {
 			} else {
 				txt, kb := Bot.CheckMute(update.Message.Chat.ID)
 				msg.Text = txt
-				msg.ReplyMarkup = kb
+				if kb != nil {
+					msg.ReplyMarkup = kb[0]
+				}
 				msg.ParseMode = "MARKDOWN"
 			}
 		default:
