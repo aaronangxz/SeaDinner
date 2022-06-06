@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	defaultKey   = TestHelper.RandomString(10)
-	defaultCtime = time.Now().Unix()
-	defaultMtime = time.Now().Unix()
+	defaultKey    = TestHelper.RandomString(10)
+	defaultCtime  = time.Now().Unix()
+	defaultMtime  = time.Now().Unix()
+	defaultIsMute = int64(sea_dinner.MuteStatus_MUTE_STATUS_NO)
 )
 
 type UserKey struct {
@@ -30,6 +31,7 @@ func New() *UserKey {
 			UserKey: new(string),
 			Ctime:   new(int64),
 			Mtime:   new(int64),
+			IsMute:  new(int64),
 		},
 	}
 }
@@ -49,6 +51,10 @@ func (uk *UserKey) FillDefaults() *UserKey {
 
 	if uk.UserKey.GetMtime() == 0 {
 		uk.SetMtime(defaultMtime)
+	}
+
+	if uk.UserKey.GetIsMute() == 0 {
+		uk.SetIsMute(defaultIsMute)
 	}
 	return uk
 }
@@ -83,6 +89,11 @@ func (uk *UserKey) SetMtime(mtime int64) *UserKey {
 	return uk
 }
 
+func (uk *UserKey) SetIsMute(mute int64) *UserKey {
+	uk.UserKey.IsMute = proto.Int64(mute)
+	return uk
+}
+
 func (uk *UserKey) TearDown() error {
 	if err := Processors.DB.Exec("DELETE FROM user_key_tab WHERE user_id = ?", uk.GetUserId()).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", uk.GetUserId())
@@ -100,4 +111,17 @@ func DeleteUserKey(userId int64) error {
 
 	log.Printf("Successfully deleted from DB | user_id:%v", userId)
 	return nil
+}
+
+func CheckUserKey(userId int64) *sea_dinner.UserKey {
+	var (
+		row *sea_dinner.UserKey
+	)
+	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", userId).Scan(&row).Error; err != nil {
+		log.Printf("Failed to read from DB | user_id:%v", userId)
+		return nil
+	}
+
+	log.Printf("Successfully read from DB | user_id:%v", userId)
+	return row
 }

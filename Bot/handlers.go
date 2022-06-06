@@ -626,11 +626,16 @@ func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 		out []tgbotapi.InlineKeyboardMarkup
 	)
 	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&res).Error; err != nil {
-		log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
+		log.Println("CheckMute | Failed to retrieve record:", err.Error())
 		return "", nil
 	}
 
-	if res == nil || res.GetIsMute() == int64(sea_dinner.MuteStatus_MUTE_STATUS_NO) {
+	if res == nil {
+		log.Printf("CheckMute | Record not found | user_id:%v", id)
+		return "Record not found.", nil
+	}
+
+	if res.GetIsMute() == int64(sea_dinner.MuteStatus_MUTE_STATUS_NO) {
 		var rows []tgbotapi.InlineKeyboardButton
 		muteBotton := tgbotapi.NewInlineKeyboardButtonData("Turn OFF 🔕", "MUTE")
 		rows = append(rows, muteBotton)
