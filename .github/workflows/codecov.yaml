@@ -33,6 +33,7 @@ jobs:
           TEST_DB_URL: ${{secrets.TEST_DB_URL}}
           TEST_DB_NAME: ${{secrets.TEST_DB_NAME}}
           AES_KEY: ${{secrets.AES_KEY}}
+          TOKEN: ${{secrets.TOKEN}}
           REDIS_URL: ${{secrets.REDIS_URL}}
           REDIS_PORT: ${{secrets.REDIS_PORT}}
           REDIS_PASSWORD: ${{secrets.REDIS_PASSWORD}}
