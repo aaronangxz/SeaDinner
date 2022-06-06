@@ -1,13 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
 	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/go-redis/redis"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -34,9 +37,51 @@ func main() {
 
 	for update := range updates {
 		if update.CallbackQuery != nil {
+			var muteType bool
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
 			msg.ParseMode = "MARKDOWN"
-			msg.Text, _ = Bot.CallbackQueryHandler(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
+			msg.Text, muteType = Bot.CallbackQueryHandler(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
+
+			//Handle MUTE related callback separately
+			if update.CallbackQuery.Data == "MUTE" || update.CallbackQuery.Data == "UNMUTE" {
+				//Retrieve the previous chat ID after user calls /mute
+				cacheKey := fmt.Sprint(Common.USER_MUTE_MSG_ID_PREFIX, update.CallbackQuery.Message.Chat.ID)
+				val, redisErr := Processors.RedisClient.Get(cacheKey).Result()
+				if redisErr != nil {
+					if redisErr == redis.Nil {
+						log.Printf("Callback Mute | No result of %v in Redis", cacheKey)
+					} else {
+						log.Printf("Callback Mute | Error while reading from redis: %v", redisErr.Error())
+					}
+					//Return expired message if not found
+					msg.Text = "Oops this selection had expired. Start over at /mute!"
+					if _, err := bot.Send(msg); err != nil {
+						log.Println(err)
+					}
+					continue
+				} else {
+					var out []tgbotapi.InlineKeyboardMarkup
+					if muteType {
+						var rows []tgbotapi.InlineKeyboardButton
+						unmuteBotton := tgbotapi.NewInlineKeyboardButtonData("Turn ON 🔔", "UNMUTE")
+						rows = append(rows, unmuteBotton)
+						out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
+					} else {
+						var rows []tgbotapi.InlineKeyboardButton
+						muteBotton := tgbotapi.NewInlineKeyboardButtonData("Turn OFF 🔕", "MUTE")
+						rows = append(rows, muteBotton)
+						out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
+					}
+					//Edit the previous message and buttons
+					intVar, _ := strconv.Atoi(val)
+					c := tgbotapi.NewEditMessageText(update.CallbackQuery.Message.Chat.ID, intVar, msg.Text)
+					c.ParseMode = "MARKDOWN"
+					c.ReplyMarkup = &out[0]
+					bot.Send(c)
+					continue
+				}
+			}
+
 			if _, err := bot.Send(msg); err != nil {
 				log.Println(err)
 			}
@@ -154,6 +199,18 @@ func main() {
 					msg.ReplyMarkup = kb[0]
 				}
 				msg.ParseMode = "MARKDOWN"
+				if msgTrace, err := bot.Send(msg); err != nil {
+					log.Panic(err)
+				} else {
+					//save msg id into cache for msg update
+					cacheKey := fmt.Sprint(Common.USER_MUTE_MSG_ID_PREFIX, update.Message.Chat.ID)
+					if err := Processors.RedisClient.Set(cacheKey, msgTrace.MessageID, 1800*time.Second).Err(); err != nil {
+						log.Printf("Mute | Error while writing to redis: %v", err.Error())
+					} else {
+						log.Printf("Mute | Successful | Written %v to redis", cacheKey)
+					}
+					continue
+				}
 			}
 		default:
 			msg.Text = "I don't understand this command :("

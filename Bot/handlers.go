@@ -640,22 +640,26 @@ func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 		muteBotton := tgbotapi.NewInlineKeyboardButtonData("Turn OFF 🔕", "MUTE")
 		rows = append(rows, muteBotton)
 		out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
-		return "Daily reminder notifications are *ON*. Do you want to turn it OFF?", out
+		return "Daily reminder notifications are *ON*.\nDo you want to turn it OFF?", out
 	}
 	var rows []tgbotapi.InlineKeyboardButton
 	unmuteBotton := tgbotapi.NewInlineKeyboardButtonData("Turn ON 🔔", "UNMUTE")
 	rows = append(rows, unmuteBotton)
 	out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
-	return "Daily reminder notifications are *OFF*. Do you want to turn it ON?", out
+	return "Daily reminder notifications are *OFF*.\nDo you want to turn it ON?", out
 }
 
 func UpdateMute(id int64, callback string) (string, bool) {
 	var (
-		toUdate = int64(sea_dinner.MuteStatus_MUTE_STATUS_YES)
+		toUdate    = int64(sea_dinner.MuteStatus_MUTE_STATUS_YES)
+		returnMsg  = "Daily reminder notifications are *OFF*.\nDo you want to turn it ON?"
+		returnBool = true
 	)
 
 	if callback == "UNMUTE" {
 		toUdate = int64(sea_dinner.MuteStatus_MUTE_STATUS_NO)
+		returnMsg = "Daily reminder notifications are *ON*.\nDo you want to turn it OFF?"
+		returnBool = false
 	}
 
 	if err := Processors.DB.Exec("UPDATE user_key_tab SET is_mute = ? WHERE user_id = ?", toUdate, id).Error; err != nil {
@@ -663,5 +667,5 @@ func UpdateMute(id int64, callback string) (string, bool) {
 		return err.Error(), false
 	}
 
-	return "Successfully updated your preference.", true
+	return returnMsg, returnBool
 }
