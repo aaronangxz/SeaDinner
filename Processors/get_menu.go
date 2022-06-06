@@ -21,6 +21,8 @@ func GetMenu(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 		expiry     = 3600 * time.Second
 		currentarr *sea_dinner.DinnerMenuArray
 	)
+	txn := App.StartTransaction("get_menu")
+	defer txn.End()
 
 	//check cache
 	val, redisErr := RedisClient.Get(cacheKey).Result()
@@ -74,6 +76,8 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		dayText         string = "today"
 		skipFillButtons bool
 	)
+	txn := App.StartTransaction("output_menu_with_button")
+	defer txn.End()
 
 	m := GetMenu(Client, key)
 

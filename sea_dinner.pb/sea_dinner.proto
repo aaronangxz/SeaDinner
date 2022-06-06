@@ -6,6 +6,7 @@
 // To get an in-depth walkthrough of this file and the related examples, see:
 // https://developers.google.com/protocol-buffers/docs/tutorials
 
+//export PATH=$PATH:$GOPATH/bin
 //protoc --proto_path=. --go_out=. sea_dinner.proto
 
 // [START declaration]
@@ -18,6 +19,11 @@ enum URLType{
     URL_CURRENT = 0;
 	URL_MENU    = 1;
 	URL_ORDER   = 2;
+}
+
+enum MuteStatus{
+    MUTE_STATUS_NO  = 0;
+	MUTE_STATUS_YES = 1;
 }
 
 enum OrderStatus{
@@ -75,6 +81,7 @@ message UserKey{
     optional string user_key = 2;
     optional int64 ctime = 3;
     optional int64 mtime = 4;
+    optional int64 is_mute = 5;
 }
 
 message UserChoice{

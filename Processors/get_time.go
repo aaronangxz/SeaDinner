@@ -80,12 +80,21 @@ func IsNotEOW(t time.Time) bool {
 	return day >= 1 && day < 5
 }
 
+//IsSOW Checks if today is a monday
+func IsSOW(t time.Time) bool {
+	tz, _ := time.LoadLocation(TimeZone)
+	day := t.In(tz).Weekday()
+	return day == 1
+}
+
 //IsPollStart Checks if order polling has started
 func IsPollStart() bool {
 	var (
 		status *sea_dinner.Current
 		key    = os.Getenv("TOKEN")
 	)
+	txn := App.StartTransaction("is_poll_start")
+	defer txn.End()
 
 	_, err := Client.R().
 		SetHeader("Authorization", MakeToken(key)).

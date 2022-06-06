@@ -23,6 +23,8 @@ func GetKey(id int64) string {
 		cacheKey       = fmt.Sprint(Common.USER_KEY_PREFIX, id)
 		expiry         = 604800 * time.Second
 	)
+	txn := Processors.App.StartTransaction("get_key")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("GetKey | Id must be > 1.")
@@ -76,6 +78,8 @@ func CheckKey(id int64) (string, bool) {
 		cacheKey       = fmt.Sprint(Common.USER_KEY_PREFIX, id)
 		expiry         = 604800 * time.Second
 	)
+	txn := Processors.App.StartTransaction("check_key")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("CheckKey | Id must be > 1.")
@@ -137,6 +141,8 @@ func UpdateKey(id int64, s string) (string, bool) {
 			Mtime:   proto.Int64(time.Now().Unix()),
 		}
 	)
+	txn := Processors.App.StartTransaction("update_key")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("UpdateKey | Id must be > 1.")
@@ -186,6 +192,9 @@ func CheckChope(id int64) (string, bool) {
 		existingRecord sea_dinner.UserChoice
 		dayText        = "today"
 	)
+
+	txn := Processors.App.StartTransaction("check_chope")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("Id must be > 1.")
@@ -239,6 +248,8 @@ func GetChope(id int64, s string) (string, bool) {
 		}
 		key = fmt.Sprint(Common.USER_CHOICE_PREFIX, r.GetUserId())
 	)
+	txn := Processors.App.StartTransaction("get_chope")
+	defer txn.End()
 
 	if id <= 0 {
 		log.Println("Id must be > 1.")
@@ -311,7 +322,7 @@ func GetChope(id int64, s string) (string, bool) {
 
 			//To stop ordering
 			if s == "-1" {
-				return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
+				return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning for the rest of the week.😀", menu[s]), true
 			}
 
 			if s == "RAND" {
@@ -333,7 +344,7 @@ func GetChope(id int64, s string) (string, bool) {
 
 		//To stop ordering
 		if s == "-1" {
-			return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning.😀", menu[s]), true
+			return fmt.Sprintf("Okay got it. I will order %v for you and stop sending reminders in the morning for the rest of the week.😀", menu[s]), true
 		}
 
 		if s == "RAND" {
@@ -361,6 +372,8 @@ func ListWeeklyResultByUserId(id int64) string {
 	var (
 		res []*sea_dinner.OrderRecord
 	)
+	txn := Processors.App.StartTransaction("list_weekly_result_by_user_id")
+	defer txn.End()
 
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 
@@ -382,6 +395,9 @@ func ListWeeklyResultByUserId(id int64) string {
 
 //GenerateWeeklyResultTable Outputs pre-formatted weekly order status.
 func GenerateWeeklyResultTable(record []*sea_dinner.OrderRecord) string {
+	txn := Processors.App.StartTransaction("generate_weekly_result_table")
+	defer txn.End()
+
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 	m := MakeMenuCodeMap()
 	status := map[int64]string{int64(sea_dinner.OrderStatus_ORDER_STATUS_OK): "✅", int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL): "❌"}
@@ -400,6 +416,8 @@ func BatchGetLatestResult() []*sea_dinner.OrderRecord {
 	var (
 		res []*sea_dinner.OrderRecord
 	)
+	txn := Processors.App.StartTransaction("batch_get_latest_result")
+	defer txn.End()
 
 	if err := Processors.DB.Raw("SELECT ol.* FROM order_log_tab ol INNER JOIN "+
 		"(SELECT MAX(order_time) AS max_order_time FROM order_log_tab WHERE status <> ? AND order_time BETWEEN ? AND ? GROUP BY user_id) nestedQ "+
@@ -419,6 +437,9 @@ func SendNotifications() {
 	var (
 		msg string
 	)
+	txn := Processors.App.StartTransaction("send_notifications")
+	defer txn.End()
+
 	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)
@@ -449,7 +470,10 @@ func BatchGetUsersChoice() []*sea_dinner.UserChoice {
 		res    []*sea_dinner.UserChoice
 		expiry = 7200 * time.Second
 	)
-	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab").Scan(&res).Error; err != nil {
+	txn := Processors.App.StartTransaction("batch_get_user_choice")
+	defer txn.End()
+
+	if err := Processors.DB.Raw("SELECT uc.* FROM user_choice_tab uc, user_key_tab uk WHERE uc.user_id = uk.user_id AND uk.is_mute <> ?", sea_dinner.MuteStatus_MUTE_STATUS_YES).Scan(&res).Error; err != nil {
 		log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
 		return nil
 	}
@@ -474,6 +498,8 @@ func BatchGetUsersChoice() []*sea_dinner.UserChoice {
 
 //SendReminder Sends out daily reminder at 10.30 SGT on weekdays / working days
 func SendReminder() {
+	txn := Processors.App.StartTransaction("send_reminder")
+	defer txn.End()
 
 	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
@@ -489,11 +515,6 @@ func SendReminder() {
 	code := MakeMenuCodeMap()
 
 	for _, r := range res {
-		if r.GetUserChoice() == "-1" {
-			log.Printf("SendReminder | skip -1 records | %v", r.GetUserId())
-			continue
-		}
-
 		msg := tgbotapi.NewMessage(r.GetUserId(), "")
 
 		var (
@@ -502,37 +523,56 @@ func SendReminder() {
 			rows   []tgbotapi.InlineKeyboardButton
 			msgTxt string
 		)
-		_, ok := menu[r.GetUserChoice()]
-		if !ok {
-			msgTxt = fmt.Sprintf("Good Morning. Your previous order %v is not available today! I will not proceed to order. Choose another dish from /menu 😃 ", r.GetUserChoice())
+
+		if Processors.IsSOW(time.Now()) {
+			//Everyone exceot "MUTE" will receive weekly reminders
+			msgTxt = "Good Morning! It's a brand new week with a brand new menu! Check it out at /menu 😋"
+			randomBotton := tgbotapi.NewInlineKeyboardButtonData("🎲", "RAND")
+			rows = append(rows, randomBotton)
+			skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
+			rows = append(rows, skipBotton)
+			out = append(out, rows)
+			mk.InlineKeyboard = out
+			msg.ReplyMarkup = mk
 		} else {
-			if r.GetUserChoice() != "-1" {
-				//If choice was updated after yesterdays' lunch time
-				if r.GetMtime() > Processors.GetPreviousDayLunchTime().Unix() {
-					msgTxt = fmt.Sprintf("Good Morning. I will order %v %v today! If you changed your mind, you can choose from /menu 😋", code[r.GetUserChoice()], menu[r.GetUserChoice()])
-					if r.GetUserChoice() == "RAND" {
-						msgTxt = "Good Morning. I will order a random dish today! If you changed your mind, you can choose from /menu 😋"
-					}
-				} else {
-					msgTxt = fmt.Sprintf("Good Morning. I will order %v %v again, just like yesterday! If you changed your mind, you can choose from /menu 😋", code[r.GetUserChoice()], menu[r.GetUserChoice()])
-					if r.GetUserChoice() == "RAND" {
-						msgTxt = "Good Morning. I will order a random dish again today! If you changed your mind, you can choose from /menu 😋"
-					}
-				}
+			//Only skips on non-mondays
+			if r.GetUserChoice() == "-1" {
+				log.Printf("SendReminder | skip -1 records | %v", r.GetUserId())
+				continue
+			}
 
-				//If choice is already RAND, don't show RAND button again
-				if r.GetUserChoice() != "RAND" {
-					randomBotton := tgbotapi.NewInlineKeyboardButtonData("🎲", "RAND")
-					rows = append(rows, randomBotton)
-				}
+			_, ok := menu[r.GetUserChoice()]
+			if !ok {
+				msgTxt = fmt.Sprintf("Good Morning. Your previous order %v is not available today! I will not proceed to order. Choose another dish from /menu 😃 /mute to shut me up 🫢 ", r.GetUserChoice())
+			} else {
+				if r.GetUserChoice() != "-1" {
+					//If choice was updated after yesterdays' lunch time
+					if r.GetMtime() > Processors.GetPreviousDayLunchTime().Unix() {
+						msgTxt = fmt.Sprintf("Good Morning. I will order %v %v today! If you changed your mind, you can choose from /menu 😋", code[r.GetUserChoice()], menu[r.GetUserChoice()])
+						if r.GetUserChoice() == "RAND" {
+							msgTxt = "Good Morning. I will order a random dish today! If you changed your mind, you can choose from /menu 😋"
+						}
+					} else {
+						msgTxt = fmt.Sprintf("Good Morning. I will order %v %v again, just like yesterday! If you changed your mind, you can choose from /menu 😋", code[r.GetUserChoice()], menu[r.GetUserChoice()])
+						if r.GetUserChoice() == "RAND" {
+							msgTxt = "Good Morning. I will order a random dish again today! If you changed your mind, you can choose from /menu 😋"
+						}
+					}
 
-				ignoreBotton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v is good!", code[r.GetUserChoice()]), "SAME")
-				rows = append(rows, ignoreBotton)
-				skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
-				rows = append(rows, skipBotton)
-				out = append(out, rows)
-				mk.InlineKeyboard = out
-				msg.ReplyMarkup = mk
+					//If choice is already RAND, don't show RAND button again
+					if r.GetUserChoice() != "RAND" {
+						randomBotton := tgbotapi.NewInlineKeyboardButtonData("🎲", "RAND")
+						rows = append(rows, randomBotton)
+					}
+
+					ignoreBotton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v is good!", code[r.GetUserChoice()]), "SAME")
+					rows = append(rows, ignoreBotton)
+					skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
+					rows = append(rows, skipBotton)
+					out = append(out, rows)
+					mk.InlineKeyboard = out
+					msg.ReplyMarkup = mk
+				}
 			}
 		}
 		msg.Text = msgTxt
@@ -547,6 +587,9 @@ func MakeMenuNameMap() map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
 	)
+	txn := Processors.App.StartTransaction("make_menu_name_map")
+	defer txn.End()
+
 	menuMap := make(map[string]string)
 	menu := Processors.GetMenu(Processors.Client, key)
 	for _, m := range menu.GetFood() {
@@ -563,6 +606,9 @@ func MakeMenuCodeMap() map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
 	)
+	txn := Processors.App.StartTransaction("make_menu_code_map")
+	defer txn.End()
+
 	menuMap := make(map[string]string)
 	menu := Processors.GetMenu(Processors.Client, key)
 	for _, m := range menu.GetFood() {
@@ -574,21 +620,31 @@ func MakeMenuCodeMap() map[string]string {
 
 //CallbackQueryHandler Handles the call back result of menu buttons
 func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
+	txn := Processors.App.StartTransaction("call_back_query_handler")
+	defer txn.End()
 	log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack.Data)
+
+	if callBack.Data == "MUTE" || callBack.Data == "UNMUTE" {
+		return UpdateMute(id, callBack.Data)
+	}
+
 	return GetChope(id, callBack.Data)
 }
 
 //MakeHelpResponse Prints out Introduction
 func MakeHelpResponse() string {
+	txn := Processors.App.StartTransaction("make_help_response")
+	defer txn.End()
 	return "*Welcome to SeaHungerGamesBot!*\n\n" +
 		"The goal of my existence is to help you snatch that dinner in milliseconds. And also we all know that you are too lazy to open up SeaTalk.\n\n" +
 		"*Get started*\n" +
 		"1. /key to tell me your Sea API key. This is important because without the key, I'm basically useless. When you refresh your key, remember to let me know in /newkey\n" +
 		"2. /menu to browse through the dishes, and tap the button below to snatch. There are also options to choose a random dish or skip ordering. Do take note that if you choose to skip, I will remember that and stop ordering forever until you tell me to do so again.\n" +
 		"3. /choice to check the current dish I'm tasked to order.\n" +
-		"4. /status to see what you have ordered this week, and the order status.\n\n" +
+		"4. /status to see what you have ordered this week, and the order status.\n" +
+		"5. /mute to stop receiving morning reminders. Not recommended tho!\n\n" +
 		"*Features*\n" +
-		"1. I will send you a daily reminder at 10.30am (If you never skip order on that day). Order can be altered easily from the quick options:\n" +
+		"1. I will send you a daily reminder at 10.30am (If you never mute or skip order on that day). Order can be altered easily from the quick options:\n" +
 		"🎲 to order a random dish\n" +
 		"🙅 to stop ordering\n" +
 		"2. At 12.29pm, I will no longer entertain your requests, because I have better things to do! Don't even think about last minute changes.\n" +
@@ -597,6 +653,61 @@ func MakeHelpResponse() string {
 		"*Disclaimer*\n" +
 		"By using my services, you agree to let me store your API key. However, not to worry! Your key is encrypted with AES-256, it's very unlikely that it will be stolen.\n\n" +
 		"*Contribute*\n" +
-		"If you see or encounter any bugs, or if there's a feature / improvement that you have in mind, feel free to open an Issue / Pull Request at https://github.com/aaronangxz/SeaDinner\n\n" +
+		"If you see or encounter any bugs, or if there's any feature / improvement that you have in mind, feel free to open an Issue / Pull Request at https://github.com/aaronangxz/SeaDinner\n\n" +
 		"Thank you and happy eating!😋"
+}
+
+func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
+	var (
+		res *sea_dinner.UserKey
+		out []tgbotapi.InlineKeyboardMarkup
+	)
+	txn := Processors.App.StartTransaction("check_mute")
+	defer txn.End()
+
+	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&res).Error; err != nil {
+		log.Println("CheckMute | Failed to retrieve record:", err.Error())
+		return "", nil
+	}
+
+	if res == nil {
+		log.Printf("CheckMute | Record not found | user_id:%v", id)
+		return "Record not found.", nil
+	}
+
+	if res.GetIsMute() == int64(sea_dinner.MuteStatus_MUTE_STATUS_NO) {
+		var rows []tgbotapi.InlineKeyboardButton
+		muteBotton := tgbotapi.NewInlineKeyboardButtonData("Turn OFF 🔕", "MUTE")
+		rows = append(rows, muteBotton)
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
+		return "Daily reminder notifications are *ON*.\nDo you want to turn it OFF?", out
+	}
+	var rows []tgbotapi.InlineKeyboardButton
+	unmuteBotton := tgbotapi.NewInlineKeyboardButtonData("Turn ON 🔔", "UNMUTE")
+	rows = append(rows, unmuteBotton)
+	out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
+	return "Daily reminder notifications are *OFF*.\nDo you want to turn it ON?", out
+}
+
+func UpdateMute(id int64, callback string) (string, bool) {
+	var (
+		toUdate    = int64(sea_dinner.MuteStatus_MUTE_STATUS_YES)
+		returnMsg  = "Daily reminder notifications are *OFF*.\nDo you want to turn it ON?"
+		returnBool = true
+	)
+	txn := Processors.App.StartTransaction("update_mute")
+	defer txn.End()
+
+	if callback == "UNMUTE" {
+		toUdate = int64(sea_dinner.MuteStatus_MUTE_STATUS_NO)
+		returnMsg = "Daily reminder notifications are *ON*.\nDo you want to turn it OFF?"
+		returnBool = false
+	}
+
+	if err := Processors.DB.Exec("UPDATE user_key_tab SET is_mute = ? WHERE user_id = ?", toUdate, id).Error; err != nil {
+		log.Println("Failed to update DB")
+		return err.Error(), false
+	}
+
+	return returnMsg, returnBool
 }
