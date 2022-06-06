@@ -474,6 +474,8 @@ func BatchGetUsersChoice() []*sea_dinner.UserChoice {
 
 //SendReminder Sends out daily reminder at 10.30 SGT on weekdays / working days
 func SendReminder() {
+	txn := Processors.App.StartTransaction("send_reminder")
+	defer txn.End()
 
 	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -18,6 +19,7 @@ var (
 	Client      resty.Client
 	DB          *gorm.DB
 	RedisClient *redis.Client
+	App         *newrelic.Application
 )
 
 func LoadEnv() {
@@ -43,6 +45,16 @@ func Init() {
 		ConnectMySQL()
 		ConnectRedis()
 	}
+
+	app, err := newrelic.NewApplication(
+		newrelic.ConfigAppName("sea-dinner"),
+		newrelic.ConfigLicense("76e67ea9ce3c0608c6a45dcf35496190fed8NRAL"),
+		newrelic.ConfigDistributedTracerEnabled(true),
+	)
+	if err != nil {
+		log.Printf("Error initializing newRelic | %v", err.Error())
+	}
+	App = app
 }
 
 func ConnectMySQL() {
