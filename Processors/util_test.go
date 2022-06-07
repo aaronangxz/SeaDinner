@@ -249,8 +249,15 @@ func TestRandomFood(t *testing.T) {
 	m["D"] = "4"
 	m["E"] = "5"
 	m["F"] = "6"
+	m["G"] = "[Vegetarian] 7"
+	m["H"] = "[Vegetarian] 8"
+	m["I"] = "[vegetarian] 9"
 	m["RAND"] = "RAND"
 	m["-1"] = "-1"
+
+	v := make(map[string]string)
+	v["A"] = "[Vegetarian] 1"
+	v["B"] = "[Vegetarian] 2"
 
 	type args struct {
 		m map[string]string
@@ -274,6 +281,11 @@ func TestRandomFood(t *testing.T) {
 			name: "HappyCaseAndAgain",
 			args: args{m},
 			want: true,
+		},
+		{
+			name: "NoMoreAfterRemovingInapplicable",
+			args: args{v},
+			want: false,
 		},
 	}
 	for _, tt := range tests {

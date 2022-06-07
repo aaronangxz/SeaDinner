@@ -6,6 +6,7 @@ token_prefix = "Token "
 
 [runtime]
 retry_times = 5
+menu_refresh_interval_seconds = 600
 
 [order_time]
 hour = 12

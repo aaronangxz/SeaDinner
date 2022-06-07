@@ -9,7 +9,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-func AdhocTestGetMenu(t *testing.T) {
+func AdhocTestGetMenuUsingCache(t *testing.T) {
 	LoadEnv()
 	Common.LoadConfig()
 	ConnectTestRedis()
@@ -33,7 +33,7 @@ func AdhocTestGetMenu(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetMenu(tt.args.client, tt.args.key); !reflect.DeepEqual(len(got.GetFood()), tt.want) {
+			if got := GetMenuUsingCache(tt.args.client, tt.args.key); !reflect.DeepEqual(len(got.GetFood()), tt.want) {
 				t.Errorf("GetMenu() = %v, want %v", len(got.GetFood()), tt.want)
 			}
 		})
