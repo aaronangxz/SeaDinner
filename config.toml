@@ -1,4 +1,4 @@
-adhoc = false
+adhoc = true
 
 [prefix]
 url_prefix = "https://dinner.sea.com"
@@ -9,8 +9,8 @@ retry_times = 5
 menu_refresh_interval_seconds = 600
 
 [order_time]
-hour = 12
-minutes = 30
+hour = 23
+minutes = 45
 seconds = 0
 
 [grayscale]

@@ -26,16 +26,16 @@ func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.
 	txn := App.StartTransaction("order_dinner_with_update")
 	defer txn.End()
 
-	if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
-		log.Println("OrderDinnerWithUpdate | TEST | return dummy result.")
-		return int64(sea_dinner.OrderStatus_ORDER_STATUS_OK), &sea_dinner.OrderRecord{
-			UserId:    proto.Int64(u.GetUserId()),
-			FoodId:    proto.String(u.GetUserChoice()),
-			OrderTime: proto.Int64(time.Now().Unix()),
-			Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)),
-			ErrorMsg:  proto.String("TEST"),
-		}
-	}
+	// if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
+	// 	log.Println("OrderDinnerWithUpdate | TEST | return dummy result.")
+	// 	return int64(sea_dinner.OrderStatus_ORDER_STATUS_OK), &sea_dinner.OrderRecord{
+	// 		UserId:    proto.Int64(u.GetUserId()),
+	// 		FoodId:    proto.String(u.GetUserChoice()),
+	// 		OrderTime: proto.Int64(time.Now().Unix()),
+	// 		Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)),
+	// 		ErrorMsg:  proto.String("TEST"),
+	// 	}
+	// }
 
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
@@ -71,7 +71,7 @@ func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.
 		OrderTime: proto.Int64(time.Now().Unix()),
 	}
 
-	if resp.GetSelected() == 0 {
+	if resp.GetSelected() != 0 {
 		status = int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL)
 		if resp.Error == nil {
 			record.ErrorMsg = proto.String("Unknown Error")
@@ -148,7 +148,7 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 			defer wg.Done()
 			var record *sea_dinner.OrderRecord
 			for {
-				if IsOrderTime() && IsPollStart() {
+				if IsOrderTime() && !IsPollStart() {
 					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | user_id: %v", u.GetUserId())
 					m[u.GetUserId()], record = OrderDinnerWithUpdate(u)
 					records = append(records, record)
@@ -183,7 +183,9 @@ func UpdateOrderLog(records []*sea_dinner.OrderRecord) {
 //SendInstantNotification Spawns a one-time telegram bot instance and send notification to user
 func SendInstantNotification(u *sea_dinner.UserChoiceWithKey, took int64) {
 	var (
-		msg string
+		mk   tgbotapi.InlineKeyboardMarkup
+		out  [][]tgbotapi.InlineKeyboardButton
+		rows []tgbotapi.InlineKeyboardButton
 	)
 	txn := App.StartTransaction("send_instant_notifications")
 	defer txn.End()
@@ -196,9 +198,16 @@ func SendInstantNotification(u *sea_dinner.UserChoiceWithKey, took int64) {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	menu := MakeMenuMap()
-	msg = fmt.Sprintf("Successfully ordered %v in %vms! 🥳", menu[u.GetUserChoice()], took)
+	msg := tgbotapi.NewMessage(u.GetUserId(), "")
+	msg.Text = fmt.Sprintf("Successfully ordered %v in %vms! 🥳", menu[u.GetUserChoice()], took)
 
-	if _, err := bot.Send(tgbotapi.NewMessage(u.GetUserId(), msg)); err != nil {
+	skipBotton := tgbotapi.NewInlineKeyboardButtonData("I DON'T NEED IT 🙅 (Beta)", "CANCEL")
+	rows = append(rows, skipBotton)
+	out = append(out, rows)
+	mk.InlineKeyboard = out
+	msg.ReplyMarkup = mk
+
+	if _, err := bot.Send(msg); err != nil {
 		log.Println(err)
 	}
 	log.Printf("SendInstantNotification | user_id:%v | msg: %v", u.GetUserId(), msg)

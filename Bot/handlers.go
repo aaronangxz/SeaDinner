@@ -635,6 +635,10 @@ func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, b
 		return UpdateMute(id, callBack.Data)
 	}
 
+	if callBack.Data == "CANCEL" {
+		return CancelOrder(id)
+	}
+
 	return GetChope(id, callBack.Data)
 }
 
@@ -664,6 +668,7 @@ func MakeHelpResponse() string {
 		"Thank you and happy eating!😋"
 }
 
+//CheckMute Checks the user's current status of mute state
 func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 	var (
 		res *sea_dinner.UserKey
@@ -696,6 +701,7 @@ func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 	return "Daily reminder notifications are *OFF*.\nDo you want to turn it ON?", out
 }
 
+//UpdateMute Updates the user's current status of mute state
 func UpdateMute(id int64, callback string) (string, bool) {
 	var (
 		toUdate    = int64(sea_dinner.MuteStatus_MUTE_STATUS_YES)
@@ -717,4 +723,44 @@ func UpdateMute(id int64, callback string) (string, bool) {
 	}
 
 	return returnMsg, returnBool
+}
+
+//CancelOrder Cancels the user's order after it is processed
+func CancelOrder(id int64) (string, bool) {
+	var (
+		resp *sea_dinner.OrderResponse
+	)
+
+	//Get currently ordered food id
+	currOrder, ok := Processors.GetOrderByUserId(id)
+	if !ok {
+		return currOrder, false
+	}
+
+	fData := make(map[string]string)
+	fData["food_id"] = currOrder
+
+	_, err := Processors.Client.R().
+		SetHeader("Authorization", Processors.MakeToken(fmt.Sprint(GetKey(id)))).
+		SetFormData(fData).
+		SetResult(&resp).
+		EnableTrace().
+		Delete(Processors.MakeURL(int(sea_dinner.URLType_URL_ORDER), proto.Int64(Processors.GetDayId())))
+
+	if err != nil {
+		log.Printf("CancelOrder | error: %v", err.Error())
+		return "There were some issues 😥 Try to cancel from SeaTalk instead!", false
+	}
+
+	if resp.GetStatus() == "error" {
+		log.Printf("CancelOrder | status error: %v", resp.GetError())
+		return fmt.Sprintf("I can't cancel this order: %v 😥 Try to cancel from SeaTalk instead!", resp.GetError()), false
+	}
+
+	if resp.Selected != nil {
+		log.Println("CancelOrder | failed to cancel order")
+		return "It seems like you ordered something else 😥 Try to cancel from SeaTalk instead!", false
+	}
+
+	return "I have cancelled your order!😀", true
 }

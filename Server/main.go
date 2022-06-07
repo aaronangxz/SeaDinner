@@ -34,7 +34,7 @@ func main() {
 
 		if Processors.IsOrderTime() {
 			for {
-				if Processors.IsPollStart() {
+				if !Processors.IsPollStart() {
 					start = time.Now().UnixMilli()
 					Processors.BatchOrderDinnerMultiThreaded(r)
 					elapsed = time.Now().UnixMilli() - start
