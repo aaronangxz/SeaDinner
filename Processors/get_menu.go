@@ -41,7 +41,7 @@ func GetMenu(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 func GetMenuUsingCache(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 	var (
 		cacheKey   = fmt.Sprint(Common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
-		expiry     = 3600 * time.Second
+		expiry     = 7200 * time.Second
 		currentarr *sea_dinner.DinnerMenuArray
 	)
 	txn := App.StartTransaction("get_menu_using_cache")
@@ -66,14 +66,7 @@ func GetMenuUsingCache(client resty.Client, key string) *sea_dinner.DinnerMenuAr
 		}
 	}
 
-	_, err := client.R().
-		SetHeader("Authorization", MakeToken(key)).
-		SetResult(&currentarr).
-		Get(MakeURL(int(sea_dinner.URLType_URL_MENU), proto.Int64(GetDayId())))
-
-	if err != nil {
-		log.Println(err)
-	}
+	currentarr = GetMenu(Client, key)
 
 	//set back into cache
 	data, err := json.Marshal(currentarr)
