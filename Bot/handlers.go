@@ -730,6 +730,8 @@ func CancelOrder(id int64) (string, bool) {
 	var (
 		resp *sea_dinner.OrderResponse
 	)
+	txn := Processors.App.StartTransaction("cancel_order")
+	defer txn.End()
 
 	//Get currently ordered food id
 	currOrder, ok := Processors.GetOrderByUserId(id)
