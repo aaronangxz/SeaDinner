@@ -109,5 +109,5 @@ func GetLiveMenuDetails() []*sea_dinner.Food {
 		return nil
 	}
 	log.Println("GetLiveMenuDetails | Success")
-	return Processors.GetMenu(Processors.Client, key).GetFood()
+	return Processors.GetMenuUsingCache(Processors.Client, key).GetFood()
 }

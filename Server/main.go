@@ -19,6 +19,8 @@ var (
 func main() {
 	Processors.Init()
 	Processors.InitClient()
+	go Processors.MenuRefresher()
+
 	for {
 		if Processors.IsSendReminderTime() {
 			Bot.SendReminder()
