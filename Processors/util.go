@@ -10,6 +10,7 @@ import (
 	"log"
 	random "math/rand"
 	"os"
+	"strings"
 	"time"
 	"unicode"
 
@@ -171,16 +172,31 @@ func MakeKey() string {
 //RandomFood Returns a random element in the provided menu map, excluding RAND and -1
 func RandomFood(m map[string]string) string {
 	s := []string{}
-
-	for k := range m {
-		if k == "RAND" || k == "-1" {
+	count := 0
+	for k, v := range m {
+		if k == "RAND" ||
+			k == "-1" ||
+			strings.Contains(v, "Vegetarian") ||
+			strings.Contains(v, "vegetarian") {
+			count++
 			continue
 		}
 		s = append(s, k)
 	}
 
+	if count >= len(m) {
+		log.Println("RandomFood | Count exceeds Index")
+		return ""
+	}
+
 	r := random.New(random.NewSource(time.Now().UnixNano()))
-	gen := int64(r.Intn(len(m) - 3))
+	gen := int64(r.Intn(len(m) - count))
+
+	if gen >= int64(len(s)) {
+		log.Println("RandomFood | Index exceeds len")
+		return ""
+	}
+
 	log.Println("RandomFood | result:", s[gen])
 	return s[gen]
 }
