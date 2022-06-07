@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
-	"github.com/aaronangxz/SeaDinner/Bot/TestHelper/user_choice"
-	"github.com/aaronangxz/SeaDinner/Bot/TestHelper/user_key"
 	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/aaronangxz/SeaDinner/TestHelper"
+	"github.com/aaronangxz/SeaDinner/TestHelper/user_choice"
+	"github.com/aaronangxz/SeaDinner/TestHelper/user_key"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
 

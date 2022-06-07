@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/aaronangxz/SeaDinner/Bot/TestHelper"
 	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Processors"
+	"github.com/aaronangxz/SeaDinner/TestHelper"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"google.golang.org/protobuf/proto"
 )
