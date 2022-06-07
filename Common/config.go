@@ -23,7 +23,8 @@ type orderTimeConfig struct {
 }
 
 type runtimeConfig struct {
-	RetryTimes int `toml:"retry_times"`
+	RetryTimes                 int `toml:"retry_times"`
+	MenuRefreshIntervalSeconds int `toml:"menu_refresh_interval_seconds"`
 }
 
 type prefixConfig struct {

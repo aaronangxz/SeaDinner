@@ -213,7 +213,7 @@ func MakeMenuMap() map[string]string {
 	defer txn.End()
 
 	menuMap := make(map[string]string)
-	menu := GetMenu(Client, key)
+	menu := GetMenuUsingCache(Client, key)
 	for _, m := range menu.GetFood() {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetName()
 	}

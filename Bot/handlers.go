@@ -405,7 +405,14 @@ func GenerateWeeklyResultTable(record []*sea_dinner.OrderRecord) string {
 	table := "<pre>\n     Day    Code  Status\n"
 	table += "-------------------------\n"
 	for _, r := range record {
-		table += fmt.Sprintf(" %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), m[r.GetFoodId()], status[r.GetStatus()])
+		//In the event when menu was changed during the week, and we have no info of that particular food code
+		var code string
+		if _, ok := m[r.GetFoodId()]; !ok {
+			code = "??"
+		} else {
+			code = m[r.GetFoodId()]
+		}
+		table += fmt.Sprintf(" %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), code, status[r.GetStatus()])
 	}
 	table += "</pre>"
 	return header + table
@@ -591,7 +598,7 @@ func MakeMenuNameMap() map[string]string {
 	defer txn.End()
 
 	menuMap := make(map[string]string)
-	menu := Processors.GetMenu(Processors.Client, key)
+	menu := Processors.GetMenuUsingCache(Processors.Client, key)
 	for _, m := range menu.GetFood() {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetName()
 	}
@@ -610,7 +617,7 @@ func MakeMenuCodeMap() map[string]string {
 	defer txn.End()
 
 	menuMap := make(map[string]string)
-	menu := Processors.GetMenu(Processors.Client, key)
+	menu := Processors.GetMenuUsingCache(Processors.Client, key)
 	for _, m := range menu.GetFood() {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetCode()
 	}
