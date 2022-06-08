@@ -47,5 +47,13 @@ func main() {
 				Processors.ConvertTimeStamp(time.Now().Unix()),
 				Processors.ConvertTimeStampTime(time.Now().Unix()), elapsed)
 		}
+
+		if Processors.IsSendCheckInTime() {
+			Bot.SendCheckInLink()
+		}
+
+		if Processors.IsDeleteCheckInTime() {
+			Bot.DeleteCheckInLink()
+		}
 	}
 }

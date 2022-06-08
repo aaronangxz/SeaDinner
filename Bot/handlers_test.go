@@ -12,6 +12,7 @@ import (
 	"github.com/aaronangxz/SeaDinner/TestHelper/user_choice"
 	"github.com/aaronangxz/SeaDinner/TestHelper/user_key"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestGetKey(t *testing.T) {
@@ -480,6 +481,51 @@ func TestUpdateMute(t *testing.T) {
 				if c.GetIsMute() != tt.expected {
 					t.Errorf("UpdateMute() record = %v, expected %v", c.GetIsMute(), tt.expected)
 				}
+			}
+		})
+	}
+}
+
+func TestBatchGetUsersChoiceWithKey(t *testing.T) {
+	m := TestHelper.GetLiveMenuDetails()
+	u := user_choice.New().SetUserChoice(fmt.Sprint(m[0].GetId())).Build()
+	uk := user_key.New().SetUserId(u.GetUserId()).Build()
+
+	expected := []*sea_dinner.UserChoiceWithKey{
+		{
+			UserId:     proto.Int64(u.GetUserId()),
+			UserKey:    proto.String(uk.GetUserKey()),
+			UserChoice: proto.String(u.GetUserChoice()),
+			Ctime:      proto.Int64(u.GetCtime()),
+			Mtime:      proto.Int64(u.GetMtime()),
+		},
+	}
+
+	defer func() {
+		u.TearDown()
+		uk.TearDown()
+	}()
+
+	tests := []struct {
+		name    string
+		want    []*sea_dinner.UserChoiceWithKey
+		wantErr bool
+	}{
+		{
+			name:    "HappyCase",
+			want:    expected,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := BatchGetUsersChoiceWithKey()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BatchGetUsersChoiceWithKey() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !TestHelper.IsInSlice(tt.want, got) {
+				t.Errorf("BatchGetUsersChoiceWithKey() = %v, want %v", got, tt.want)
 			}
 		})
 	}

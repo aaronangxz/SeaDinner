@@ -212,6 +212,16 @@ func main() {
 					continue
 				}
 			}
+		case "checkin":
+			//Backdoor for test env
+			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
+				Bot.SendCheckInLink()
+			}
+		case "delete":
+			//Backdoor for test env
+			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
+				Bot.DeleteCheckInLink()
+			}
 		default:
 			msg.Text = "I don't understand this command :("
 		}
