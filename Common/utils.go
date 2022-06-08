@@ -1,8 +1,17 @@
 package Common
 
 import (
+	"bytes"
+	"image"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
+
+	_ "image/jpeg"
+	_ "image/png"
+
+	"github.com/liyue201/goqr"
 )
 
 func GetTGToken() string {
@@ -15,4 +24,38 @@ func GetTGToken() string {
 
 func IsInGrayScale(userId int64) bool {
 	return userId%100 >= Config.GrayScale.Percentage
+}
+
+func DecodeQR() (string, error) {
+	absPath, _ := filepath.Abs("../Common/resource/DinnerQR.jpg")
+	qr, err := recognizeFile(absPath)
+	if err != nil {
+		return "DecodeQR | Failed to recognize file.", err
+	}
+
+	if len(qr) == 0 {
+		return "DecodeQR | Unable to find QR URL.", nil
+	}
+
+	return string(qr[0].Payload), nil
+}
+
+func recognizeFile(path string) ([]*goqr.QRData, error) {
+	log.Printf("recognize file: %v\n", path)
+	imgdata, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Printf("%v\n", err)
+		return nil, err
+	}
+	img, _, err := image.Decode(bytes.NewReader(imgdata))
+	if err != nil {
+		log.Printf("image.Decode error: %v\n", err)
+		return nil, err
+	}
+	qrCodes, err := goqr.Recognize(img)
+	if err != nil {
+		log.Printf("Recognize failed: %v\n", err)
+		return nil, err
+	}
+	return qrCodes, nil
 }

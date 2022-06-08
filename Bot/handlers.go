@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
@@ -765,4 +767,133 @@ func CancelOrder(id int64) (string, bool) {
 	}
 
 	return "I have cancelled your order!😀", true
+}
+
+//BatchGetUsersChoiceWithKey Retrieves the user's choice and key. Only return those that has valid choices in the current week.
+func BatchGetUsersChoiceWithKey() ([]*sea_dinner.UserChoiceWithKey, error) {
+	var (
+		record []*sea_dinner.UserChoiceWithKey
+	)
+
+	m := Processors.MakeMenuMap()
+	inQuery := "("
+	for e := range m {
+		// Skip menu id: -1
+		if e == "-1" {
+			continue
+		}
+		if e == "RAND" {
+			inQuery += "'RAND', "
+			continue
+		}
+		inQuery += e + ", "
+	}
+	inQuery += ")"
+	inQuery = strings.ReplaceAll(inQuery, ", )", ")")
+	query := fmt.Sprintf("SELECT c.*, k.user_key FROM user_choice_tab c, user_key_tab k WHERE user_choice IN %v AND c.user_id = k.user_id", inQuery)
+	log.Println(query)
+
+	//check whole db
+	if err := Processors.DB.Raw(query).Scan(&record).Error; err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	log.Println("BatchGetUsersChoiceWithKey | Sucess | size:", len(record))
+	return record, nil
+}
+
+//BatchGetSuccessfulOrder Calls Sea API to verify the user's current order
+func BatchGetSuccessfulOrder() []int64 {
+	var (
+		success []int64
+	)
+	records, err := BatchGetUsersChoiceWithKey()
+	if err != nil {
+		log.Println("BatchGetSuccessfulOrder | Failed to fetch user_records:", err.Error())
+		return nil
+	}
+
+	for _, r := range records {
+		ok := Processors.GetSuccessfulOrder(r.GetUserKey())
+		if ok {
+			success = append(success, r.GetUserId())
+		}
+	}
+	log.Println("BatchGetSuccessfulOrder | Sucess | size:", len(success))
+	return success
+}
+
+//SendCheckInLink Verify if the user indeed has a valid order and sends the updated check-in link of the day
+func SendCheckInLink() {
+	var (
+		txt        = "Check in now to collect your food!\nLink will expire at 8.30pm."
+		buttonText = "Check in"
+		out        []tgbotapi.InlineKeyboardMarkup
+	)
+	url, err := Common.DecodeQR()
+	if err != nil {
+		log.Printf("SendCheckInLink | error:%v", err.Error())
+		return
+	}
+
+	orders := BatchGetSuccessfulOrder()
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
+	if err != nil {
+		log.Panic(err)
+	}
+	bot.Debug = true
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+
+	for _, user := range orders {
+		var buttons []tgbotapi.InlineKeyboardButton
+		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonURL(buttonText, url))
+		out = append(out, tgbotapi.NewInlineKeyboardMarkup(buttons))
+
+		msg := tgbotapi.NewMessage(user, "")
+		msg.Text = txt
+		msg.ReplyMarkup = out[0]
+
+		if msgTrace, err := bot.Send(msg); err != nil {
+			log.Println(err)
+		} else {
+			//Save into set as <user_id>:<message_id>
+			toWrite := fmt.Sprint(user, ":", msgTrace.MessageID)
+			if err := Processors.RedisClient.SAdd("checkin_link", toWrite).Err(); err != nil {
+				log.Printf("SendCheckInLink | Error while writing to redis: %v", err.Error())
+			} else {
+				log.Printf("SendCheckInLink | Successful | Written %v to checkin_link set", toWrite)
+			}
+		}
+	}
+}
+
+//DeleteCheckInLink Deletes the supposingly expired check-in link
+func DeleteCheckInLink() {
+	s := Processors.RedisClient.SMembers("checkin_link")
+	if s == nil {
+		log.Println("DeleteCheckInLink | Set is empty.")
+		return
+	}
+
+	for _, pair := range s.Val() {
+		split := strings.Split(pair, ":")
+		user_id, _ := strconv.Atoi(split[0])
+		msgId, _ := strconv.Atoi(split[1])
+
+		bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
+		if err != nil {
+			log.Panic(err)
+		}
+		bot.Debug = true
+		log.Printf("Authorized on account %s", bot.Self.UserName)
+		c := tgbotapi.NewDeleteMessage(int64(user_id), msgId)
+		bot.Send(c)
+	}
+	log.Println("DeleteCheckInLink | Successfuly deleted check in links.")
+
+	if err := Processors.RedisClient.Del("checkin_link").Err(); err != nil {
+		log.Printf("DeleteCheckInLink | Error while erasing from redis: %v", err.Error())
+	} else {
+		log.Println("DeleteCheckInLink | Successful | Deleted checkin_link set")
+	}
 }
