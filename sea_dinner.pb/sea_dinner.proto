@@ -104,6 +104,7 @@ message OrderRecord{
     optional int64 user_id = 2;
     optional string food_id = 3;
     optional int64 order_time = 4;
-    optional int64 status = 5;
-    optional string error_msg = 6;
+    optional int64 time_taken = 5;
+    optional int64 status = 6;
+    optional string error_msg = 7;
 }
