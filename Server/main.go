@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
@@ -48,12 +49,14 @@ func main() {
 				Processors.ConvertTimeStampTime(time.Now().Unix()), elapsed)
 		}
 
-		if Processors.IsSendCheckInTime() {
-			Bot.SendCheckInLink()
-		}
+		if os.Getenv("SEND_CHECKIN") == "TRUE" {
+			if Processors.IsSendCheckInTime() {
+				Bot.SendCheckInLink()
+			}
 
-		if Processors.IsDeleteCheckInTime() {
-			Bot.DeleteCheckInLink()
+			if Processors.IsDeleteCheckInTime() {
+				Bot.DeleteCheckInLink()
+			}
 		}
 	}
 }
