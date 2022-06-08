@@ -869,6 +869,7 @@ func SendCheckInLink() {
 
 //DeleteCheckInLink Deletes the supposingly expired check-in link
 func DeleteCheckInLink() {
+	//Retrieve the whole set
 	s := Processors.RedisClient.SMembers("checkin_link")
 	if s == nil {
 		log.Println("DeleteCheckInLink | Set is empty.")
@@ -876,8 +877,9 @@ func DeleteCheckInLink() {
 	}
 
 	for _, pair := range s.Val() {
+		//split <user_id>:<message_id> by ':'
 		split := strings.Split(pair, ":")
-		user_id, _ := strconv.Atoi(split[0])
+		userId, _ := strconv.Atoi(split[0])
 		msgId, _ := strconv.Atoi(split[1])
 
 		bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
@@ -886,11 +888,12 @@ func DeleteCheckInLink() {
 		}
 		bot.Debug = true
 		log.Printf("Authorized on account %s", bot.Self.UserName)
-		c := tgbotapi.NewDeleteMessage(int64(user_id), msgId)
+		c := tgbotapi.NewDeleteMessage(int64(userId), msgId)
 		bot.Send(c)
 	}
 	log.Println("DeleteCheckInLink | Successfuly deleted check in links.")
 
+	//Clear set
 	if err := Processors.RedisClient.Del("checkin_link").Err(); err != nil {
 		log.Printf("DeleteCheckInLink | Error while erasing from redis: %v", err.Error())
 	} else {
