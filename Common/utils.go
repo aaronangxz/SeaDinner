@@ -27,7 +27,11 @@ func IsInGrayScale(userId int64) bool {
 
 func DecodeQR() (string, error) {
 	//absPath, _ := filepath.Abs("../Common/resource/DinnerQR.jpg")
-	qr, err := recognizeFile("../Common/resource/DinnerQR.jpg")
+	filepath := "../Common/resource/DinnerQR.jpg"
+	if os.Getenv("HEROKU_DEPLOY") == "TRUE" || os.Getenv("TEST_DEPLOY") == "TRUE" {
+		filepath = "../resource/DinnerQR.jpg"
+	}
+	qr, err := recognizeFile(filepath)
 	if err != nil {
 		return "DecodeQR | Failed to recognize file.", err
 	}
