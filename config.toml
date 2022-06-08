@@ -1,4 +1,4 @@
-adhoc = false
+adhoc = true
 
 [prefix]
 url_prefix = "https://dinner.sea.com"
