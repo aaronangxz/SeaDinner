@@ -830,6 +830,7 @@ func SendCheckInLink() {
 		buttonText = "Check in"
 		out        []tgbotapi.InlineKeyboardMarkup
 	)
+	//Decode dynamic URL from static QR
 	url, err := Common.DecodeQR()
 	if err != nil {
 		log.Printf("SendCheckInLink | error:%v", err.Error())

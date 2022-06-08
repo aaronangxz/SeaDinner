@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+//GetSuccessfulOrder Calls Sea API, check the actual order of a user. Returns food = nil if there is no order.
 func GetSuccessfulOrder(key string) bool {
 	var (
 		order *sea_dinner.DinnerMenu

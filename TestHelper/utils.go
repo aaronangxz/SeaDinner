@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -110,4 +111,29 @@ func GetLiveMenuDetails() []*sea_dinner.Food {
 	}
 	log.Println("GetLiveMenuDetails | Success")
 	return Processors.GetMenuUsingCache(Processors.Client, key).GetFood()
+}
+
+func IsInSlice(a interface{}, slice interface{}) bool {
+	switch reflect.TypeOf(slice).Kind() {
+	case reflect.Slice, reflect.Ptr:
+		values := reflect.Indirect(reflect.ValueOf(slice))
+		if values.Len() == 0 {
+			return false
+		}
+		val := reflect.Indirect(reflect.ValueOf(a))
+
+		if val.Index(0).Kind() != values.Index(0).Kind() {
+			log.Println("mismatched type")
+			return false
+		}
+
+		for i := 0; i < values.Len(); i++ {
+			for j := 0; j < values.Len(); j++ {
+				if reflect.DeepEqual(values.Index(i).Interface(), val.Index(j).Interface()) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
