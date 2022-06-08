@@ -78,14 +78,13 @@ func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.
 		} else {
 			record.ErrorMsg = proto.String(resp.GetError())
 		}
-		record.Status = proto.Int64(int64(status))
 	} else {
 		status = int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)
-		record.Status = proto.Int64(int64(status))
-
-		trace := apiResp.Request.TraceInfo()
-		SendInstantNotification(u, trace.TotalTime.Milliseconds())
+		timeTaken := apiResp.Request.TraceInfo().TotalTime.Milliseconds()
+		SendInstantNotification(u, timeTaken)
+		record.TimeTaken = proto.Int64(timeTaken)
 	}
+	record.Status = proto.Int64(status)
 	return status, record
 }
 
