@@ -1,5 +1,5 @@
 <h1 align = "center"> SeaHungerGames </h1>
-<p align="center"><img src = "banner.gif"></p>
+<p align="center"><img src = "static/banner.gif"></p>
 
 <div align="center">
 
@@ -10,7 +10,6 @@
 </div>
 
 <div align="center"> <em>"May the odds be ever in your favor."</em> </div>
-
 
 <h1> How To Use </h1>
 
@@ -23,11 +22,12 @@
 | `/start`    | Begin chatting with the bot. If it is your first time, the bot will prompt for your key.|
 | `/key`      | Check if your key is remembered by the bot.|
 | `/newkey`   | Update a new key.        |
-| `/menu`     | Check today's menu.        |
-| `/chope`    | Select the food that you want to order.        |
+| `/menu`     | Check today's menu and place your order.        |
 | `/choice`   | Check the current food that you tasked the bot to order.        |
-| `/status`   | Check the order status of today.        |
+| `/status`   | Check the order status of the entire week.        |
+| `/mute`     | Mute or unmute daily reminders.       |
+| `/help`     | Introduction and help.        |
 
-4. The bot will not entertain anymore requests 1 minute before and after `12.30`, and proceed to order for you.
+4. The bot will not entertain anymore requests 1 minute before `12.30pm`, and proceed to order for you.
 5. It will tell you if the order is successful.
 6. Remember to collect and eat it. Yumm.

@@ -137,3 +137,20 @@ func IsPrepOrderTime() bool {
 func IsOrderTime() bool {
 	return ShouldOrder() && time.Now().Unix() == GetLunchTime().Unix()
 }
+
+//GetOffWorkTime Returns the off-work time
+func GetOffWorkTime() time.Time {
+	now := time.Now().In(tz)
+	year, month, day := now.Date()
+	return time.Date(year, month, day, 19, 0, 0, 0, now.Location())
+}
+
+//IsSendCheckInTime Checks if it is eod
+func IsSendCheckInTime() bool {
+	return ShouldOrder() && time.Now().Unix() == GetOffWorkTime().Unix()
+}
+
+//IsDeleteCheckInTime Checks if it is check-in expiry time
+func IsDeleteCheckInTime() bool {
+	return ShouldOrder() && time.Now().Unix() == GetOffWorkTime().Add(time.Duration(5400)*time.Second).Unix()
+}

@@ -148,8 +148,9 @@ func MenuRefresher() {
 
 			if !reflect.DeepEqual(liveMenu, cacheMenu) {
 				log.Println("MenuRefresher | Live and Cached menu are inconsistent.")
+				log.Printf("Live: %v | Cached: %v", liveMenu, cacheMenu)
 				cacheKey := fmt.Sprint(Common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
-				expiry := 3600 * time.Second
+				expiry := 7200 * time.Second
 
 				data, err := json.Marshal(liveMenu)
 				if err != nil {
