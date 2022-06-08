@@ -142,7 +142,7 @@ func IsOrderTime() bool {
 func GetOffWorkTime() time.Time {
 	now := time.Now().In(tz)
 	year, month, day := now.Date()
-	return time.Date(year, month, day, 19, 15, 0, 0, now.Location())
+	return time.Date(year, month, day, 19, 20, 0, 0, now.Location())
 }
 
 //IsSendCheckInTime Checks if it is eod

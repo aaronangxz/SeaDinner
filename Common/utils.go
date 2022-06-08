@@ -29,7 +29,7 @@ func DecodeQR() (string, error) {
 	//absPath, _ := filepath.Abs("../Common/resource/DinnerQR.jpg")
 	filepath := "../Common/resource/DinnerQR.jpg"
 	if os.Getenv("HEROKU_DEPLOY") == "TRUE" || os.Getenv("TEST_DEPLOY") == "TRUE" {
-		filepath = "../resource/DinnerQR.jpg"
+		filepath = "Common/resource/DinnerQR.jpg"
 	}
 	qr, err := recognizeFile(filepath)
 	if err != nil {
