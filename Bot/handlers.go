@@ -798,7 +798,7 @@ func BatchGetUsersChoiceWithKey() ([]*sea_dinner.UserChoiceWithKey, error) {
 		fmt.Println(err.Error())
 		return nil, err
 	}
-	log.Println("BatchGetUsersChoiceWithKey | Sucess | size:", len(record))
+	log.Println("BatchGetUsersChoiceWithKey | Success | size:", len(record))
 	return record, nil
 }
 
@@ -817,9 +817,11 @@ func BatchGetSuccessfulOrder() []int64 {
 		ok := Processors.GetSuccessfulOrder(r.GetUserKey())
 		if ok {
 			success = append(success, r.GetUserId())
+		} else {
+			log.Println("BatchGetSuccessfulOrder | Failed | user_id:", r.GetUserId())
 		}
 	}
-	log.Println("BatchGetSuccessfulOrder | Sucess | size:", len(success))
+	log.Println("BatchGetSuccessfulOrder | Done | size:", len(success))
 	return success
 }
 
