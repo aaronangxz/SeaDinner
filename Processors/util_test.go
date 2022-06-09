@@ -296,3 +296,80 @@ func TestRandomFood(t *testing.T) {
 		})
 	}
 }
+
+func TestCompareSliceStruct(t *testing.T) {
+	a := []*sea_dinner.Food{
+		{
+			Id: proto.Int64(1),
+		},
+		{
+			Id: proto.Int64(2),
+		},
+	}
+
+	b := []*sea_dinner.Food{
+		{
+			Id: proto.Int64(1),
+		},
+		{
+			Id: proto.Int64(2),
+		},
+	}
+
+	c := []*sea_dinner.Food{
+		{
+			Id: proto.Int64(3),
+		},
+		{
+			Id: proto.Int64(4),
+		},
+	}
+
+	d := &sea_dinner.DinnerMenuArray{
+		Status: proto.String("1"),
+		Food:   []*sea_dinner.Food{},
+	}
+
+	e := &sea_dinner.DinnerMenuArray{
+		Status: proto.String("2"),
+		Food:   []*sea_dinner.Food{},
+	}
+
+	type args struct {
+		a interface{}
+		b interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			"HappyCase",
+			args{a, b},
+			true,
+		},
+		{
+			"Inconsistent",
+			args{b, c},
+			false,
+		},
+		{
+			"DifferentType",
+			args{c, d},
+			false,
+		},
+		{
+			"NonSlice",
+			args{d, e},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CompareSliceStruct(tt.args.a, tt.args.b); got != tt.want {
+				t.Errorf("CompareSliceStruct() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
