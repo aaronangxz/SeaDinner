@@ -141,6 +141,7 @@ func UpdateKey(id int64, s string) (string, bool) {
 			UserKey: proto.String(hashedKey),
 			Ctime:   proto.Int64(time.Now().Unix()),
 			Mtime:   proto.Int64(time.Now().Unix()),
+			IsMute:  proto.Int64(int64(sea_dinner.MuteStatus_MUTE_STATUS_NO)),
 		}
 	)
 	txn := Processors.App.StartTransaction("update_key")
@@ -785,6 +786,8 @@ func BatchGetUsersChoiceWithKey() ([]*sea_dinner.UserChoiceWithKey, error) {
 	var (
 		record []*sea_dinner.UserChoiceWithKey
 	)
+	txn := Processors.App.StartTransaction("batch_get_users_choice_with_key")
+	defer txn.End()
 
 	m := Processors.MakeMenuMap()
 	inQuery := "("
@@ -818,6 +821,9 @@ func BatchGetSuccessfulOrder() []int64 {
 	var (
 		success []int64
 	)
+	txn := Processors.App.StartTransaction("batch_get_successful_order")
+	defer txn.End()
+
 	records, err := BatchGetUsersChoiceWithKey()
 	if err != nil {
 		log.Println("BatchGetSuccessfulOrder | Failed to fetch user_records:", err.Error())
@@ -843,6 +849,9 @@ func SendCheckInLink() {
 		buttonText = "Check in"
 		out        []tgbotapi.InlineKeyboardMarkup
 	)
+	txn := Processors.App.StartTransaction("send_check_in_link")
+	defer txn.End()
+
 	//Decode dynamic URL from static QR
 	url, err := Common.DecodeQR()
 	if err != nil {
@@ -883,6 +892,9 @@ func SendCheckInLink() {
 
 //DeleteCheckInLink Deletes the supposingly expired check-in link
 func DeleteCheckInLink() {
+	txn := Processors.App.StartTransaction("delete_check_in_link")
+	defer txn.End()
+
 	//Retrieve the whole set
 	s := Processors.RedisClient.SMembers("checkin_link")
 	if s == nil {
