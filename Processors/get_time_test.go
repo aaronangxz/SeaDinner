@@ -220,3 +220,26 @@ func TestGetPreviousDayLunchTime(t *testing.T) {
 		})
 	}
 }
+
+func TestGetOffWorkTime(t *testing.T) {
+	tz, _ := time.LoadLocation(TimeZone)
+	now := time.Now().In(tz)
+	year, month, day := now.Date()
+	expectedTime := time.Date(year, month, day, 19, 0, 0, 0, now.Location())
+	tests := []struct {
+		name string
+		want time.Time
+	}{
+		{
+			name: "HappyCase",
+			want: expectedTime,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetOffWorkTime(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetOffWorkTime() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

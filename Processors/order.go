@@ -78,14 +78,13 @@ func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.
 		} else {
 			record.ErrorMsg = proto.String(resp.GetError())
 		}
-		record.Status = proto.Int64(int64(status))
 	} else {
 		status = int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)
-		record.Status = proto.Int64(int64(status))
-
-		trace := apiResp.Request.TraceInfo()
-		SendInstantNotification(u, trace.TotalTime.Milliseconds())
+		timeTaken := apiResp.Request.TraceInfo().TotalTime.Milliseconds()
+		SendInstantNotification(u, timeTaken)
+		record.TimeTaken = proto.Int64(timeTaken)
 	}
+	record.Status = proto.Int64(status)
 	return status, record
 }
 
@@ -122,7 +121,7 @@ func BatchOrderDinnerMultiThreaded(userQueue []*sea_dinner.UserChoiceWithKey) {
 	wg.Wait()
 
 	log.Printf("BatchOrderDinnerMultiThreaded | Done")
-	UpdateOrderLog(records)
+	BatchInsertOrderLogs(records)
 	OutputResults(m, "BatchOrderDinnerMultiThreaded")
 }
 
@@ -162,22 +161,41 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 	wg.Wait()
 
 	log.Printf("BatchOrderDinnerMultiThreadedWithWait | Done")
-	UpdateOrderLog(records)
+	BatchInsertOrderLogs(records)
 	OutputResults(m, "BatchOrderDinnerMultiThreadedWithWait")
 }
 
-//UpdateOrderLog Batch insert new order records into order_log_tab
-func UpdateOrderLog(records []*sea_dinner.OrderRecord) {
-	txn := App.StartTransaction("update_order_log")
+//BatchInsertOrderLogs Batch insert new order records into order_log_tab
+func BatchInsertOrderLogs(records []*sea_dinner.OrderRecord) {
+	txn := App.StartTransaction("batch_insert_order_logs")
 	defer txn.End()
 
 	if records == nil {
-		log.Printf("UpdateOrderLog | No record to update.")
+		log.Printf("BatchInsertOrderLogs | No record to update.")
 		return
 	}
 	if err := DB.Table(Common.DB_ORDER_LOG_TAB).Create(&records).Error; err != nil {
-		log.Printf("UpdateOrderLog | Failed to update records.")
+		log.Printf("BatchInsertOrderLogs | Failed to update records | %v", err.Error())
+		return
 	}
+	log.Printf("BatchInsertOrderLogs | Successfully updated records | size: %v", len(records))
+}
+
+//UpdateOrderLog Update a single record in order_log_tab
+func UpdateOrderLog(record *sea_dinner.OrderRecord) {
+	txn := App.StartTransaction("update_order_log")
+	defer txn.End()
+
+	if record == nil {
+		log.Printf("UpdateOrderLog | No record to update.")
+		return
+	}
+
+	if err := DB.Exec("UPDATE user_log_tab SET status = ? WHERE user_id = ?", sea_dinner.OrderStatus_ORDER_STATUS_CANCEL, record.GetUserId()).Error; err != nil {
+		log.Printf("UpdateOrderLog | Failed to update records | %v", err.Error())
+		return
+	}
+	log.Printf("UpdateOrderLog | Successfully updated record | user_id: %v", record.GetUserId())
 }
 
 //SendInstantNotification Spawns a one-time telegram bot instance and send notification to user
@@ -201,12 +219,11 @@ func SendInstantNotification(u *sea_dinner.UserChoiceWithKey, took int64) {
 	msg := tgbotapi.NewMessage(u.GetUserId(), "")
 	msg.Text = fmt.Sprintf("Successfully ordered %v in %vms! 🥳", menu[u.GetUserChoice()], took)
 
-	skipBotton := tgbotapi.NewInlineKeyboardButtonData("I DON'T NEED IT 🙅 (Beta)", "CANCEL")
+	skipBotton := tgbotapi.NewInlineKeyboardButtonData("I DON'T NEED IT 🙅", "ATTEMPTCANCEL")
 	rows = append(rows, skipBotton)
 	out = append(out, rows)
 	mk.InlineKeyboard = out
 	msg.ReplyMarkup = mk
-
 	if _, err := bot.Send(msg); err != nil {
 		log.Println(err)
 	}
