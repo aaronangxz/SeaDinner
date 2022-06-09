@@ -22,6 +22,9 @@ func main() {
 	Processors.InitClient()
 	go Processors.MenuRefresher()
 
+	//For adhoc use only
+	//Processors.SendAdHocNotification(0,"")
+
 	for {
 		if Processors.IsSendReminderTime() {
 			Bot.SendReminder()

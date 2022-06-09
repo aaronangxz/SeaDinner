@@ -29,6 +29,7 @@ enum MuteStatus{
 enum OrderStatus{
     ORDER_STATUS_OK   = 0;
 	ORDER_STATUS_FAIL = 1;
+    ORDER_STATUS_CANCEL = 2;
 }
 
 message OrderResponse{
