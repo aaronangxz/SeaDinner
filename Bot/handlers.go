@@ -646,7 +646,7 @@ func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, b
 	case "UNMUTE":
 		return UpdateMute(id, callBack.Data)
 	case "ATTEMPTCANCEL":
-		return CancelOrderConfirmation(id)
+		return "", true
 	case "CANCEL":
 		return CancelOrder(id)
 	case "SKIP":
@@ -736,11 +736,6 @@ func UpdateMute(id int64, callback string) (string, bool) {
 	}
 
 	return returnMsg, returnBool
-}
-
-func CancelOrderConfirmation(id int64) (string, bool) {
-
-	return "", true
 }
 
 //CancelOrder Cancels the user's order after it is processed
