@@ -335,6 +335,10 @@ func TestCompareSliceStruct(t *testing.T) {
 		Food:   []*sea_dinner.Food{},
 	}
 
+	f := []*sea_dinner.Food{}
+
+	g := []*sea_dinner.Food{}
+
 	type args struct {
 		a interface{}
 		b interface{}
@@ -362,6 +366,11 @@ func TestCompareSliceStruct(t *testing.T) {
 		{
 			"NonSlice",
 			args{d, e},
+			false,
+		},
+		{
+			"EmptySlice",
+			args{f, g},
 			false,
 		},
 	}

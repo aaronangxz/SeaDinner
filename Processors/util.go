@@ -220,10 +220,6 @@ func CompareSliceStruct(a interface{}, b interface{}) bool {
 			return false
 		}
 
-		if first.Index(0).Kind() != second.Index(0).Kind() {
-			return false
-		}
-
 		for i, j := 0, 0; i < first.Len() && j < second.Len(); i, j = i+1, j+1 {
 			if !reflect.DeepEqual(first.Index(i).Interface(), second.Index(j).Interface()) {
 				log.Printf("CompareSliceStruct | diff | \nfirst: %v | \nsecond: %v", first.Index(i).Interface(), second.Index(j).Interface())
