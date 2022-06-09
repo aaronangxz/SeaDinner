@@ -9,8 +9,8 @@ retry_times = 5
 menu_refresh_interval_seconds = 600
 
 [order_time]
-hour = 18
-minutes = 32
+hour = 12
+minutes = 30
 seconds = 0
 
 [grayscale]

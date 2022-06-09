@@ -26,16 +26,16 @@ func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.
 	txn := App.StartTransaction("order_dinner_with_update")
 	defer txn.End()
 
-	// if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
-	// 	log.Println("OrderDinnerWithUpdate | TEST | return dummy result.")
-	// 	return int64(sea_dinner.OrderStatus_ORDER_STATUS_OK), &sea_dinner.OrderRecord{
-	// 		UserId:    proto.Int64(u.GetUserId()),
-	// 		FoodId:    proto.String(u.GetUserChoice()),
-	// 		OrderTime: proto.Int64(time.Now().Unix()),
-	// 		Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)),
-	// 		ErrorMsg:  proto.String("TEST"),
-	// 	}
-	// }
+	if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
+		log.Println("OrderDinnerWithUpdate | TEST | return dummy result.")
+		return int64(sea_dinner.OrderStatus_ORDER_STATUS_OK), &sea_dinner.OrderRecord{
+			UserId:    proto.Int64(u.GetUserId()),
+			FoodId:    proto.String(u.GetUserChoice()),
+			OrderTime: proto.Int64(time.Now().Unix()),
+			Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)),
+			ErrorMsg:  proto.String("TEST"),
+		}
+	}
 
 	fData := make(map[string]string)
 	fData["food_id"] = fmt.Sprint(u.GetUserChoice())
@@ -71,7 +71,7 @@ func OrderDinnerWithUpdate(u *sea_dinner.UserChoiceWithKey) (int64, *sea_dinner.
 		OrderTime: proto.Int64(time.Now().Unix()),
 	}
 
-	if resp.GetSelected() != 0 {
+	if resp.GetSelected() == 0 {
 		status = int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL)
 		if resp.Error == nil {
 			record.ErrorMsg = proto.String("Unknown Error")
@@ -147,7 +147,7 @@ func BatchOrderDinnerMultiThreadedWithWait(userQueue []*sea_dinner.UserChoiceWit
 			defer wg.Done()
 			var record *sea_dinner.OrderRecord
 			for {
-				if IsOrderTime() && !IsPollStart() {
+				if IsOrderTime() && IsPollStart() {
 					log.Printf("BatchOrderDinnerMultiThreadedWithWait | Begin | user_id: %v", u.GetUserId())
 					m[u.GetUserId()], record = OrderDinnerWithUpdate(u)
 					records = append(records, record)
