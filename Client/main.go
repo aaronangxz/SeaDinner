@@ -80,8 +80,25 @@ func main() {
 					bot.Send(c)
 					continue
 				}
-			}
+			} else if update.CallbackQuery.Data == "ATTEMPTCANCEL" {
+				var mk tgbotapi.InlineKeyboardMarkup
+				var out [][]tgbotapi.InlineKeyboardButton
+				var rows []tgbotapi.InlineKeyboardButton
 
+				cancelButton := tgbotapi.NewInlineKeyboardButtonData("⚠️ DO IT ⚠️", "CANCEL")
+				rows = append(rows, cancelButton)
+				skipButton := tgbotapi.NewInlineKeyboardButtonData("OK NVM", "SKIP")
+				rows = append(rows, skipButton)
+
+				c := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+				c.Text = "Are you sure you want to cancel? 😦 You have to re-select it in SeaTalk."
+				c.ParseMode = "MARKDOWN"
+				out = append(out, rows)
+				mk.InlineKeyboard = out
+				c.ReplyMarkup = mk
+				bot.Send(c)
+				continue
+			}
 			if _, err := bot.Send(msg); err != nil {
 				log.Println(err)
 			}

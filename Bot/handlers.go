@@ -402,10 +402,15 @@ func GenerateWeeklyResultTable(record []*sea_dinner.OrderRecord) string {
 
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 	m := MakeMenuCodeMap()
-	status := map[int64]string{int64(sea_dinner.OrderStatus_ORDER_STATUS_OK): "✅", int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL): "❌"}
+
+	status := map[int64]string{
+		int64(sea_dinner.OrderStatus_ORDER_STATUS_OK):     "🟢",
+		int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL):   "🔴",
+		int64(sea_dinner.OrderStatus_ORDER_STATUS_CANCEL): "🟡"}
+
 	header := fmt.Sprintf("Your orders from %v to %v\n", Processors.ConvertTimeStampMonthDay(start), Processors.ConvertTimeStampMonthDay(end))
-	table := "<pre>\n     Day    Code  Status\n"
-	table += "-------------------------\n"
+
+	table := "<pre>\n    Day     Code  Status\n-------------------------\n"
 	for _, r := range record {
 		//In the event when menu was changed during the week, and we have no info of that particular food code
 		var code string
@@ -417,7 +422,8 @@ func GenerateWeeklyResultTable(record []*sea_dinner.OrderRecord) string {
 		table += fmt.Sprintf(" %v   %v     %v\n", Processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), code, status[r.GetStatus()])
 	}
 	table += "</pre>"
-	return header + table
+	legend := "\n\n🟢 Success\n🟡 Cancelled\n🔴 Failed"
+	return fmt.Sprint(header, table, legend)
 }
 
 //BatchGetLatestResult Retrieves the most recent failed orders
@@ -631,16 +637,21 @@ func MakeMenuCodeMap() map[string]string {
 func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
 	txn := Processors.App.StartTransaction("call_back_query_handler")
 	defer txn.End()
+
 	log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack.Data)
 
-	if callBack.Data == "MUTE" || callBack.Data == "UNMUTE" {
+	switch callBack.Data {
+	case "MUTE":
+		fallthrough
+	case "UNMUTE":
 		return UpdateMute(id, callBack.Data)
-	}
-
-	if callBack.Data == "CANCEL" {
+	case "ATTEMPTCANCEL":
+		return "", true
+	case "CANCEL":
 		return CancelOrder(id)
+	case "SKIP":
+		return "I figured 🤦", true
 	}
-
 	return GetChope(id, callBack.Data)
 }
 
