@@ -10,6 +10,7 @@ import (
 	"log"
 	random "math/rand"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 	"unicode"
@@ -199,4 +200,35 @@ func RandomFood(m map[string]string) string {
 
 	log.Println("RandomFood | result:", s[gen])
 	return s[gen]
+}
+
+//CompareStruct Compares two struct slices and outputs the difference.
+func CompareSliceStruct(a interface{}, b interface{}) bool {
+	same := true
+
+	if reflect.TypeOf(a).Kind() != reflect.TypeOf(b).Kind() {
+		log.Println("CompareSliceStruct | Slices must be the same type.")
+		return false
+	}
+
+	switch reflect.TypeOf(a).Kind() {
+	case reflect.Slice:
+		first := reflect.Indirect(reflect.ValueOf(a))
+		second := reflect.Indirect(reflect.ValueOf(b))
+
+		if first.Len() == 0 || second.Len() == 0 {
+			return false
+		}
+
+		for i, j := 0, 0; i < first.Len() && j < second.Len(); i, j = i+1, j+1 {
+			if !reflect.DeepEqual(first.Index(i).Interface(), second.Index(j).Interface()) {
+				log.Printf("CompareSliceStruct | diff | \nfirst: %v | \nsecond: %v", first.Index(i).Interface(), second.Index(j).Interface())
+				same = false
+			}
+		}
+	default:
+		log.Println("CompareSliceStruct | Only slice is supported.")
+		return false
+	}
+	return same
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
@@ -146,9 +145,8 @@ func MenuRefresher() {
 			liveMenu := GetMenu(Client, key)
 			cacheMenu := GetMenuUsingCache(Client, key)
 
-			if !reflect.DeepEqual(liveMenu, cacheMenu) {
+			if !CompareSliceStruct(liveMenu.GetFood(), cacheMenu.GetFood()) {
 				log.Println("MenuRefresher | Live and Cached menu are inconsistent.")
-				log.Printf("Live: %v | Cached: %v", liveMenu, cacheMenu)
 				cacheKey := fmt.Sprint(Common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 				expiry := 7200 * time.Second
 

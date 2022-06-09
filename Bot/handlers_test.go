@@ -491,7 +491,7 @@ func TestBatchGetUsersChoiceWithKey(t *testing.T) {
 	u := user_choice.New().SetUserChoice(fmt.Sprint(m[0].GetId())).Build()
 	uk := user_key.New().SetUserId(u.GetUserId()).Build()
 
-	expected := []*sea_dinner.UserChoiceWithKey{
+	expected1 := []*sea_dinner.UserChoiceWithKey{
 		{
 			UserId:     proto.Int64(u.GetUserId()),
 			UserKey:    proto.String(uk.GetUserKey()),
@@ -501,9 +501,24 @@ func TestBatchGetUsersChoiceWithKey(t *testing.T) {
 		},
 	}
 
+	u2 := user_choice.New().SetUserChoice(fmt.Sprint(m[0].GetId())).Build()
+	uk2 := user_key.New().SetUserId(u2.GetUserId()).Build()
+
+	expected2 := []*sea_dinner.UserChoiceWithKey{
+		{
+			UserId:     proto.Int64(u2.GetUserId()),
+			UserKey:    proto.String(uk2.GetUserKey()),
+			UserChoice: proto.String(u2.GetUserChoice()),
+			Ctime:      proto.Int64(u2.GetCtime()),
+			Mtime:      proto.Int64(u2.GetMtime()),
+		},
+	}
+
 	defer func() {
 		u.TearDown()
 		uk.TearDown()
+		u2.TearDown()
+		uk2.TearDown()
 	}()
 
 	tests := []struct {
@@ -513,7 +528,12 @@ func TestBatchGetUsersChoiceWithKey(t *testing.T) {
 	}{
 		{
 			name:    "HappyCase",
-			want:    expected,
+			want:    expected1,
+			wantErr: false,
+		},
+		{
+			name:    "HasRAND",
+			want:    expected2,
 			wantErr: false,
 		},
 	}
