@@ -129,8 +129,9 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
 		rows = append(rows, skipBotton)
 		out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
+	} else {
+		texts = append(texts, "We are done for this week! You can order again next week 😀")
 	}
-
 	return texts, out
 }
 
