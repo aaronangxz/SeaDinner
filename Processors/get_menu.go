@@ -1,6 +1,7 @@
 package Processors
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
@@ -16,7 +18,7 @@ import (
 )
 
 //GetMenu Calls Sea API, retrieves the current day's menu in realtime
-func GetMenu(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
+func GetMenu(ctx context.Context, client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 	var (
 		currentarr *sea_dinner.DinnerMenuArray
 	)
@@ -24,20 +26,21 @@ func GetMenu(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 	defer txn.End()
 
 	_, err := client.R().
-		SetHeader("Authorization", MakeToken(key)).
+		SetHeader("Authorization", MakeToken(ctx, key)).
 		SetResult(&currentarr).
-		Get(MakeURL(int(sea_dinner.URLType_URL_MENU), proto.Int64(GetDayId())))
+		Get(MakeURL(int(sea_dinner.URLType_URL_MENU), proto.Int64(GetDayId(ctx))))
 
 	if err != nil {
-		log.Println(err)
+		Log.Error(ctx, err.Error())
+		// log.Println(err)
 	}
-
-	log.Printf("GetMenu | Query status of today's menu: %v", currentarr.GetStatus())
+	Log.Info(ctx, "GetMenu | Query status of today's menu: %v", currentarr.GetStatus())
+	// log.Printf("GetMenu | Query status of today's menu: %v", currentarr.GetStatus())
 	return currentarr
 }
 
 //GetMenuUsingCache Calls Sea API, retrieves the current day's menu. Supports cache with TTL of 60 mins
-func GetMenuUsingCache(client resty.Client, key string) *sea_dinner.DinnerMenuArray {
+func GetMenuUsingCache(ctx context.Context, client resty.Client, key string) *sea_dinner.DinnerMenuArray {
 	var (
 		cacheKey   = fmt.Sprint(Common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 		expiry     = 7200 * time.Second
@@ -50,41 +53,48 @@ func GetMenuUsingCache(client resty.Client, key string) *sea_dinner.DinnerMenuAr
 	val, redisErr := RedisClient.Get(cacheKey).Result()
 	if redisErr != nil {
 		if redisErr == redis.Nil {
-			log.Printf("GetMenuUsingCache | No result of %v in Redis, reading from API", cacheKey)
+			Log.Warn(ctx, "GetMenuUsingCache | No result of %v in Redis, reading from API", cacheKey)
+			//log.Printf("GetMenuUsingCache | No result of %v in Redis, reading from API", cacheKey)
 		} else {
-			log.Printf("GetMenuUsingCache | Error while reading from redis: %v", redisErr.Error())
+			Log.Error(ctx, "GetMenuUsingCache | Error while reading from redis: %v", redisErr.Error())
+			// log.Printf("GetMenuUsingCache | Error while reading from redis: %v", redisErr.Error())
 		}
 	} else {
 		redisResp := &sea_dinner.DinnerMenuArray{}
 		err := json.Unmarshal([]byte(val), &redisResp)
 		if err != nil {
-			log.Printf("GetMenuUsingCache | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
+			Log.Warn(ctx, "GetMenuUsingCache | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
+			// log.Printf("GetMenuUsingCache | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
 		} else {
-			log.Printf("GetMenuUsingCache | Successful | Cached %v", cacheKey)
+			Log.Info(ctx, "GetMenuUsingCache | Successful | Cached %v", cacheKey)
+			// log.Printf("GetMenuUsingCache | Successful | Cached %v", cacheKey)
 			return redisResp
 		}
 	}
 
-	currentarr = GetMenu(Client, key)
+	currentarr = GetMenu(ctx, Client, key)
 
 	//set back into cache
 	data, err := json.Marshal(currentarr)
 	if err != nil {
-		log.Printf("GetMenuUsingCache | Failed to marshal JSON results: %v\n", err.Error())
+		Log.Error(ctx, "GetMenuUsingCache | Failed to marshal JSON results: %v\n", err.Error())
+		// log.Printf("GetMenuUsingCache | Failed to marshal JSON results: %v\n", err.Error())
 	}
 
 	if err := RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
-		log.Printf("GetMenuUsingCache | Error while writing to redis: %v", err.Error())
+		Log.Error(ctx, "GetMenuUsingCache | Error while writing to redis: %v", err.Error())
+		// log.Printf("GetMenuUsingCache | Error while writing to redis: %v", err.Error())
 	} else {
-		log.Printf("GetMenuUsingCache | Successful | Written %v to redis", cacheKey)
+		Log.Info(ctx, "GetMenuUsingCache | Successful | Written %v to redis", cacheKey)
+		// log.Printf("GetMenuUsingCache | Successful | Written %v to redis", cacheKey)
 	}
-
-	log.Printf("GetMenuUsingCache | Query status of today's menu: %v", currentarr.GetStatus())
+	Log.Info(ctx, "GetMenuUsingCache | Query status of today's menu: %v", currentarr.GetStatus())
+	// log.Printf("GetMenuUsingCache | Query status of today's menu: %v", currentarr.GetStatus())
 	return currentarr
 }
 
 //OutputMenuWithButton Sends menu and callback buttons
-func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyboardMarkup) {
+func OutputMenuWithButton(ctx context.Context, key string, id int64) ([]string, []tgbotapi.InlineKeyboardMarkup) {
 	var (
 		texts           []string
 		out             []tgbotapi.InlineKeyboardMarkup
@@ -94,7 +104,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 	txn := App.StartTransaction("output_menu_with_button")
 	defer txn.End()
 
-	m := GetMenuUsingCache(Client, key)
+	m := GetMenuUsingCache(ctx, Client, key)
 
 	if m.Status == nil {
 		texts = append(texts, "There is no dinner order today! 😕")
@@ -130,7 +140,7 @@ func OutputMenuWithButton(key string, id int64) ([]string, []tgbotapi.InlineKeyb
 		rows = append(rows, skipBotton)
 		out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
 	}
-
+	Log.Info(ctx, "OutputMenuWithButton | Success")
 	return texts, out
 }
 
@@ -142,24 +152,28 @@ func MenuRefresher() {
 			key := os.Getenv("TOKEN")
 			log.Println("MenuRefresher | Comparing Live and Cached menu.")
 
-			liveMenu := GetMenu(Client, key)
-			cacheMenu := GetMenuUsingCache(Client, key)
+			liveMenu := GetMenu(Ctx, Client, key)
+			cacheMenu := GetMenuUsingCache(Ctx, Client, key)
 
 			if !CompareSliceStruct(liveMenu.GetFood(), cacheMenu.GetFood()) {
-				log.Println("MenuRefresher | Live and Cached menu are inconsistent.")
+				Log.Warn(Ctx, "MenuRefresher | Live and Cached menu are inconsistent.")
+				// log.Println("MenuRefresher | Live and Cached menu are inconsistent.")
 				cacheKey := fmt.Sprint(Common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 				expiry := 7200 * time.Second
 
 				data, err := json.Marshal(liveMenu)
 				if err != nil {
-					log.Printf("MenuRefresher | Failed to marshal JSON results: %v\n", err.Error())
+					Log.Error(Ctx, "MenuRefresher | Failed to marshal JSON results: %v\n", err.Error())
+					// log.Printf("MenuRefresher | Failed to marshal JSON results: %v\n", err.Error())
 				}
 
 				//Use live menu as the source of truth
 				if err := RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
+					// Log.Error(Ctx,"MenuRefresher | Error while writing to redis: %v", err.Error())
 					log.Printf("MenuRefresher | Error while writing to redis: %v", err.Error())
 				} else {
-					log.Printf("MenuRefresher | Successful | Written %v to redis", cacheKey)
+					Log.Info(Ctx, "MenuRefresher | Successful | Written %v to redis", cacheKey)
+					// log.Printf("MenuRefresher | Successful | Written %v to redis", cacheKey)
 				}
 			}
 		}()

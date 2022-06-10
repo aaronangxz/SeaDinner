@@ -2,9 +2,9 @@ package Processors
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"google.golang.org/protobuf/proto"
 )
@@ -33,22 +33,25 @@ func PrepOrder() ([]*sea_dinner.UserChoiceWithKey, bool) {
 	inQuery += ")"
 	inQuery = strings.ReplaceAll(inQuery, ", )", ")")
 	query := fmt.Sprintf("SELECT c.*, k.user_key FROM user_choice_tab c, user_key_tab k WHERE user_choice IN %v AND c.user_id = k.user_id", inQuery)
-	log.Println(query)
+	Log.Info(Ctx, query)
+	// log.Println(query)
 
 	//check whole db
 	if err := DB.Raw(query).Scan(&record).Error; err != nil {
-		fmt.Println(err.Error())
+		Log.Error(Ctx, err.Error())
+		// fmt.Println(err.Error())
 		return nil, false
 	}
 
 	for _, r := range record {
 		if r.GetUserChoice() == "RAND" {
 			r.UserChoice = proto.String(RandomFood(m))
-			log.Printf("PrepOrder | id:%v | random choice:%v", r.GetUserId(), r.GetUserChoice())
+			Log.Info(Ctx, "PrepOrder | id:%v | random choice:%v", r.GetUserId(), r.GetUserChoice())
+			// log.Printf("PrepOrder | id:%v | random choice:%v", r.GetUserId(), r.GetUserChoice())
 		}
 	}
-
-	log.Println("PrepOrder | Fetched user_records:", len(record))
+	Log.Info(Ctx, "PrepOrder | Fetched user_records: %v", len(record))
+	// log.Println("PrepOrder | Fetched user_records:", len(record))
 	return record, true
 }
 
@@ -58,13 +61,14 @@ func GetOrderByUserId(user_id int64) (string, bool) {
 	)
 
 	if err := DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", user_id).Scan(&record).Error; err != nil {
-		fmt.Printf("GetOrderByUserId | failed to retrieve record: %v", err.Error())
+		Log.Error(Ctx, "GetOrderByUserId | failed to retrieve record: %v", err.Error())
+		// fmt.Printf("GetOrderByUserId | failed to retrieve record: %v", err.Error())
 		return "I can't find your order 😥 Try to cancel from SeaTalk instead!", false
 	}
 
 	if record == nil {
 		return "I can't find your order 😥 Try to cancel from SeaTalk instead!", false
 	}
-
+	Log.Info(Ctx, "GetOrderByUserId | Success")
 	return record.GetUserChoice(), true
 }

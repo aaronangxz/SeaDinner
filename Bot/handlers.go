@@ -1,6 +1,7 @@
 package Bot
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-redis/redis"
@@ -19,7 +21,7 @@ import (
 
 //GetKey Retrieves user's API key with user_id.
 //Reads from cache first, then user_key_tab.
-func GetKey(id int64) string {
+func GetKey(ctx context.Context, id int64) string {
 	var (
 		existingRecord *sea_dinner.UserKey
 		cacheKey       = fmt.Sprint(Common.USER_KEY_PREFIX, id)
@@ -29,7 +31,8 @@ func GetKey(id int64) string {
 	defer txn.End()
 
 	if id <= 0 {
-		log.Println("GetKey | Id must be > 1.")
+		Log.Error(ctx, "UpdateKey | Id must be > 1.")
+		//log.Println("GetKey | Id must be > 1.")
 		return ""
 	}
 
@@ -37,44 +40,51 @@ func GetKey(id int64) string {
 	val, redisErr := Processors.RedisClient.Get(cacheKey).Result()
 	if redisErr != nil {
 		if redisErr == redis.Nil {
-			log.Printf("GetKey | No result of %v in Redis, reading from DB", cacheKey)
+			Log.Warn(ctx, "GetKey | No result of %v in Redis, reading from DB", cacheKey)
+			//log.Printf("GetKey | No result of %v in Redis, reading from DB", cacheKey)
 		} else {
-			log.Printf("GetKey | Error while reading from redis: %v", redisErr.Error())
+			Log.Error(ctx, "GetKey | Error while reading from redis: %v", redisErr.Error())
+			//log.Printf("GetKey | Error while reading from redis: %v", redisErr.Error())
 		}
 	} else {
 		redisResp := &sea_dinner.UserKey{}
 		err := json.Unmarshal([]byte(val), &redisResp)
 		if err != nil {
-			log.Printf("GetKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
+			Log.Error(ctx, "GetKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
+			//log.Printf("GetKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
 		} else {
-			log.Printf("GetKey | Successful | Cached %v", cacheKey)
+			Log.Info(ctx, "GetKey | Successful | Cached %v", cacheKey)
+			//log.Printf("GetKey | Successful | Cached %v", cacheKey)
 			return redisResp.GetUserKey()
 		}
 	}
 
 	//Read from DB
 	if err := Processors.DB.Table(Common.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
+		Log.Error(ctx, "GetKey | Failed to find record | %v", err.Error())
 		return ""
 	}
 
 	//set back into cache
 	data, err := json.Marshal(existingRecord)
 	if err != nil {
-		log.Printf("GetKey | Failed to marshal JSON results: %v\n", err.Error())
+		Log.Error(ctx, "GetKey | Failed to marshal JSON results: %v\n", err.Error())
+		//log.Printf("GetKey | Failed to marshal JSON results: %v\n", err.Error())
 	}
 
 	if err := Processors.RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
-		log.Printf("GetKey | Error while writing to redis: %v", err.Error())
+		Log.Error(ctx, "GetKey | Error while writing to redis: %v", err.Error())
+		//log.Printf("GetKey | Error while writing to redis: %v", err.Error())
 	} else {
-		log.Printf("GetKey | Successful | Written %v to redis", cacheKey)
+		Log.Info(ctx, "GetKey | Successful | Written %v to redis", cacheKey)
+		// log.Printf("GetKey | Successful | Written %v to redis", cacheKey)
 	}
-
 	return existingRecord.GetUserKey()
 }
 
 //CheckKey Checks if user's API key exists.
 //Reads from cache first, then user_key_tab.
-func CheckKey(id int64) (string, bool) {
+func CheckKey(ctx context.Context, id int64) (string, bool) {
 	var (
 		existingRecord *sea_dinner.UserKey
 		cacheKey       = fmt.Sprint(Common.USER_KEY_PREFIX, id)
@@ -84,7 +94,8 @@ func CheckKey(id int64) (string, bool) {
 	defer txn.End()
 
 	if id <= 0 {
-		log.Println("CheckKey | Id must be > 1.")
+		Log.Error(ctx, "UpdateKey | Id must be > 1.")
+		// log.Println("CheckKey | Id must be > 1.")
 		return "", false
 	}
 
@@ -92,17 +103,21 @@ func CheckKey(id int64) (string, bool) {
 	val, redisErr := Processors.RedisClient.Get(cacheKey).Result()
 	if redisErr != nil {
 		if redisErr == redis.Nil {
-			log.Printf("CheckKey | No result of %v in Redis, reading from DB", cacheKey)
+			Log.Warn(ctx, "CheckKey | No result of %v in Redis, reading from DB", cacheKey)
+			//log.Printf("CheckKey | No result of %v in Redis, reading from DB", cacheKey)
 		} else {
-			log.Printf("CheckKey | Error while reading from redis: %v", redisErr.Error())
+			Log.Error(ctx, "CheckKey | Error while reading from redis: %v", redisErr.Error())
+			//log.Printf("CheckKey | Error while reading from redis: %v", redisErr.Error())
 		}
 	} else {
 		redisResp := &sea_dinner.UserKey{}
 		err := json.Unmarshal([]byte(val), &redisResp)
 		if err != nil {
-			log.Printf("CheckKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
+			Log.Error(ctx, "CheckKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
+			//log.Printf("CheckKey | Fail to unmarshal Redis value of key %v : %v, reading from DB", cacheKey, err)
 		} else {
-			log.Printf("CheckKey | Successful | Cached %v", cacheKey)
+			Log.Info(ctx, "CheckKey | Successful | Cached %v", cacheKey)
+			//log.Printf("CheckKey | Successful | Cached %v", cacheKey)
 			decrypt := Processors.DecryptKey(redisResp.GetUserKey(), os.Getenv("AES_KEY"))
 			return fmt.Sprintf("I have your key %v***** that you told me on %v! But I won't leak it 😀", decrypt[:5], Processors.ConvertTimeStamp(redisResp.GetMtime())), true
 		}
@@ -115,13 +130,16 @@ func CheckKey(id int64) (string, bool) {
 		//set back into cache
 		data, err := json.Marshal(existingRecord)
 		if err != nil {
-			log.Printf("CheckKey | Failed to marshal JSON results: %v\n", err.Error())
+			Log.Error(ctx, "CheckKey | Failed to marshal JSON results: %v\n", err.Error())
+			//log.Printf("CheckKey | Failed to marshal JSON results: %v\n", err.Error())
 		}
 
 		if err := Processors.RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
-			log.Printf("CheckKey | Error while writing to redis: %v", err.Error())
+			Log.Error(ctx, "CheckKey | Error while writing to redis: %v", err.Error())
+			//log.Printf("CheckKey | Error while writing to redis: %v", err.Error())
 		} else {
-			log.Printf("CheckKey | Successful | Written %v to redis", cacheKey)
+			Log.Info(ctx, "CheckKey | Successful | Written %v to redis", cacheKey)
+			//log.Printf("CheckKey | Successful | Written %v to redis", cacheKey)
 		}
 		decrypt := Processors.DecryptKey(existingRecord.GetUserKey(), os.Getenv("AES_KEY"))
 		return fmt.Sprintf("I have your key %v***** that you told me on %v! But I won't leak it 😀", decrypt[:5], Processors.ConvertTimeStamp(existingRecord.GetMtime())), true
@@ -130,7 +148,7 @@ func CheckKey(id int64) (string, bool) {
 
 //UpdateKey Creates record to store user's key if not exists, or update the existing record.
 //With basic parameter verifications
-func UpdateKey(id int64, s string) (string, bool) {
+func UpdateKey(ctx context.Context, id int64, s string) (string, bool) {
 	hashedKey := Processors.EncryptKey(s, os.Getenv("AES_KEY"))
 
 	var (
@@ -148,49 +166,57 @@ func UpdateKey(id int64, s string) (string, bool) {
 	defer txn.End()
 
 	if id <= 0 {
-		log.Println("UpdateKey | Id must be > 1.")
+		Log.Error(ctx, "UpdateKey | Id must be > 1.")
+		//log.Println("UpdateKey | Id must be > 1.")
 		return "", false
 	}
 
 	if s == "" {
-		log.Println("UpdateKey | Key cannot be empty.")
+		Log.Error(ctx, "UpdateKey | Key cannot be empty.")
+		//log.Println("UpdateKey | Key cannot be empty.")
 		return "Key cannot be empty 😟", false
 	}
 
 	if len(s) != 40 {
-		log.Printf("UpdateKey | Key length invalid | length: %v", len(s))
+		Log.Error(ctx, "UpdateKey | Key length invalid | length: %v", len(s))
+		//log.Printf("UpdateKey | Key length invalid | length: %v", len(s))
 		return "Are you sure this is a valid key? 😟", false
 	}
 
 	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
-		log.Printf("UpdateKey | %v", err.Error())
+		Log.Error(ctx, "UpdateKey | %v", err.Error())
+		//log.Printf("UpdateKey | %v", err.Error())
 		return err.Error(), false
 	} else {
 		if existingRecord.UserId == nil {
 			if err := Processors.DB.Table(Common.DB_USER_KEY_TAB).Create(&r).Error; err != nil {
-				log.Println("UpdateKey | Failed to insert DB")
+				Log.Error(ctx, "UpdateKey | Failed to insert DB | %v", err.Error())
+				//log.Println("UpdateKey | Failed to insert DB")
 				return err.Error(), false
 			}
 			return "Okay got it. I remember your key now! 😙\n Disclaimer: I will never disclose your key. Your key is safely encrypted.", true
 		}
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_key_tab SET user_key = ?, mtime = ? WHERE user_id = ?", hashedKey, time.Now().Unix(), id).Error; err != nil {
-			log.Printf("UpdateKey | %v", err.Error())
+			Log.Error(ctx, "UpdateKey | Failed to insert DB | %v", err.Error())
+			// log.Printf("UpdateKey | %v", err.Error())
 			return err.Error(), false
 		}
 
 		//Invalidate cache after successful update
 		if _, err := Processors.RedisClient.Del(cacheKey).Result(); err != nil {
-			log.Printf("UpdateKey | Failed to invalidate cache: %v. %v", cacheKey, err)
+			Log.Error(ctx, "UpdateKey | Failed to invalidate cache: %v. %v", cacheKey, err)
+			//log.Printf("UpdateKey | Failed to invalidate cache: %v. %v", cacheKey, err)
 		}
-		log.Printf("UpdateKey | Successfully invalidated cache: %v", cacheKey)
+		Log.Info(ctx, "UpdateKey | Successfully invalidated cache: %v", cacheKey)
+		//log.Printf("UpdateKey | Successfully invalidated cache: %v", cacheKey)
 
 		return "Okay got it. I will take note of your new key 😙", true
 	}
 }
 
 //CheckChope Retrieves the current food choice made by user.
-func CheckChope(id int64) (string, bool) {
+func CheckChope(ctx context.Context, id int64) (string, bool) {
 	var (
 		existingRecord sea_dinner.UserChoice
 		dayText        = "today"
@@ -200,7 +226,8 @@ func CheckChope(id int64) (string, bool) {
 	defer txn.End()
 
 	if id <= 0 {
-		log.Println("Id must be > 1.")
+		Log.Error(ctx, "Id must be > 1.")
+		// log.Println("Id must be > 1.")
 		return "", false
 	}
 
@@ -222,7 +249,7 @@ func CheckChope(id int64) (string, bool) {
 			}
 			return fmt.Sprintf("Not placing dinner order for you %v 🙅 Changed your mind? You can choose from /menu", dayText), false
 		}
-		menu := MakeMenuNameMap()
+		menu := MakeMenuNameMap(ctx)
 
 		_, ok := menu[existingRecord.GetUserChoice()]
 
@@ -240,7 +267,7 @@ func CheckChope(id int64) (string, bool) {
 //GetChope Updates the current food choice made by user.
 //With basic parameter verifications
 //Supports Button Callbacks
-func GetChope(id int64, s string) (string, bool) {
+func GetChope(ctx context.Context, id int64, s string) (string, bool) {
 	var (
 		existingRecord sea_dinner.UserChoice
 		r              = &sea_dinner.UserChoice{
@@ -255,7 +282,8 @@ func GetChope(id int64, s string) (string, bool) {
 	defer txn.End()
 
 	if id <= 0 {
-		log.Println("Id must be > 1.")
+		Log.Error(ctx, "Id must be > 1.")
+		//log.Println("Id must be > 1.")
 		return "", false
 	}
 
@@ -267,12 +295,13 @@ func GetChope(id int64, s string) (string, bool) {
 	if Processors.IsNotNumber(s) {
 		//RAND is passed from CallBack
 		if s != "RAND" && s != "SAME" {
-			log.Printf("Selection contains illegal character | selection: %v", s)
+			Log.Error(ctx, "Selection contains illegal character | selection: %v", s)
+			//log.Printf("Selection contains illegal character | selection: %v", s)
 			return "Are you sure that is a valid FoodID? Tell me another one. 😟", false
 		}
 	}
 
-	menu := MakeMenuNameMap()
+	menu := MakeMenuNameMap(ctx)
 
 	if s == "SAME" {
 		//Set back to DB using cache data (user_choice:<id>)
@@ -280,20 +309,24 @@ func GetChope(id int64, s string) (string, bool) {
 		val, redisErr := Processors.RedisClient.Get(key).Result()
 		if redisErr != nil {
 			if redisErr == redis.Nil {
-				log.Printf("GetChope | No result of %v in Redis, reading from API", key)
+				Log.Info(ctx, "GetChope | No result of %v in Redis, reading from API", key)
+				//log.Printf("GetChope | No result of %v in Redis, reading from API", key)
 			} else {
-				log.Printf("GetChope | Error while reading from redis: %v", redisErr.Error())
+				Log.Error(ctx, "GetChope | Error while reading from redis: %v", redisErr.Error())
+				//log.Printf("GetChope | Error while reading from redis: %v", redisErr.Error())
 			}
 			return "The selection has expired, you can choose from /menu again 😀", true
 		}
 
 		if val == "" {
-			log.Printf("GetChope | empty in redis: %v", key)
+			Log.Error(ctx, "GetChope | empty in redis: %v", key)
+			//log.Printf("GetChope | empty in redis: %v", key)
 			return "The selection has expired, you can choose from /menu again 😀", true
 		}
 
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", val, time.Now().Unix(), id).Error; err != nil {
-			log.Println("Failed to update DB")
+			Log.Error(ctx, "Failed to update DB | %v", err.Error())
+			//log.Println("Failed to update DB")
 			return err.Error(), false
 		}
 
@@ -309,17 +342,20 @@ func GetChope(id int64, s string) (string, bool) {
 
 	_, ok := menu[s]
 	if !ok {
-		log.Printf("Selection is invalid | selection: %v", s)
+		Log.Error(ctx, "Selection is invalid | selection: %v", s)
+		// log.Printf("Selection is invalid | selection: %v", s)
 		return "This dish is not available today. Tell me another one.😟", false
 	}
 
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
-		log.Printf("GetChope | %v", err.Error())
+		Log.Error(ctx, "GetChope | %v", err.Error())
+		// log.Printf("GetChope | %v", err.Error())
 		return err.Error(), false
 	} else {
 		if existingRecord.UserId == nil {
 			if err := Processors.DB.Table(Common.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
-				log.Println("Failed to insert DB")
+				Log.Error(ctx, "Failed to update DB | %v", err.Error())
+				//log.Println("Failed to insert DB")
 				return err.Error(), false
 			}
 
@@ -341,7 +377,8 @@ func GetChope(id int64, s string) (string, bool) {
 		}
 		//Update key if user_id exists
 		if err := Processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
-			log.Println("Failed to update DB")
+			Log.Error(ctx, "Failed to update DB | %v", err.Error())
+			//log.Println("Failed to update DB")
 			return err.Error(), false
 		}
 
@@ -358,20 +395,20 @@ func GetChope(id int64, s string) (string, bool) {
 		if time.Now().Unix() < Processors.GetLunchTime().Unix() {
 			//Set into cache for Morning reminder callback. TTL is always until 12.30
 			if err := Processors.RedisClient.Set(key, s, time.Duration(Processors.GetLunchTime().UnixMilli()-time.Now().UnixMilli())).Err(); err != nil {
-				log.Printf("GetChope | Error while writing to redis: %v", err.Error())
+				Log.Error(ctx, "GetChope | Error while writing to redis: %v", err.Error())
+				//log.Printf("GetChope | Error while writing to redis: %v", err.Error())
 			} else {
-				log.Printf("GetChope | Successful | Written %v to redis", key)
+				Log.Info(ctx, "GetChope | Successful | Written %v to redis", key)
+				//log.Printf("GetChope | Successful | Written %v to redis", key)
 			}
-
 			return fmt.Sprintf("Okay got it. I will order %v for you today 😙", menu[s]), true
 		}
-
 		return fmt.Sprintf("Okay got it. I will order %v for you tomorrow 😙", menu[s]), true
 	}
 }
 
 //ListWeeklyResultByUserId Returns the order records of a user in the current week
-func ListWeeklyResultByUserId(id int64) string {
+func ListWeeklyResultByUserId(ctx context.Context, id int64) string {
 	var (
 		res []*sea_dinner.OrderRecord
 	)
@@ -381,28 +418,30 @@ func ListWeeklyResultByUserId(id int64) string {
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 
 	if id <= 0 {
-		log.Println("Id must be > 1.")
+		Log.Error(ctx, "Id must be > 1.")
+		// log.Println("Id must be > 1.")
 		return ""
 	}
 
 	if err := Processors.DB.Raw("SELECT * FROM order_log_tab WHERE user_id = ? AND order_time BETWEEN ? AND ?", id, start, end).Scan(&res).Error; err != nil {
-		log.Printf("id : %v | Failed to retrieve record.", id)
+		Log.Error(ctx, "id : %v | Failed to retrieve record.", id)
+		// log.Printf("id : %v | Failed to retrieve record.", id)
 		return "You have not ordered anything this week. 😕"
 	}
 
 	if res == nil {
 		return "You have not ordered anything this week. 😕"
 	}
-	return GenerateWeeklyResultTable(res)
+	return GenerateWeeklyResultTable(ctx, res)
 }
 
 //GenerateWeeklyResultTable Outputs pre-formatted weekly order status.
-func GenerateWeeklyResultTable(record []*sea_dinner.OrderRecord) string {
+func GenerateWeeklyResultTable(ctx context.Context, record []*sea_dinner.OrderRecord) string {
 	txn := Processors.App.StartTransaction("generate_weekly_result_table")
 	defer txn.End()
 
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
-	m := MakeMenuCodeMap()
+	m := MakeMenuCodeMap(ctx)
 
 	status := map[int64]string{
 		int64(sea_dinner.OrderStatus_ORDER_STATUS_OK):     "🟢",
@@ -428,7 +467,7 @@ func GenerateWeeklyResultTable(record []*sea_dinner.OrderRecord) string {
 }
 
 //BatchGetLatestResult Retrieves the most recent failed orders
-func BatchGetLatestResult() []*sea_dinner.OrderRecord {
+func BatchGetLatestResult(ctx context.Context) []*sea_dinner.OrderRecord {
 	var (
 		res []*sea_dinner.OrderRecord
 	)
@@ -440,10 +479,12 @@ func BatchGetLatestResult() []*sea_dinner.OrderRecord {
 		"ON ol.order_time = nestedQ.max_order_time GROUP BY user_id",
 		sea_dinner.OrderStatus_ORDER_STATUS_OK, Processors.GetLunchTime().Unix()-300, Processors.GetLunchTime().Unix()+300).
 		Scan(&res).Error; err != nil {
-		log.Println("Failed to retrieve record.")
+		Log.Error(ctx, "Failed to retrieve record.")
+		// log.Println("Failed to retrieve record.")
 		return nil
 	}
-	log.Println("BatchGetLatestResult:", len(res))
+	Log.Info(ctx, "BatchGetLatestResult:", len(res))
+	// log.Println("BatchGetLatestResult:", len(res))
 	return res
 }
 
@@ -463,8 +504,8 @@ func SendNotifications() {
 	bot.Debug = true
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
-	res := BatchGetLatestResult()
-	menu := MakeMenuNameMap()
+	res := BatchGetLatestResult(Processors.Ctx)
+	menu := MakeMenuNameMap(Processors.Ctx)
 	log.Println("SendNotifications | size:", len(res))
 
 	for _, r := range res {
@@ -527,8 +568,8 @@ func SendReminder() {
 	res := BatchGetUsersChoice()
 	log.Println("SendReminder | size:", len(res))
 
-	menu := MakeMenuNameMap()
-	code := MakeMenuCodeMap()
+	menu := MakeMenuNameMap(Processors.Ctx)
+	code := MakeMenuCodeMap(Processors.Ctx)
 
 	for _, r := range res {
 		msg := tgbotapi.NewMessage(r.GetUserId(), "")
@@ -599,7 +640,7 @@ func SendReminder() {
 }
 
 //MakeMenuNameMap Returns food_id:food_name mapping of current menu
-func MakeMenuNameMap() map[string]string {
+func MakeMenuNameMap(ctx context.Context) map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
 	)
@@ -607,7 +648,7 @@ func MakeMenuNameMap() map[string]string {
 	defer txn.End()
 
 	menuMap := make(map[string]string)
-	menu := Processors.GetMenuUsingCache(Processors.Client, key)
+	menu := Processors.GetMenuUsingCache(ctx, Processors.Client, key)
 	for _, m := range menu.GetFood() {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetName()
 	}
@@ -618,7 +659,7 @@ func MakeMenuNameMap() map[string]string {
 }
 
 //MakeMenuCodeMap Returns food_id:food_code mapping of current menu
-func MakeMenuCodeMap() map[string]string {
+func MakeMenuCodeMap(ctx context.Context) map[string]string {
 	var (
 		key = os.Getenv("TOKEN")
 	)
@@ -626,7 +667,7 @@ func MakeMenuCodeMap() map[string]string {
 	defer txn.End()
 
 	menuMap := make(map[string]string)
-	menu := Processors.GetMenuUsingCache(Processors.Client, key)
+	menu := Processors.GetMenuUsingCache(ctx, Processors.Client, key)
 	for _, m := range menu.GetFood() {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetCode()
 	}
@@ -635,25 +676,26 @@ func MakeMenuCodeMap() map[string]string {
 }
 
 //CallbackQueryHandler Handles the call back result of menu buttons
-func CallbackQueryHandler(id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
+func CallbackQueryHandler(ctx context.Context, id int64, callBack *tgbotapi.CallbackQuery) (string, bool) {
 	txn := Processors.App.StartTransaction("call_back_query_handler")
 	defer txn.End()
 
-	log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack.Data)
+	Log.Info(ctx, "id: %v | CallbackQueryHandler | callback: %v", id, callBack.Data)
+	//log.Printf("id: %v | CallbackQueryHandler | callback: %v", id, callBack.Data)
 
 	switch callBack.Data {
 	case "MUTE":
 		fallthrough
 	case "UNMUTE":
-		return UpdateMute(id, callBack.Data)
+		return UpdateMute(ctx, id, callBack.Data)
 	case "ATTEMPTCANCEL":
 		return "", true
 	case "CANCEL":
-		return CancelOrder(id)
+		return CancelOrder(ctx, id)
 	case "SKIP":
 		return "I figured 🤦", true
 	}
-	return GetChope(id, callBack.Data)
+	return GetChope(ctx, id, callBack.Data)
 }
 
 //MakeHelpResponse Prints out Introduction
@@ -683,7 +725,7 @@ func MakeHelpResponse() string {
 }
 
 //CheckMute Checks the user's current status of mute state
-func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
+func CheckMute(ctx context.Context, id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 	var (
 		res *sea_dinner.UserKey
 		out []tgbotapi.InlineKeyboardMarkup
@@ -692,12 +734,14 @@ func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 	defer txn.End()
 
 	if err := Processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&res).Error; err != nil {
-		log.Println("CheckMute | Failed to retrieve record:", err.Error())
+		Log.Error(ctx, "CheckMute | Failed to retrieve record: %v", err.Error())
+		// log.Println("CheckMute | Failed to retrieve record:", err.Error())
 		return "", nil
 	}
 
 	if res == nil {
-		log.Printf("CheckMute | Record not found | user_id:%v", id)
+		Log.Error(ctx, "CheckMute | Record not found | user_id:%v", id)
+		// log.Printf("CheckMute | Record not found | user_id:%v", id)
 		return "Record not found.", nil
 	}
 
@@ -716,7 +760,7 @@ func CheckMute(id int64) (string, []tgbotapi.InlineKeyboardMarkup) {
 }
 
 //UpdateMute Updates the user's current status of mute state
-func UpdateMute(id int64, callback string) (string, bool) {
+func UpdateMute(ctx context.Context, id int64, callback string) (string, bool) {
 	var (
 		toUdate    = int64(sea_dinner.MuteStatus_MUTE_STATUS_YES)
 		returnMsg  = "Daily reminder notifications are *OFF*.\nDo you want to turn it ON?"
@@ -732,7 +776,8 @@ func UpdateMute(id int64, callback string) (string, bool) {
 	}
 
 	if err := Processors.DB.Exec("UPDATE user_key_tab SET is_mute = ? WHERE user_id = ?", toUdate, id).Error; err != nil {
-		log.Println("Failed to update DB")
+		Log.Error(ctx, "Failed to update DB")
+		//log.Println("Failed to update DB")
 		return err.Error(), false
 	}
 
@@ -740,7 +785,7 @@ func UpdateMute(id int64, callback string) (string, bool) {
 }
 
 //CancelOrder Cancels the user's order after it is processed
-func CancelOrder(id int64) (string, bool) {
+func CancelOrder(ctx context.Context, id int64) (string, bool) {
 	var (
 		resp *sea_dinner.OrderResponse
 	)
@@ -757,24 +802,27 @@ func CancelOrder(id int64) (string, bool) {
 	fData["food_id"] = currOrder
 
 	_, err := Processors.Client.R().
-		SetHeader("Authorization", Processors.MakeToken(fmt.Sprint(GetKey(id)))).
+		SetHeader("Authorization", Processors.MakeToken(ctx, fmt.Sprint(GetKey(ctx, id)))).
 		SetFormData(fData).
 		SetResult(&resp).
 		EnableTrace().
-		Delete(Processors.MakeURL(int(sea_dinner.URLType_URL_ORDER), proto.Int64(Processors.GetDayId())))
+		Delete(Processors.MakeURL(int(sea_dinner.URLType_URL_ORDER), proto.Int64(Processors.GetDayId(ctx))))
 
 	if err != nil {
-		log.Printf("CancelOrder | error: %v", err.Error())
+		Log.Error(ctx, "CancelOrder | error: %v", err.Error())
+		//log.Printf("CancelOrder | error: %v", err.Error())
 		return "There were some issues 😥 Try to cancel from SeaTalk instead!", false
 	}
 
 	if resp.GetStatus() == "error" {
-		log.Printf("CancelOrder | status error: %v", resp.GetError())
+		Log.Error(ctx, "CancelOrder | status error: %v", resp.GetError())
+		//log.Printf("CancelOrder | status error: %v", resp.GetError())
 		return fmt.Sprintf("I can't cancel this order: %v 😥 Try to cancel from SeaTalk instead!", resp.GetError()), false
 	}
 
 	if resp.Selected != nil {
-		log.Println("CancelOrder | failed to cancel order")
+		Log.Error(ctx, "CancelOrder | failed to cancel order")
+		//log.Println("CancelOrder | failed to cancel order")
 		return "It seems like you ordered something else 😥 Try to cancel from SeaTalk instead!", false
 	}
 
@@ -782,14 +830,14 @@ func CancelOrder(id int64) (string, bool) {
 }
 
 //BatchGetUsersChoiceWithKey Retrieves the user's choice and key. Only return those that has valid choices in the current week.
-func BatchGetUsersChoiceWithKey() ([]*sea_dinner.UserChoiceWithKey, error) {
+func BatchGetUsersChoiceWithKey(ctx context.Context) ([]*sea_dinner.UserChoiceWithKey, error) {
 	var (
 		record []*sea_dinner.UserChoiceWithKey
 	)
 	txn := Processors.App.StartTransaction("batch_get_users_choice_with_key")
 	defer txn.End()
 
-	m := Processors.MakeMenuMap()
+	m := MakeMenuNameMap(ctx)
 	inQuery := "("
 	for e := range m {
 		// Skip menu id: -1
@@ -805,28 +853,31 @@ func BatchGetUsersChoiceWithKey() ([]*sea_dinner.UserChoiceWithKey, error) {
 	inQuery += ")"
 	inQuery = strings.ReplaceAll(inQuery, ", )", ")")
 	query := fmt.Sprintf("SELECT c.*, k.user_key FROM user_choice_tab c, user_key_tab k WHERE user_choice IN %v AND c.user_id = k.user_id", inQuery)
-	log.Println(query)
-
+	// log.Println(query)
+	Log.Info(ctx, query)
 	//check whole db
 	if err := Processors.DB.Raw(query).Scan(&record).Error; err != nil {
-		fmt.Println(err.Error())
+		Log.Error(ctx, err.Error())
+		// fmt.Println(err.Error())
 		return nil, err
 	}
-	log.Println("BatchGetUsersChoiceWithKey | Success | size:", len(record))
+	Log.Info(ctx, "BatchGetUsersChoiceWithKey | Success | size:", len(record))
+	// log.Println("BatchGetUsersChoiceWithKey | Success | size:", len(record))
 	return record, nil
 }
 
 //BatchGetSuccessfulOrder Calls Sea API to verify the user's current order
-func BatchGetSuccessfulOrder() []int64 {
+func BatchGetSuccessfulOrder(ctx context.Context) []int64 {
 	var (
 		success []int64
 	)
 	txn := Processors.App.StartTransaction("batch_get_successful_order")
 	defer txn.End()
 
-	records, err := BatchGetUsersChoiceWithKey()
+	records, err := BatchGetUsersChoiceWithKey(ctx)
 	if err != nil {
-		log.Println("BatchGetSuccessfulOrder | Failed to fetch user_records:", err.Error())
+		Log.Error(ctx, "BatchGetSuccessfulOrder | Failed to fetch user_records:", err.Error())
+		// log.Println("BatchGetSuccessfulOrder | Failed to fetch user_records:", err.Error())
 		return nil
 	}
 
@@ -835,10 +886,12 @@ func BatchGetSuccessfulOrder() []int64 {
 		if ok {
 			success = append(success, r.GetUserId())
 		} else {
-			log.Println("BatchGetSuccessfulOrder | Failed | user_id:", r.GetUserId())
+			Log.Error(ctx, "BatchGetSuccessfulOrder | Failed | user_id:", r.GetUserId())
+			// log.Println("BatchGetSuccessfulOrder | Failed | user_id:", r.GetUserId())
 		}
 	}
-	log.Println("BatchGetSuccessfulOrder | Done | size:", len(success))
+	Log.Info(ctx, "BatchGetSuccessfulOrder | Done | size:", len(success))
+	// log.Println("BatchGetSuccessfulOrder | Done | size:", len(success))
 	return success
 }
 
@@ -859,7 +912,7 @@ func SendCheckInLink() {
 		return
 	}
 
-	orders := BatchGetSuccessfulOrder()
+	orders := BatchGetSuccessfulOrder(Processors.Ctx)
 	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
 	if err != nil {
 		log.Panic(err)

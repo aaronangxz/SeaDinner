@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
 
@@ -70,7 +71,7 @@ func IsWeekDay() bool {
 
 //IsActiveDay Checks if today has dinner (If today is a holiday)
 func IsActiveDay() bool {
-	return GetDayId() != 0
+	return GetDayId(Ctx) != 0
 }
 
 //IsNotEOW Checks if today is not friday, saturday, sunday
@@ -97,12 +98,13 @@ func IsPollStart() bool {
 	defer txn.End()
 
 	_, err := Client.R().
-		SetHeader("Authorization", MakeToken(key)).
+		SetHeader("Authorization", MakeToken(Ctx, key)).
 		SetResult(&status).
 		Get(MakeURL(int(sea_dinner.URLType_URL_CURRENT), nil))
 
 	if err != nil {
-		fmt.Println(err)
+		Log.Error(Ctx, err.Error())
+		// fmt.Println(err)
 	}
 
 	return status.GetMenu().GetActive()

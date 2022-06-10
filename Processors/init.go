@@ -1,11 +1,12 @@
 package Processors
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	_ "github.com/go-sql-driver/mysql"
@@ -20,12 +21,14 @@ var (
 	DB          *gorm.DB
 	RedisClient *redis.Client
 	App         *newrelic.Application
+	Ctx         = context.TODO()
 )
 
 func LoadEnv() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Printf("unable to load .env file")
+		Log.Warn(Ctx, "unable to load .env file")
+		// log.Printf("unable to load .env file")
 	}
 }
 
@@ -35,6 +38,7 @@ func InitClient() resty.Client {
 }
 
 func Init() {
+	Log.InitializeLogger()
 	LoadEnv()
 	Common.LoadConfig()
 	//For testing only, update in config.toml
@@ -65,39 +69,45 @@ func InitRelic() {
 		newrelic.ConfigDistributedTracerEnabled(true),
 	)
 	if err != nil {
-		log.Printf("Error initializing newRelic | %v", err.Error())
+		Log.Error(Ctx, "Error initializing newRelic | %v", err.Error())
+		// log.Printf("Error initializing newRelic | %v", err.Error())
 	}
-	log.Printf("Successfuly initialized newRelic | %v", appName)
+	Log.Info(Ctx, "Successfuly initialized newRelic | %v", appName)
+	// log.Printf("Successfuly initialized newRelic | %v", appName)
 	App = app
 }
 
 func ConnectMySQL() {
 	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_URL"), os.Getenv("DB_NAME"))
 
-	log.Printf("Connecting to %v", URL)
+	Log.Info(Ctx, "Connecting to %v", URL)
+	// log.Printf("Connecting to %v", URL)
 	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{})
 
 	if err != nil {
-		log.Printf("Error while establishing DB Connection: %v", err)
-		panic("Failed to connect to database!")
+		Log.Error(Ctx, "Error while establishing Live DB Connection: %v", err)
+		// log.Printf("Error while establishing DB Connection: %v", err)
+		panic("Failed to connect to live database!")
 	}
-
-	log.Println("NewMySQL: Database connection established")
+	Log.Info(Ctx, "Live Database connection established")
+	// log.Println("NewMySQL: Database connection established")
 	DB = db
 }
 
 func ConnectTestMySQL() {
 	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_URL"), os.Getenv("TEST_DB_NAME"))
 
-	log.Printf("Connecting to %v", URL)
+	Log.Info(Ctx, "Connecting to %v", URL)
+	// log.Printf("Connecting to %v", URL)
 	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{})
 
 	if err != nil {
-		log.Printf("Error while establishing Test DB Connection: %v", err)
+		Log.Error(Ctx, "Error while establishing Test DB Connection: %v", err)
+		// log.Printf("Error while establishing Test DB Connection: %v", err)
 		panic("Failed to connect to test database!")
 	}
-
-	log.Println("NewMySQL: Test Database connection established")
+	Log.Info(Ctx, "Test Database connection established")
+	// log.Println("NewMySQL: Test Database connection established")
 	DB = db
 }
 
@@ -112,9 +122,11 @@ func ConnectRedis() {
 	})
 
 	if err := rdb.Ping().Err(); err != nil {
-		log.Printf("Error while establishing Redis Client: %v", err)
+		Log.Error(Ctx, "Error while establishing Live Redis Client: %v", err)
+		// log.Printf("Error while establishing Redis Client: %v", err)
 	}
-	log.Println("ConnectRedis: Redis connection established")
+	Log.Info(Ctx, "Live Redis connection established")
+	// log.Println("ConnectRedis: Redis connection established")
 	RedisClient = rdb
 }
 
@@ -129,8 +141,10 @@ func ConnectTestRedis() {
 	})
 
 	if err := rdb.Ping().Err(); err != nil {
-		log.Printf("Error while establishing Test Redis Client: %v", err)
+		Log.Error(Ctx, "Error while establishing Test Redis Client: %v", err)
+		// log.Printf("Error while establishing Test Redis Client: %v", err)
 	}
-	log.Println("ConnectTestRedis: Redis connection established")
+	Log.Info(Ctx, "Test Redis connection established")
+	// log.Println("ConnectTestRedis: Redis connection established")
 	RedisClient = rdb
 }

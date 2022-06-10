@@ -1,11 +1,12 @@
 package main
 
 import (
-	"log"
+	"context"
 	"os"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Bot"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
@@ -44,10 +45,10 @@ func main() {
 					elapsed = time.Now().UnixMilli() - start
 					break
 				}
-				log.Println("Poll has not started, retrying.")
+				Log.Warn(context.TODO(), "Poll has not started, retrying.")
 			}
 			Bot.SendNotifications()
-			log.Printf("Finished run | %v at %v in %vms",
+			Log.Info(context.TODO(), "Finished run | %v at %v in %vms",
 				Processors.ConvertTimeStamp(time.Now().Unix()),
 				Processors.ConvertTimeStampTime(time.Now().Unix()), elapsed)
 		}

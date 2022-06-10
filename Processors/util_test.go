@@ -1,14 +1,20 @@
 package Processors
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"google.golang.org/protobuf/proto"
 )
 
+func TestMain(m *testing.M) {
+	Log.InitializeLogger()
+	m.Run()
+}
 func TestMakeToken(t *testing.T) {
 	LoadEnv()
 	key := "ogNiXZrVyXZglYPZHmhoF7J9JvQzxaIINBRgntOA"
@@ -41,7 +47,7 @@ func TestMakeToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MakeToken(tt.args.key); (got == tt.args.key) != tt.want {
+			if got := MakeToken(context.TODO(), tt.args.key); (got == tt.args.key) != tt.want {
 				t.Errorf("MakeToken() = %v, want %v", (got == tt.args.key), tt.want)
 			}
 		})

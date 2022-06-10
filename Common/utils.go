@@ -2,6 +2,7 @@ package Common
 
 import (
 	"bytes"
+	"context"
 	"image"
 	"io/ioutil"
 	"log"
@@ -10,12 +11,18 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/liyue201/goqr"
+)
+
+var (
+	Ctx = context.TODO()
 )
 
 func GetTGToken() string {
 	if os.Getenv("TEST_DEPLOY") == "TRUE" || Config.Adhoc {
-		log.Println("Running Test Telegram Bot Instance")
+		Log.Info(Ctx, "Running Test Telegram Bot Instance")
+		// log.Println("Running Test Telegram Bot Instance")
 		return os.Getenv("TELEGRAM_TEST_APITOKEN")
 	}
 	return os.Getenv("TELEGRAM_APITOKEN")
@@ -43,20 +50,24 @@ func DecodeQR() (string, error) {
 }
 
 func recognizeFile(path string) ([]*goqr.QRData, error) {
-	log.Printf("recognize file: %v\n", path)
+	Log.Info(Ctx, "recognize file: %v", path)
+	// log.Printf("recognize file: %v\n", path)
 	imgdata, err := ioutil.ReadFile(path)
 	if err != nil {
+		Log.Error(Ctx, "%v\n", err)
 		log.Printf("%v\n", err)
 		return nil, err
 	}
 	img, _, err := image.Decode(bytes.NewReader(imgdata))
 	if err != nil {
-		log.Printf("image.Decode error: %v\n", err)
+		Log.Error(Ctx, "image.Decode error: %v", err)
+		// log.Printf("image.Decode error: %v\n", err)
 		return nil, err
 	}
 	qrCodes, err := goqr.Recognize(img)
 	if err != nil {
-		log.Printf("Recognize failed: %v\n", err)
+		Log.Error(Ctx, "Recognize failed: %v", err)
+		// log.Printf("Recognize failed: %v\n", err)
 		return nil, err
 	}
 	return qrCodes, nil

@@ -1,12 +1,14 @@
 package Bot
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	"github.com/aaronangxz/SeaDinner/TestHelper"
 	"github.com/aaronangxz/SeaDinner/TestHelper/user_choice"
@@ -15,6 +17,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+func TestMain(m *testing.M) {
+	Log.InitializeLogger()
+	m.Run()
+}
 func TestGetKey(t *testing.T) {
 	u := user_key.New().Build()
 	randId := TestHelper.RandomInt(9999999)
@@ -44,7 +50,7 @@ func TestGetKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetKey(tt.args.id); got != tt.want {
+			if got := GetKey(context.TODO(), tt.args.id); got != tt.want {
 				t.Errorf("GetKey() = %v, want %v", got, tt.want)
 			}
 		})
@@ -81,7 +87,7 @@ func TestCheckKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, got1 := CheckKey(tt.args.id)
+			_, got1 := CheckKey(context.TODO(), tt.args.id)
 			if got1 != tt.want1 {
 				t.Errorf("CheckKey() got1 = %v, want %v", got1, tt.want1)
 			}
@@ -125,7 +131,7 @@ func TestUpdateKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, got := UpdateKey(tt.args.id, tt.args.s)
+			_, got := UpdateKey(context.TODO(), tt.args.id, tt.args.s)
 			if got != tt.want {
 				t.Errorf("UpdateKey() got = %v, want %v", got, tt.want)
 			}
@@ -206,7 +212,7 @@ func TestCheckChope(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := CheckChope(tt.args.id)
+			got, got1 := CheckChope(context.TODO(), tt.args.id)
 			if got != tt.want {
 				t.Errorf("CheckChope() got1 = %v, want %v", got, tt.want)
 			}
@@ -360,7 +366,7 @@ func TestGetChope(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := GetChope(tt.args.id, tt.args.s)
+			got, got1 := GetChope(context.TODO(), tt.args.id, tt.args.s)
 			if got != tt.want {
 				t.Errorf("GetChope() got = %v, want %v", got, tt.want)
 			}
@@ -404,7 +410,7 @@ func TestCheckMute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _ := CheckMute(tt.args.id)
+			got, _ := CheckMute(context.TODO(), tt.args.id)
 			if got != tt.want {
 				t.Errorf("CheckMute() got = %v, want %v", got, tt.want)
 			}
@@ -465,7 +471,7 @@ func TestUpdateMute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := UpdateMute(tt.args.id, tt.args.callback)
+			got, got1 := UpdateMute(context.TODO(), tt.args.id, tt.args.callback)
 			if got != tt.want {
 				t.Errorf("UpdateMute() got = %v, want %v", got, tt.want)
 			}
@@ -539,7 +545,7 @@ func TestBatchGetUsersChoiceWithKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BatchGetUsersChoiceWithKey()
+			got, err := BatchGetUsersChoiceWithKey(context.TODO())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BatchGetUsersChoiceWithKey() error = %v, wantErr %v", err, tt.wantErr)
 				return

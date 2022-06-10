@@ -1,13 +1,13 @@
 package Processors
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	random "math/rand"
 	"os"
 	"reflect"
@@ -16,19 +16,22 @@ import (
 	"unicode"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
 
 //MakeToken Decrypts the encrypted key with AES and appends the token prefix
-func MakeToken(key string) string {
+func MakeToken(ctx context.Context, key string) string {
 	if key == "" {
-		log.Println("Key is invalid:", key)
+		Log.Error(ctx, "Key is invalid: %v", key)
+		//log.Println("Key is invalid:", key)
 		return ""
 	}
 
 	decrypt := DecryptKey(key, os.Getenv("AES_KEY"))
 	if len(decrypt) != 40 {
-		log.Printf("Key length invalid | length: %v", len(decrypt))
+		Log.Error(ctx, "Key length invalid | length: %v", len(decrypt))
+		// log.Printf("Key length invalid | length: %v", len(decrypt))
 		return ""
 	}
 	return fmt.Sprint(Common.Config.Prefix.TokenPrefix, decrypt)
@@ -65,12 +68,18 @@ func OutputResults(resultMap map[int64]int64, service string) {
 		}
 	}
 
-	fmt.Println(service)
-	fmt.Println("*************************")
-	fmt.Println("Total Order: ", len(resultMap))
-	fmt.Println("Total Success: ", passed)
-	fmt.Println("Total Failures: ", len(resultMap)-passed)
-	fmt.Println("*************************")
+	Log.Info(Ctx, fmt.Sprintf("%v\n*************************\nTotal Order: %v\nTotal Success: %v\nTotal Failures: %v\n*************************",
+		service,
+		len(resultMap),
+		passed,
+		len(resultMap)-passed))
+
+	// fmt.Println(service)
+	// fmt.Println("*************************")
+	// fmt.Println("Total Order: ", len(resultMap))
+	// fmt.Println("Total Success: ", passed)
+	// fmt.Println("Total Failures: ", len(resultMap)-passed)
+	// fmt.Println("*************************")
 }
 
 //IsNotNumber Verifiy whether a string contains non-numeric characters
@@ -186,7 +195,8 @@ func RandomFood(m map[string]string) string {
 	}
 
 	if count >= len(m) {
-		log.Println("RandomFood | Count exceeds Index")
+		Log.Error(Ctx, "RandomFood | Count exceeds Index")
+		// log.Println("RandomFood | Count exceeds Index")
 		return ""
 	}
 
@@ -194,11 +204,12 @@ func RandomFood(m map[string]string) string {
 	gen := int64(r.Intn(len(m) - count))
 
 	if gen >= int64(len(s)) {
-		log.Println("RandomFood | Index exceeds len")
+		Log.Error(Ctx, "RandomFood | Index exceeds len")
+		// log.Println("RandomFood | Index exceeds len")
 		return ""
 	}
-
-	log.Println("RandomFood | result:", s[gen])
+	Log.Info(Ctx, "RandomFood | result: %v", s[gen])
+	// log.Println("RandomFood | result:", s[gen])
 	return s[gen]
 }
 
@@ -207,7 +218,8 @@ func CompareSliceStruct(a interface{}, b interface{}) bool {
 	same := true
 
 	if reflect.TypeOf(a).Kind() != reflect.TypeOf(b).Kind() {
-		log.Println("CompareSliceStruct | Slices must be the same type.")
+		Log.Error(Ctx, "CompareSliceStruct | Slices must be the same type.")
+		// log.Println("CompareSliceStruct | Slices must be the same type.")
 		return false
 	}
 
@@ -222,12 +234,14 @@ func CompareSliceStruct(a interface{}, b interface{}) bool {
 
 		for i, j := 0, 0; i < first.Len() && j < second.Len(); i, j = i+1, j+1 {
 			if !reflect.DeepEqual(first.Index(i).Interface(), second.Index(j).Interface()) {
-				log.Printf("CompareSliceStruct | diff | \nfirst: %v | \nsecond: %v", first.Index(i).Interface(), second.Index(j).Interface())
+				Log.Warn(Ctx, "CompareSliceStruct | diff | \nfirst: %v | \nsecond: %v", first.Index(i).Interface(), second.Index(j).Interface())
+				// log.Printf("CompareSliceStruct | diff | \nfirst: %v | \nsecond: %v", first.Index(i).Interface(), second.Index(j).Interface())
 				same = false
 			}
 		}
 	default:
-		log.Println("CompareSliceStruct | Only slice is supported.")
+		Log.Error(Ctx, "CompareSliceStruct | Only slice is supported.")
+		// log.Println("CompareSliceStruct | Only slice is supported.")
 		return false
 	}
 	return same
