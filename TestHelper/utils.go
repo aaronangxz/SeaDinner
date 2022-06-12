@@ -1,6 +1,7 @@
 package TestHelper
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/rand"
@@ -110,7 +111,7 @@ func GetLiveMenuDetails() []*sea_dinner.Food {
 		return nil
 	}
 	log.Println("GetLiveMenuDetails | Success")
-	return Processors.GetMenuUsingCache(Processors.Client, key).GetFood()
+	return Processors.GetMenuUsingCache(context.TODO(), Processors.Client, key).GetFood()
 }
 
 func IsInSlice(a interface{}, slice interface{}) bool {

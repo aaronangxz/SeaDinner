@@ -1,15 +1,17 @@
 package Common
 
 import (
-	"log"
+	"context"
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/aaronangxz/SeaDinner/Log"
 )
 
 var (
 	Config     tomlConfig
 	ConfigPath string
+	ctx        = context.TODO()
 )
 
 type grayScaleConfig struct {
@@ -47,8 +49,10 @@ func LoadConfig() {
 	}
 
 	if _, err := toml.DecodeFile(ConfigPath, &Config); err != nil {
-		log.Fatalln("Reading config failed | ", err, ConfigPath)
+		Log.Error(ctx, "Reading config failed | %v | %v", err, ConfigPath)
+		// log.Fatalln("Reading config failed | ", err, ConfigPath)
 		return
 	}
-	log.Println("Reading config OK", ConfigPath)
+	Log.Info(ctx, "Reading config OK | %v", ConfigPath)
+	// log.Println("Reading config OK", ConfigPath)
 }

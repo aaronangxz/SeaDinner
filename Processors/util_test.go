@@ -1,14 +1,20 @@
 package Processors
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"google.golang.org/protobuf/proto"
 )
 
+func TestMain(m *testing.M) {
+	Log.InitializeLogger()
+	m.Run()
+}
 func TestMakeToken(t *testing.T) {
 	LoadEnv()
 	key := "ogNiXZrVyXZglYPZHmhoF7J9JvQzxaIINBRgntOA"
@@ -41,7 +47,7 @@ func TestMakeToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MakeToken(tt.args.key); (got == tt.args.key) != tt.want {
+			if got := MakeToken(context.TODO(), tt.args.key); (got == tt.args.key) != tt.want {
 				t.Errorf("MakeToken() = %v, want %v", (got == tt.args.key), tt.want)
 			}
 		})
@@ -114,7 +120,7 @@ func TestOutputResults(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			OutputResults(tt.args.resultMap, s)
+			OutputResults(context.TODO(), tt.args.resultMap, s)
 		})
 	}
 }
@@ -290,7 +296,7 @@ func TestRandomFood(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := RandomFood(tt.args.m); got != "" != tt.want {
+			if got := RandomFood(context.TODO(), tt.args.m); got != "" != tt.want {
 				t.Errorf("RandomFood() = %v, want %v", got, tt.want)
 			}
 		})
@@ -376,7 +382,7 @@ func TestCompareSliceStruct(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := CompareSliceStruct(tt.args.a, tt.args.b); got != tt.want {
+			if got := CompareSliceStruct(context.TODO(), tt.args.a, tt.args.b); got != tt.want {
 				t.Errorf("CompareSliceStruct() = %v, want %v", got, tt.want)
 			}
 		})
