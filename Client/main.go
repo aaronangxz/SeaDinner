@@ -22,10 +22,10 @@ var (
 )
 
 func main() {
+	Log.InitializeLogger()
 	Processors.LoadEnv()
 	Processors.Init()
 	Processors.InitClient()
-	Log.InitializeLogger()
 
 	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken(context.TODO()))
 	if err != nil {
