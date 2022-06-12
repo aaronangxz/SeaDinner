@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -104,6 +103,11 @@ func OutputMenuWithButton(ctx context.Context, key string, id int64) ([]string, 
 	txn := App.StartTransaction("output_menu_with_button")
 	defer txn.End()
 
+	if !IsWeekDay() {
+		texts = append(texts, "We are done for this week! You can order again next week 😀")
+		return texts, out
+	}
+
 	m := GetMenuUsingCache(ctx, Client, key)
 
 	if m.Status == nil {
@@ -139,45 +143,48 @@ func OutputMenuWithButton(ctx context.Context, key string, id int64) ([]string, 
 		skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
 		rows = append(rows, skipBotton)
 		out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
-	} else {
-		texts = append(texts, "We are done for this week! You can order again next week 😀")
 	}
 	Log.Info(ctx, "OutputMenuWithButton | Success")
 	return texts, out
 }
 
-func MenuRefresher() {
+func MenuRefresher(ctx context.Context) {
+	if !IsActiveDay() {
+		return
+	}
 	ticker := time.NewTicker(time.Duration(Common.Config.Runtime.MenuRefreshIntervalSeconds) * time.Second)
 
 	for range ticker.C {
 		func() {
 			key := os.Getenv("TOKEN")
-			log.Println("MenuRefresher | Comparing Live and Cached menu.")
+			Log.Info(ctx, "MenuRefresher | Comparing Live and Cached menu.")
+			// log.Println("MenuRefresher | Comparing Live and Cached menu.")
 
-			liveMenu := GetMenu(Ctx, Client, key)
-			cacheMenu := GetMenuUsingCache(Ctx, Client, key)
+			liveMenu := GetMenu(ctx, Client, key)
+			cacheMenu := GetMenuUsingCache(ctx, Client, key)
 
-			if !CompareSliceStruct(liveMenu.GetFood(), cacheMenu.GetFood()) {
-				Log.Warn(Ctx, "MenuRefresher | Live and Cached menu are inconsistent.")
+			if !CompareSliceStruct(ctx, liveMenu.GetFood(), cacheMenu.GetFood()) {
+				Log.Warn(ctx, "MenuRefresher | Live and Cached menu are inconsistent.")
 				// log.Println("MenuRefresher | Live and Cached menu are inconsistent.")
 				cacheKey := fmt.Sprint(Common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 				expiry := 7200 * time.Second
 
 				data, err := json.Marshal(liveMenu)
 				if err != nil {
-					Log.Error(Ctx, "MenuRefresher | Failed to marshal JSON results: %v\n", err.Error())
+					Log.Error(ctx, "MenuRefresher | Failed to marshal JSON results: %v\n", err.Error())
 					// log.Printf("MenuRefresher | Failed to marshal JSON results: %v\n", err.Error())
 				}
 
 				//Use live menu as the source of truth
 				if err := RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
-					// Log.Error(Ctx,"MenuRefresher | Error while writing to redis: %v", err.Error())
-					log.Printf("MenuRefresher | Error while writing to redis: %v", err.Error())
+					Log.Error(ctx, "MenuRefresher | Error while writing to redis: %v", err.Error())
+					// log.Printf("MenuRefresher | Error while writing to redis: %v", err.Error())
 				} else {
-					Log.Info(Ctx, "MenuRefresher | Successful | Written %v to redis", cacheKey)
+					Log.Info(ctx, "MenuRefresher | Successful | Written %v to redis", cacheKey)
 					// log.Printf("MenuRefresher | Successful | Written %v to redis", cacheKey)
 				}
 			}
+			Log.Info(ctx, "MenuRefresher | Live and Cached menu are consistent.")
 		}()
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -79,6 +78,7 @@ func GetKey(ctx context.Context, id int64) string {
 		Log.Info(ctx, "GetKey | Successful | Written %v to redis", cacheKey)
 		// log.Printf("GetKey | Successful | Written %v to redis", cacheKey)
 	}
+	Log.Info(ctx, "GetKey | Successful.")
 	return existingRecord.GetUserKey()
 }
 
@@ -119,6 +119,7 @@ func CheckKey(ctx context.Context, id int64) (string, bool) {
 			Log.Info(ctx, "CheckKey | Successful | Cached %v", cacheKey)
 			//log.Printf("CheckKey | Successful | Cached %v", cacheKey)
 			decrypt := Processors.DecryptKey(redisResp.GetUserKey(), os.Getenv("AES_KEY"))
+			Log.Info(ctx, "CheckKey | Successful")
 			return fmt.Sprintf("I have your key %v***** that you told me on %v! But I won't leak it 😀", decrypt[:5], Processors.ConvertTimeStamp(redisResp.GetMtime())), true
 		}
 	}
@@ -142,6 +143,7 @@ func CheckKey(ctx context.Context, id int64) (string, bool) {
 			//log.Printf("CheckKey | Successful | Written %v to redis", cacheKey)
 		}
 		decrypt := Processors.DecryptKey(existingRecord.GetUserKey(), os.Getenv("AES_KEY"))
+		Log.Info(ctx, "CheckKey | Successful")
 		return fmt.Sprintf("I have your key %v***** that you told me on %v! But I won't leak it 😀", decrypt[:5], Processors.ConvertTimeStamp(existingRecord.GetMtime())), true
 	}
 }
@@ -231,6 +233,10 @@ func CheckChope(ctx context.Context, id int64) (string, bool) {
 		return "", false
 	}
 
+	if !Processors.IsWeekDay() {
+		return "We are done for this week! You can tell me your order again next week 😀", false
+	}
+
 	if err := Processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		return "I have yet to receive your order 🥲 You can choose from /menu", false
 	} else {
@@ -242,9 +248,6 @@ func CheckChope(ctx context.Context, id int64) (string, bool) {
 			if time.Now().In(tz).Unix() > Processors.GetLunchTime().Unix() {
 				if Processors.IsNotEOW(time.Now().In(tz)) {
 					dayText = "tomorrow"
-				} else {
-					//On fridays ~ sundays
-					return "We are done for this week! You can tell me your order again next week 😀", false
 				}
 			}
 			return fmt.Sprintf("Not placing dinner order for you %v 🙅 Changed your mind? You can choose from /menu", dayText), false
@@ -415,6 +418,11 @@ func ListWeeklyResultByUserId(ctx context.Context, id int64) string {
 	txn := Processors.App.StartTransaction("list_weekly_result_by_user_id")
 	defer txn.End()
 
+	if !Processors.IsWeekDay() {
+		Log.Warn(ctx, "ListWeeklyResultByUserId | Not a weekday.")
+		return "We are done for this week! Check again next week 😀"
+	}
+
 	start, end := Processors.WeekStartEndDate(time.Now().Unix())
 
 	if id <= 0 {
@@ -432,6 +440,7 @@ func ListWeeklyResultByUserId(ctx context.Context, id int64) string {
 	if res == nil {
 		return "You have not ordered anything this week. 😕"
 	}
+	Log.Info(ctx, "ListWeeklyResultByUserId | Success.")
 	return GenerateWeeklyResultTable(ctx, res)
 }
 
@@ -483,30 +492,33 @@ func BatchGetLatestResult(ctx context.Context) []*sea_dinner.OrderRecord {
 		// log.Println("Failed to retrieve record.")
 		return nil
 	}
-	Log.Info(ctx, "BatchGetLatestResult:", len(res))
+	Log.Info(ctx, "BatchGetLatestResult: %v", len(res))
 	// log.Println("BatchGetLatestResult:", len(res))
 	return res
 }
 
 //SendNotifications Sends out notifications based on order status from BatchGetLatestResult
 //Used to send failed orders only
-func SendNotifications() {
+func SendNotifications(ctx context.Context) {
 	var (
 		msg string
 	)
 	txn := Processors.App.StartTransaction("send_notifications")
 	defer txn.End()
 
-	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken(ctx))
 	if err != nil {
-		log.Panic(err)
+		Log.Error(ctx, err.Error())
+		// log.Panic(err)
 	}
 	bot.Debug = true
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	Log.Info(ctx, "Authorized on account %s", bot.Self.UserName)
+	// log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	res := BatchGetLatestResult(Processors.Ctx)
 	menu := MakeMenuNameMap(Processors.Ctx)
-	log.Println("SendNotifications | size:", len(res))
+	Log.Info(ctx, "SendNotifications | size: %v", len(res))
+	// log.Println("SendNotifications | size:", len(res))
 
 	for _, r := range res {
 		if r.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_OK) {
@@ -516,7 +528,8 @@ func SendNotifications() {
 		}
 
 		if _, err := bot.Send(tgbotapi.NewMessage(r.GetUserId(), msg)); err != nil {
-			log.Println(err)
+			Log.Error(ctx, err.Error())
+			// log.Println(err)
 		}
 	}
 }
@@ -531,7 +544,8 @@ func BatchGetUsersChoice() []*sea_dinner.UserChoice {
 	defer txn.End()
 
 	if err := Processors.DB.Raw("SELECT uc.* FROM user_choice_tab uc, user_key_tab uk WHERE uc.user_id = uk.user_id AND uk.is_mute <> ?", sea_dinner.MuteStatus_MUTE_STATUS_YES).Scan(&res).Error; err != nil {
-		log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
+		Log.Error(Processors.Ctx, "BatchGetUsersChoice | Failed to retrieve record: %v", err.Error())
+		// log.Println("BatchGetUsersChoice | Failed to retrieve record:", err.Error())
 		return nil
 	}
 
@@ -542,34 +556,39 @@ func BatchGetUsersChoice() []*sea_dinner.UserChoice {
 		if r.GetUserChoice() != "-1" {
 			key := fmt.Sprint(Common.USER_CHOICE_PREFIX, r.GetUserId())
 			if err := Processors.RedisClient.Set(key, r.GetUserChoice(), expiry).Err(); err != nil {
-				log.Printf("BatchGetUsersChoice | Error while writing to redis: %v", err.Error())
+				Log.Error(Processors.Ctx, "BatchGetUsersChoice | Error while writing to redis: %v", err.Error())
+				// log.Printf("BatchGetUsersChoice | Error while writing to redis: %v", err.Error())
 			} else {
-				log.Printf("BatchGetUsersChoice | Successful | Written %v to redis", key)
+				Log.Info(Processors.Ctx, "BatchGetUsersChoice | Successful | Written %v to redis", key)
+				// log.Printf("BatchGetUsersChoice | Successful | Written %v to redis", key)
 			}
 		}
 	}
-	log.Println("BatchGetUsersChoice | size:", len(res))
-	log.Println(res)
+	Log.Info(Processors.Ctx, "BatchGetUsersChoice | size: %v", len(res))
+	// log.Println("BatchGetUsersChoice | size:", len(res))
 	return res
 }
 
 //SendReminder Sends out daily reminder at 10.30 SGT on weekdays / working days
-func SendReminder() {
+func SendReminder(ctx context.Context) {
 	txn := Processors.App.StartTransaction("send_reminder")
 	defer txn.End()
 
-	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken(ctx))
 	if err != nil {
-		log.Panic(err)
+		Log.Error(ctx, err.Error())
+		// log.Panic(err)
 	}
 	bot.Debug = true
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	Log.Info(ctx, "Authorized on account %s", bot.Self.UserName)
+	// log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	res := BatchGetUsersChoice()
-	log.Println("SendReminder | size:", len(res))
+	Log.Info(ctx, "SendReminder | size: %v", len(res))
+	// log.Println("SendReminder | size:", len(res))
 
-	menu := MakeMenuNameMap(Processors.Ctx)
-	code := MakeMenuCodeMap(Processors.Ctx)
+	menu := MakeMenuNameMap(ctx)
+	code := MakeMenuCodeMap(ctx)
 
 	for _, r := range res {
 		msg := tgbotapi.NewMessage(r.GetUserId(), "")
@@ -594,7 +613,8 @@ func SendReminder() {
 		} else {
 			//Only skips on non-mondays
 			if r.GetUserChoice() == "-1" {
-				log.Printf("SendReminder | skip -1 records | %v", r.GetUserId())
+				Log.Info(ctx, "SendReminder | skip -1 records | %v", r.GetUserId())
+				// log.Printf("SendReminder | skip -1 records | %v", r.GetUserId())
 				continue
 			}
 
@@ -634,9 +654,11 @@ func SendReminder() {
 		}
 		msg.Text = msgTxt
 		if _, err := bot.Send(msg); err != nil {
-			log.Println(err)
+			Log.Error(ctx, err.Error())
+			// log.Println(err)
 		}
 	}
+	Log.Info(ctx, "SendReminder | Success")
 }
 
 //MakeMenuNameMap Returns food_id:food_name mapping of current menu
@@ -780,7 +802,7 @@ func UpdateMute(ctx context.Context, id int64, callback string) (string, bool) {
 		//log.Println("Failed to update DB")
 		return err.Error(), false
 	}
-
+	Log.Info(ctx, "UpdateMute | Success")
 	return returnMsg, returnBool
 }
 
@@ -793,7 +815,7 @@ func CancelOrder(ctx context.Context, id int64) (string, bool) {
 	defer txn.End()
 
 	//Get currently ordered food id
-	currOrder, ok := Processors.GetOrderByUserId(id)
+	currOrder, ok := Processors.GetOrderByUserId(ctx, id)
 	if !ok {
 		return currOrder, false
 	}
@@ -825,7 +847,7 @@ func CancelOrder(ctx context.Context, id int64) (string, bool) {
 		//log.Println("CancelOrder | failed to cancel order")
 		return "It seems like you ordered something else 😥 Try to cancel from SeaTalk instead!", false
 	}
-
+	Log.Info(ctx, "CancelOrder | Success | user_id:%v", id)
 	return "I have cancelled your order!😀", true
 }
 
@@ -861,7 +883,7 @@ func BatchGetUsersChoiceWithKey(ctx context.Context) ([]*sea_dinner.UserChoiceWi
 		// fmt.Println(err.Error())
 		return nil, err
 	}
-	Log.Info(ctx, "BatchGetUsersChoiceWithKey | Success | size:", len(record))
+	Log.Info(ctx, "BatchGetUsersChoiceWithKey | Success | size: %v", len(record))
 	// log.Println("BatchGetUsersChoiceWithKey | Success | size:", len(record))
 	return record, nil
 }
@@ -876,27 +898,27 @@ func BatchGetSuccessfulOrder(ctx context.Context) []int64 {
 
 	records, err := BatchGetUsersChoiceWithKey(ctx)
 	if err != nil {
-		Log.Error(ctx, "BatchGetSuccessfulOrder | Failed to fetch user_records:", err.Error())
+		Log.Error(ctx, "BatchGetSuccessfulOrder | Failed to fetch user_records: %v", err.Error())
 		// log.Println("BatchGetSuccessfulOrder | Failed to fetch user_records:", err.Error())
 		return nil
 	}
 
 	for _, r := range records {
-		ok := Processors.GetSuccessfulOrder(r.GetUserKey())
+		ok := Processors.GetSuccessfulOrder(ctx, r.GetUserKey())
 		if ok {
 			success = append(success, r.GetUserId())
 		} else {
-			Log.Error(ctx, "BatchGetSuccessfulOrder | Failed | user_id:", r.GetUserId())
+			Log.Error(ctx, "BatchGetSuccessfulOrder | Failed | user_id: %v", r.GetUserId())
 			// log.Println("BatchGetSuccessfulOrder | Failed | user_id:", r.GetUserId())
 		}
 	}
-	Log.Info(ctx, "BatchGetSuccessfulOrder | Done | size:", len(success))
+	Log.Info(ctx, "BatchGetSuccessfulOrder | Done | size: %v", len(success))
 	// log.Println("BatchGetSuccessfulOrder | Done | size:", len(success))
 	return success
 }
 
 //SendCheckInLink Verify if the user indeed has a valid order and sends the updated check-in link of the day
-func SendCheckInLink() {
+func SendCheckInLink(ctx context.Context) {
 	var (
 		txt        = "Check in now to collect your food!\nLink will expire at 8.30pm."
 		buttonText = "Check in"
@@ -908,17 +930,20 @@ func SendCheckInLink() {
 	//Decode dynamic URL from static QR
 	url, err := Common.DecodeQR()
 	if err != nil {
-		log.Printf("SendCheckInLink | error:%v", err.Error())
+		Log.Error(ctx, "SendCheckInLink | error:%v", err.Error())
+		// log.Printf("SendCheckInLink | error:%v", err.Error())
 		return
 	}
 
-	orders := BatchGetSuccessfulOrder(Processors.Ctx)
-	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
+	orders := BatchGetSuccessfulOrder(ctx)
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken(ctx))
 	if err != nil {
-		log.Panic(err)
+		Log.Error(ctx, err.Error())
+		// log.Panic(err)
 	}
 	bot.Debug = true
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	Log.Info(ctx, "Authorized on account %s", bot.Self.UserName)
+	// log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	for _, user := range orders {
 		var buttons []tgbotapi.InlineKeyboardButton
@@ -930,28 +955,32 @@ func SendCheckInLink() {
 		msg.ReplyMarkup = out[0]
 
 		if msgTrace, err := bot.Send(msg); err != nil {
-			log.Println(err)
+			Log.Error(ctx, err.Error())
+			// log.Println(err)
 		} else {
 			//Save into set as <user_id>:<message_id>
 			toWrite := fmt.Sprint(user, ":", msgTrace.MessageID)
 			if err := Processors.RedisClient.SAdd("checkin_link", toWrite).Err(); err != nil {
-				log.Printf("SendCheckInLink | Error while writing to redis: %v", err.Error())
+				Log.Error(ctx, "SendCheckInLink | Error while writing to redis: %v", err.Error())
+				// log.Printf("SendCheckInLink | Error while writing to redis: %v", err.Error())
 			} else {
-				log.Printf("SendCheckInLink | Successful | Written %v to checkin_link set", toWrite)
+				Log.Info(ctx, "SendCheckInLink | Successful | Written %v to checkin_link set", toWrite)
+				// log.Printf("SendCheckInLink | Successful | Written %v to checkin_link set", toWrite)
 			}
 		}
 	}
 }
 
 //DeleteCheckInLink Deletes the supposingly expired check-in link
-func DeleteCheckInLink() {
+func DeleteCheckInLink(ctx context.Context) {
 	txn := Processors.App.StartTransaction("delete_check_in_link")
 	defer txn.End()
 
 	//Retrieve the whole set
 	s := Processors.RedisClient.SMembers("checkin_link")
 	if s == nil {
-		log.Println("DeleteCheckInLink | Set is empty.")
+		Log.Error(ctx, "DeleteCheckInLink | Set is empty.")
+		// log.Println("DeleteCheckInLink | Set is empty.")
 		return
 	}
 
@@ -961,21 +990,26 @@ func DeleteCheckInLink() {
 		userId, _ := strconv.Atoi(split[0])
 		msgId, _ := strconv.Atoi(split[1])
 
-		bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
+		bot, err := tgbotapi.NewBotAPI(Common.GetTGToken(ctx))
 		if err != nil {
-			log.Panic(err)
+			Log.Error(ctx, err.Error())
+			// log.Panic(err)
 		}
 		bot.Debug = true
-		log.Printf("Authorized on account %s", bot.Self.UserName)
+		Log.Info(ctx, "Authorized on account %s", bot.Self.UserName)
+		// log.Printf("Authorized on account %s", bot.Self.UserName)
 		c := tgbotapi.NewDeleteMessage(int64(userId), msgId)
 		bot.Send(c)
 	}
-	log.Println("DeleteCheckInLink | Successfuly deleted check in links.")
+	Log.Info(ctx, "DeleteCheckInLink | Successfuly deleted check in links.")
+	// log.Println("DeleteCheckInLink | Successfuly deleted check in links.")
 
 	//Clear set
 	if err := Processors.RedisClient.Del("checkin_link").Err(); err != nil {
-		log.Printf("DeleteCheckInLink | Error while erasing from redis: %v", err.Error())
+		Log.Error(ctx, "DeleteCheckInLink | Error while erasing from redis: %v", err.Error())
+		// log.Printf("DeleteCheckInLink | Error while erasing from redis: %v", err.Error())
 	} else {
-		log.Println("DeleteCheckInLink | Successful | Deleted checkin_link set")
+		Log.Info(ctx, "DeleteCheckInLink | Successful | Deleted checkin_link set")
+		// log.Println("DeleteCheckInLink | Successful | Deleted checkin_link set")
 	}
 }

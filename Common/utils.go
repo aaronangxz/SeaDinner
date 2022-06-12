@@ -19,9 +19,9 @@ var (
 	Ctx = context.TODO()
 )
 
-func GetTGToken() string {
+func GetTGToken(ctx context.Context) string {
 	if os.Getenv("TEST_DEPLOY") == "TRUE" || Config.Adhoc {
-		Log.Info(Ctx, "Running Test Telegram Bot Instance")
+		Log.Info(ctx, "Running Test Telegram Bot Instance")
 		// log.Println("Running Test Telegram Bot Instance")
 		return os.Getenv("TELEGRAM_TEST_APITOKEN")
 	}

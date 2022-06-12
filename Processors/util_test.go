@@ -120,7 +120,7 @@ func TestOutputResults(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			OutputResults(tt.args.resultMap, s)
+			OutputResults(context.TODO(), tt.args.resultMap, s)
 		})
 	}
 }
@@ -296,7 +296,7 @@ func TestRandomFood(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := RandomFood(tt.args.m); got != "" != tt.want {
+			if got := RandomFood(context.TODO(), tt.args.m); got != "" != tt.want {
 				t.Errorf("RandomFood() = %v, want %v", got, tt.want)
 			}
 		})
@@ -382,7 +382,7 @@ func TestCompareSliceStruct(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := CompareSliceStruct(tt.args.a, tt.args.b); got != tt.want {
+			if got := CompareSliceStruct(context.TODO(), tt.args.a, tt.args.b); got != tt.want {
 				t.Errorf("CompareSliceStruct() = %v, want %v", got, tt.want)
 			}
 		})

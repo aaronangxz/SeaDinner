@@ -22,7 +22,7 @@ var Log *zap.Logger
 func InitializeLogger() {
 	pe := zap.NewDevelopmentEncoderConfig()
 	pe.ConsoleSeparator = " | "
-	pe.EncodeTime = zapcore.RFC3339TimeEncoder
+	pe.EncodeTime = zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05")
 	consoleEncoder := zapcore.NewConsoleEncoder(pe)
 	level := zap.InfoLevel
 

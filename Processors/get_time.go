@@ -1,6 +1,7 @@
 package Processors
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -71,7 +72,7 @@ func IsWeekDay() bool {
 
 //IsActiveDay Checks if today has dinner (If today is a holiday)
 func IsActiveDay() bool {
-	return GetDayId(Ctx) != 0
+	return GetDayId(context.TODO()) != 0
 }
 
 //IsNotEOW Checks if today is not friday, saturday, sunday
@@ -98,12 +99,12 @@ func IsPollStart() bool {
 	defer txn.End()
 
 	_, err := Client.R().
-		SetHeader("Authorization", MakeToken(Ctx, key)).
+		SetHeader("Authorization", MakeToken(context.TODO(), key)).
 		SetResult(&status).
 		Get(MakeURL(int(sea_dinner.URLType_URL_CURRENT), nil))
 
 	if err != nil {
-		Log.Error(Ctx, err.Error())
+		Log.Error(context.TODO(), err.Error())
 		// fmt.Println(err)
 	}
 

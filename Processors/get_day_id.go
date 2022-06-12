@@ -42,7 +42,7 @@ func GetDayId(ctx context.Context) (ID int64) {
 	)
 
 	_, err := Client.R().
-		SetHeader("Authorization", MakeToken(Ctx, key)).
+		SetHeader("Authorization", MakeToken(ctx, key)).
 		SetResult(&currentMenu).
 		Get(MakeURL(int(sea_dinner.URLType_URL_CURRENT), nil))
 

@@ -26,21 +26,20 @@ func main() {
 	Processors.Init()
 	Processors.InitClient()
 	Log.InitializeLogger()
-	ctx := Log.NewCtx()
 
-	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken(context.TODO()))
 	if err != nil {
 		log.Panic(err)
 	}
 
 	bot.Debug = true
 	Log.Info(context.TODO(), "Authorized on account %s", bot.Self.UserName)
-	// log.Printf("Authorized on account %s", bot.Self.UserName)
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 3600
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
+		ctx := Log.NewCtx()
 		if update.CallbackQuery != nil {
 			var muteType bool
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
@@ -217,7 +216,7 @@ func main() {
 		case "reminder":
 			//Backdoor for test env
 			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
-				Bot.SendReminder()
+				Bot.SendReminder(ctx)
 			}
 		case "mute":
 			s, ok := Bot.CheckKey(ctx, update.Message.Chat.ID)
@@ -249,12 +248,12 @@ func main() {
 		case "checkin":
 			//Backdoor for test env
 			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
-				Bot.SendCheckInLink()
+				Bot.SendCheckInLink(ctx)
 			}
 		case "delete":
 			//Backdoor for test env
 			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
-				Bot.DeleteCheckInLink()
+				Bot.DeleteCheckInLink(ctx)
 			}
 		default:
 			msg.Text = "I don't understand this command :("

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"os"
 	"time"
 
@@ -21,45 +20,46 @@ var (
 func main() {
 	Processors.Init()
 	Processors.InitClient()
-	go Processors.MenuRefresher()
+	go Processors.MenuRefresher(Log.NewCtx())
 
 	//For adhoc use only
 	//Processors.SendAdHocNotification(0,"")
 
 	for {
+		ctx := Log.NewCtx()
 		if Processors.IsSendReminderTime() {
-			Bot.SendReminder()
+			Bot.SendReminder(ctx)
 		}
 
 		if Processors.IsPrepOrderTime() && !donePrep {
-			r, donePrep = Processors.PrepOrder()
+			r, donePrep = Processors.PrepOrder(ctx)
 			//Test
-			go Processors.BatchOrderDinnerMultiThreadedWithWait(r)
+			go Processors.BatchOrderDinnerMultiThreadedWithWait(ctx, r)
 		}
 
 		if Processors.IsOrderTime() {
 			for {
 				if Processors.IsPollStart() {
 					start = time.Now().UnixMilli()
-					Processors.BatchOrderDinnerMultiThreaded(r)
+					Processors.BatchOrderDinnerMultiThreaded(ctx, r)
 					elapsed = time.Now().UnixMilli() - start
 					break
 				}
-				Log.Warn(context.TODO(), "Poll has not started, retrying.")
+				Log.Warn(ctx, "Poll has not started, retrying.")
 			}
-			Bot.SendNotifications()
-			Log.Info(context.TODO(), "Finished run | %v at %v in %vms",
+			Bot.SendNotifications(ctx)
+			Log.Info(ctx, "Finished run | %v at %v in %vms",
 				Processors.ConvertTimeStamp(time.Now().Unix()),
 				Processors.ConvertTimeStampTime(time.Now().Unix()), elapsed)
 		}
 
 		if os.Getenv("SEND_CHECKIN") == "TRUE" {
 			if Processors.IsSendCheckInTime() {
-				Bot.SendCheckInLink()
+				Bot.SendCheckInLink(ctx)
 			}
 
 			if Processors.IsDeleteCheckInTime() {
-				Bot.DeleteCheckInLink()
+				Bot.DeleteCheckInLink(ctx)
 			}
 		}
 	}
