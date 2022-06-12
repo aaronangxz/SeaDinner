@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/aaronangxz/SeaDinner/Bot"
 	"github.com/aaronangxz/SeaDinner/Common"
+	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/Processors"
 	"github.com/go-redis/redis"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -23,24 +25,26 @@ func main() {
 	Processors.LoadEnv()
 	Processors.Init()
 	Processors.InitClient()
+	Log.InitializeLogger()
 
-	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken())
+	bot, err := tgbotapi.NewBotAPI(Common.GetTGToken(context.TODO()))
 	if err != nil {
 		log.Panic(err)
 	}
 
 	bot.Debug = true
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	Log.Info(context.TODO(), "Authorized on account %s", bot.Self.UserName)
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 3600
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
+		ctx := Log.NewCtx()
 		if update.CallbackQuery != nil {
 			var muteType bool
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
 			msg.ParseMode = "MARKDOWN"
-			msg.Text, muteType = Bot.CallbackQueryHandler(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
+			msg.Text, muteType = Bot.CallbackQueryHandler(ctx, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
 
 			//Handle MUTE related callback separately
 			if update.CallbackQuery.Data == "MUTE" || update.CallbackQuery.Data == "UNMUTE" {
@@ -49,14 +53,17 @@ func main() {
 				val, redisErr := Processors.RedisClient.Get(cacheKey).Result()
 				if redisErr != nil {
 					if redisErr == redis.Nil {
-						log.Printf("Callback Mute | No result of %v in Redis", cacheKey)
+						Log.Warn(ctx, "Callback Mute | No result of %v in Redis", cacheKey)
+						//log.Printf("Callback Mute | No result of %v in Redis", cacheKey)
 					} else {
-						log.Printf("Callback Mute | Error while reading from redis: %v", redisErr.Error())
+						Log.Error(ctx, "Callback Mute | Error while reading from redis: %v", redisErr.Error())
+						//log.Printf("Callback Mute | Error while reading from redis: %v", redisErr.Error())
 					}
 					//Return expired message if not found
 					msg.Text = "Oops this selection had expired. Start over at /mute!"
 					if _, err := bot.Send(msg); err != nil {
-						log.Println(err)
+						Log.Error(ctx, err.Error())
+						//log.Println(err)
 					}
 					continue
 				} else {
@@ -100,7 +107,8 @@ func main() {
 				continue
 			}
 			if _, err := bot.Send(msg); err != nil {
-				log.Println(err)
+				Log.Error(ctx, err.Error())
+				// log.Println(err)
 			}
 			continue
 		}
@@ -109,7 +117,8 @@ func main() {
 		if time.Now().Unix() >= Processors.GetLunchTime().Unix()-60 &&
 			(time.Now().Unix() <= Processors.GetLunchTime().Unix()+60 && !Processors.IsPollStart()) {
 			if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Omw to order, wait for my good news! 🏃")); err != nil {
-				log.Println(err)
+				Log.Error(ctx, err.Error())
+				// log.Println(err)
 			}
 			continue
 		}
@@ -121,26 +130,29 @@ func main() {
 		if !update.Message.IsCommand() {
 			if startListenKey {
 				//Capture key
-				msg, _ := Bot.UpdateKey(update.Message.Chat.ID, update.Message.Text)
+				msg, _ := Bot.UpdateKey(ctx, update.Message.Chat.ID, update.Message.Text)
 				if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, msg)); err != nil {
-					log.Println(err)
+					Log.Error(ctx, err.Error())
+					// log.Println(err)
 				}
 				startListenKey = false
 				continue
 			} else if startListenChope {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 				ok := false
-				msg.Text, ok = Bot.GetChope(update.Message.Chat.ID, update.Message.Text)
+				msg.Text, ok = Bot.GetChope(ctx, update.Message.Chat.ID, update.Message.Text)
 				if !ok {
 					if _, err := bot.Send(msg); err != nil {
-						log.Println(err)
+						Log.Error(ctx, err.Error())
+						// log.Println(err)
 					}
 					continue
 				}
 				//Capture chope
 				msg.ParseMode = "MARKDOWN"
 				if _, err := bot.Send(msg); err != nil {
-					log.Println(err)
+					Log.Error(ctx, err.Error())
+					// log.Println(err)
 				}
 				startListenChope = false
 				continue
@@ -152,25 +164,26 @@ func main() {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 		switch update.Message.Command() {
 		case "start":
-			s, ok := Bot.CheckKey(update.Message.Chat.ID)
+			s, ok := Bot.CheckKey(ctx, update.Message.Chat.ID)
 			if !ok {
 				msg.Text = s
 			} else {
 				msg.Text = "Hello! " + update.Message.Chat.UserName
 			}
 		case "menu":
-			s, ok := Bot.CheckKey(update.Message.Chat.ID)
+			s, ok := Bot.CheckKey(ctx, update.Message.Chat.ID)
 			if !ok {
 				msg.Text = s
 			} else {
-				txt, mp := Processors.OutputMenuWithButton(Bot.GetKey(update.Message.Chat.ID), update.Message.Chat.ID)
+				txt, mp := Processors.OutputMenuWithButton(ctx, Bot.GetKey(ctx, update.Message.Chat.ID), update.Message.Chat.ID)
 				for i, r := range txt {
 					msg.Text = r
 					if len(mp) > 0 {
 						msg.ReplyMarkup = mp[i]
 					}
 					if _, err := bot.Send(msg); err != nil {
-						log.Panic(err)
+						Log.Error(ctx, err.Error())
+						// log.Panic(err)
 					}
 				}
 				continue
@@ -179,52 +192,55 @@ func main() {
 			msg.Text = Bot.MakeHelpResponse()
 			msg.ParseMode = "MARKDOWN"
 		case "key":
-			msg.Text, _ = Bot.CheckKey(update.Message.Chat.ID)
+			msg.Text, _ = Bot.CheckKey(ctx, update.Message.Chat.ID)
 		case "newkey":
 			msg.Text = "What's your key? \nGo to https://dinner.sea.com/accounts/token, copy the Key under Generate Auth Token and paste it here:"
 			startListenKey = true
 		case "status":
-			s, ok := Bot.CheckKey(update.Message.Chat.ID)
+			s, ok := Bot.CheckKey(ctx, update.Message.Chat.ID)
 			if !ok {
 				msg.Text = s
 			} else {
-				msg.Text = Bot.ListWeeklyResultByUserId(update.Message.Chat.ID)
+				msg.Text = Bot.ListWeeklyResultByUserId(ctx, update.Message.Chat.ID)
 				msg.ParseMode = "HTML"
 			}
 		case "chope":
 			msg.Text = "This command is deprecated. Choose from /menu instead!😋"
 		case "choice":
-			s, ok := Bot.CheckKey(update.Message.Chat.ID)
+			s, ok := Bot.CheckKey(ctx, update.Message.Chat.ID)
 			if !ok {
 				msg.Text = s
 			} else {
-				msg.Text, _ = Bot.CheckChope(update.Message.Chat.ID)
+				msg.Text, _ = Bot.CheckChope(ctx, update.Message.Chat.ID)
 			}
 		case "reminder":
 			//Backdoor for test env
 			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
-				Bot.SendReminder()
+				Bot.SendReminder(ctx)
 			}
 		case "mute":
-			s, ok := Bot.CheckKey(update.Message.Chat.ID)
+			s, ok := Bot.CheckKey(ctx, update.Message.Chat.ID)
 			if !ok {
 				msg.Text = s
 			} else {
-				txt, kb := Bot.CheckMute(update.Message.Chat.ID)
+				txt, kb := Bot.CheckMute(ctx, update.Message.Chat.ID)
 				msg.Text = txt
 				if kb != nil {
 					msg.ReplyMarkup = kb[0]
 				}
 				msg.ParseMode = "MARKDOWN"
 				if msgTrace, err := bot.Send(msg); err != nil {
-					log.Panic(err)
+					Log.Error(ctx, err.Error())
+					// log.Panic(err)
 				} else {
 					//save msg id into cache for msg update
 					cacheKey := fmt.Sprint(Common.USER_MUTE_MSG_ID_PREFIX, update.Message.Chat.ID)
 					if err := Processors.RedisClient.Set(cacheKey, msgTrace.MessageID, 1800*time.Second).Err(); err != nil {
-						log.Printf("Mute | Error while writing to redis: %v", err.Error())
+						Log.Error(ctx, "Mute | Error while writing to redis: %v", err.Error())
+						// log.Printf("Mute | Error while writing to redis: %v", err.Error())
 					} else {
-						log.Printf("Mute | Successful | Written %v to redis", cacheKey)
+						Log.Info(ctx, "Mute | Successful | Written %v to redis", cacheKey)
+						// log.Printf("Mute | Successful | Written %v to redis", cacheKey)
 					}
 					continue
 				}
@@ -232,19 +248,20 @@ func main() {
 		case "checkin":
 			//Backdoor for test env
 			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
-				Bot.SendCheckInLink()
+				Bot.SendCheckInLink(ctx)
 			}
 		case "delete":
 			//Backdoor for test env
 			if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
-				Bot.DeleteCheckInLink()
+				Bot.DeleteCheckInLink(ctx)
 			}
 		default:
 			msg.Text = "I don't understand this command :("
 		}
 		if msg.Text != "" {
 			if _, err := bot.Send(msg); err != nil {
-				log.Panic(err)
+				Log.Error(ctx, err.Error())
+				// log.Panic(err)
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package Processors
 
 import (
+	"context"
 	"testing"
 )
 
@@ -25,7 +26,7 @@ func TestGetOrderByUserId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := GetOrderByUserId(tt.args.user_id)
+			got, got1 := GetOrderByUserId(context.TODO(), tt.args.user_id)
 			if got != tt.want {
 				t.Errorf("GetOrderByUserId() got = %v, want %v", got, tt.want)
 			}
