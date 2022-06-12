@@ -21,7 +21,7 @@ var (
 	DB          *gorm.DB
 	RedisClient *redis.Client
 	App         *newrelic.Application
-	Ctx         = context.TODO()
+	Ctx         context.Context
 )
 
 func LoadEnv() {
@@ -39,6 +39,7 @@ func InitClient() resty.Client {
 
 func Init() {
 	Log.InitializeLogger()
+	Ctx = context.TODO()
 	LoadEnv()
 	Common.LoadConfig()
 	//For testing only, update in config.toml
