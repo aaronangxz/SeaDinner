@@ -50,7 +50,7 @@ func main() {
 			if update.CallbackQuery.Data == "MUTE" || update.CallbackQuery.Data == "UNMUTE" {
 				//Retrieve the previous chat ID after user calls /mute
 				cacheKey := fmt.Sprint(Common.USER_MUTE_MSG_ID_PREFIX, update.CallbackQuery.Message.Chat.ID)
-				val, redisErr := Processors.RedisClient.Get(cacheKey).Result()
+				val, redisErr := Common.Redis.Get(cacheKey).Result()
 				if redisErr != nil {
 					if redisErr == redis.Nil {
 						Log.Warn(ctx, "Callback Mute | No result of %v in Redis", cacheKey)
@@ -235,7 +235,7 @@ func main() {
 				} else {
 					//save msg id into cache for msg update
 					cacheKey := fmt.Sprint(Common.USER_MUTE_MSG_ID_PREFIX, update.Message.Chat.ID)
-					if err := Processors.RedisClient.Set(cacheKey, msgTrace.MessageID, 1800*time.Second).Err(); err != nil {
+					if err := Common.Redis.Set(cacheKey, msgTrace.MessageID, 1800*time.Second).Err(); err != nil {
 						Log.Error(ctx, "Mute | Error while writing to redis: %v", err.Error())
 						// log.Printf("Mute | Error while writing to redis: %v", err.Error())
 					} else {
