@@ -45,9 +45,11 @@ func Init() {
 	//For testing only, update in config.toml
 	if os.Getenv("TEST_DEPLOY") == "TRUE" || Common.Config.Adhoc {
 		ConnectTestMySQL()
+		Common.ConnectTestRedis()
 		ConnectTestRedis()
 	} else {
 		ConnectMySQL()
+		Common.ConnectRedis()
 		ConnectRedis()
 	}
 	InitRelic()

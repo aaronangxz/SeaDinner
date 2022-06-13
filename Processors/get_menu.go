@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/Common"
 	"github.com/aaronangxz/SeaDinner/Log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
-	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"google.golang.org/protobuf/proto"
@@ -48,47 +48,54 @@ func GetMenuUsingCache(ctx context.Context, client resty.Client, key string) *se
 	txn := App.StartTransaction("get_menu_using_cache")
 	defer txn.End()
 
+	rds := Common.NewCacheIO().SetKey(cacheKey).SetEntity(sea_dinner.DinnerMenuArray{}).SetExpiry(expiry)
+
 	//check cache
-	val, redisErr := RedisClient.Get(cacheKey).Result()
-	if redisErr != nil {
-		if redisErr == redis.Nil {
-			Log.Warn(ctx, "GetMenuUsingCache | No result of %v in Redis, reading from API", cacheKey)
-			//log.Printf("GetMenuUsingCache | No result of %v in Redis, reading from API", cacheKey)
-		} else {
-			Log.Error(ctx, "GetMenuUsingCache | Error while reading from redis: %v", redisErr.Error())
-			// log.Printf("GetMenuUsingCache | Error while reading from redis: %v", redisErr.Error())
-		}
-	} else {
-		redisResp := &sea_dinner.DinnerMenuArray{}
-		err := json.Unmarshal([]byte(val), &redisResp)
-		if err != nil {
-			Log.Warn(ctx, "GetMenuUsingCache | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
-			// log.Printf("GetMenuUsingCache | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
-		} else {
-			Log.Info(ctx, "GetMenuUsingCache | Successful | Cached %v", cacheKey)
-			// log.Printf("GetMenuUsingCache | Successful | Cached %v", cacheKey)
-			return redisResp
-		}
+	val, err := rds.Get()
+	if err == nil {
+		v, _ := val.(*sea_dinner.DinnerMenuArray)
+		log.Println(v)
+		return v
 	}
+
+	// val, redisErr := RedisClient.Get(cacheKey).Result()
+	// if redisErr != nil {
+	// 	if redisErr == redis.Nil {
+	// 		Log.Warn(ctx, "GetMenuUsingCache | No result of %v in Redis, reading from API", cacheKey)
+	// 		//log.Printf("GetMenuUsingCache | No result of %v in Redis, reading from API", cacheKey)
+	// 	} else {
+	// 		Log.Error(ctx, "GetMenuUsingCache | Error while reading from redis: %v", redisErr.Error())
+	// 		// log.Printf("GetMenuUsingCache | Error while reading from redis: %v", redisErr.Error())
+	// 	}
+	// } else {
+	// 	redisResp := &sea_dinner.DinnerMenuArray{}
+	// 	err := json.Unmarshal([]byte(val), &redisResp)
+	// 	if err != nil {
+	// 		Log.Warn(ctx, "GetMenuUsingCache | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
+	// 		// log.Printf("GetMenuUsingCache | Fail to unmarshal Redis value of key %v : %v, reading from API", cacheKey, err)
+	// 	} else {
+	// 		Log.Info(ctx, "GetMenuUsingCache | Successful | Cached %v", cacheKey)
+	// 		// log.Printf("GetMenuUsingCache | Successful | Cached %v", cacheKey)
+	// 		return redisResp
+	// 	}
+	// }
 
 	currentarr = GetMenu(ctx, Client, key)
 
-	//set back into cache
-	data, err := json.Marshal(currentarr)
-	if err != nil {
-		Log.Error(ctx, "GetMenuUsingCache | Failed to marshal JSON results: %v\n", err.Error())
-		// log.Printf("GetMenuUsingCache | Failed to marshal JSON results: %v\n", err.Error())
-	}
+	rds.SetValue(currentarr).Set()
 
-	if err := RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
-		Log.Error(ctx, "GetMenuUsingCache | Error while writing to redis: %v", err.Error())
-		// log.Printf("GetMenuUsingCache | Error while writing to redis: %v", err.Error())
-	} else {
-		Log.Info(ctx, "GetMenuUsingCache | Successful | Written %v to redis", cacheKey)
-		// log.Printf("GetMenuUsingCache | Successful | Written %v to redis", cacheKey)
-	}
-	Log.Info(ctx, "GetMenuUsingCache | Query status of today's menu: %v", currentarr.GetStatus())
-	// log.Printf("GetMenuUsingCache | Query status of today's menu: %v", currentarr.GetStatus())
+	//set back into cache
+	// data, err := json.Marshal(currentarr)
+	// if err != nil {
+	// 	Log.Error(ctx, "GetMenuUsingCache | Failed to marshal JSON results: %v\n", err.Error())
+	// }
+
+	// if err := Common.Redis.Set(cacheKey, data, expiry).Err(); err != nil {
+	// 	Log.Error(ctx, "GetMenuUsingCache | Error while writing to redis: %v", err.Error())
+	// } else {
+	// 	Log.Info(ctx, "GetMenuUsingCache | Successful | Written %v to redis", cacheKey)
+	// }
+	// Log.Info(ctx, "GetMenuUsingCache | Query status of today's menu: %v", currentarr.GetStatus())
 	return currentarr
 }
 
@@ -102,6 +109,9 @@ func OutputMenuWithButton(ctx context.Context, key string, id int64) ([]string, 
 	)
 	txn := App.StartTransaction("output_menu_with_button")
 	defer txn.End()
+
+	//Handle limiter
+	//
 
 	if !IsWeekDay() {
 		texts = append(texts, "We are done for this week! You can order again next week 😀")
@@ -176,7 +186,7 @@ func MenuRefresher(ctx context.Context) {
 				}
 
 				//Use live menu as the source of truth
-				if err := RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
+				if err := Common.Redis.Set(cacheKey, data, expiry).Err(); err != nil {
 					Log.Error(ctx, "MenuRefresher | Error while writing to redis: %v", err.Error())
 					// log.Printf("MenuRefresher | Error while writing to redis: %v", err.Error())
 				} else {
