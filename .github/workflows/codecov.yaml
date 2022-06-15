@@ -13,7 +13,7 @@ jobs:
         with:
           go-version: '1.17'
       - name: Run coverage in processors
-        working-directory: ./processors
+        working-directory: processors
         env:
           TEST_DB_USERNAME: ${{secrets.TEST_DB_USERNAME}}
           TEST_DB_PASSWORD: ${{secrets.TEST_DB_PASSWORD}}
@@ -27,7 +27,7 @@ jobs:
           TEST_NEWRELIC_KEY: ${{secrets.TEST_NEWRELIC_KEY}}
         run: go test -coverprofile=coverage.out -covermode=atomic
       - name: Run coverage in bot
-        working-directory: ./bot
+        working-directory: bot
         env:
           TEST_DB_USERNAME: ${{secrets.TEST_DB_USERNAME}}
           TEST_DB_PASSWORD: ${{secrets.TEST_DB_PASSWORD}}
