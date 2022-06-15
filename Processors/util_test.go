@@ -1,18 +1,18 @@
-package Processors
+package processors
 
 import (
 	"context"
+	"github.com/aaronangxz/SeaDinner/common"
 	"os"
 	"testing"
 
-	"github.com/aaronangxz/SeaDinner/Common"
-	"github.com/aaronangxz/SeaDinner/Log"
+	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"google.golang.org/protobuf/proto"
 )
 
 func TestMain(m *testing.M) {
-	Log.InitializeLogger()
+	log.InitializeLogger()
 	m.Run()
 }
 func TestMakeToken(t *testing.T) {
@@ -55,7 +55,7 @@ func TestMakeToken(t *testing.T) {
 }
 
 func TestMakeURL(t *testing.T) {
-	Common.Config.Prefix.UrlPrefix = "https://dinner.sea.com"
+	common.Config.Prefix.URLPrefix = "https://dinner.sea.com"
 	type args struct {
 		opt int
 		id  *int64

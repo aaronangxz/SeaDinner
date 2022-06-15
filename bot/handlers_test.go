@@ -1,29 +1,28 @@
-package Bot
+package handlers
 
 import (
 	"context"
 	"fmt"
-	"log"
+	"github.com/aaronangxz/SeaDinner/common"
 	"testing"
 	"time"
 
-	"github.com/aaronangxz/SeaDinner/Common"
-	"github.com/aaronangxz/SeaDinner/Log"
-	"github.com/aaronangxz/SeaDinner/Processors"
-	"github.com/aaronangxz/SeaDinner/TestHelper"
-	"github.com/aaronangxz/SeaDinner/TestHelper/user_choice"
-	"github.com/aaronangxz/SeaDinner/TestHelper/user_key"
+	"github.com/aaronangxz/SeaDinner/log"
+	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"github.com/aaronangxz/SeaDinner/test_helper"
+	"github.com/aaronangxz/SeaDinner/test_helper/user_choice"
+	"github.com/aaronangxz/SeaDinner/test_helper/user_key"
 	"google.golang.org/protobuf/proto"
 )
 
 func TestMain(m *testing.M) {
-	Log.InitializeLogger()
+	log.InitializeLogger()
 	m.Run()
 }
 func TestGetKey(t *testing.T) {
 	u := user_key.New().Build()
-	randId := TestHelper.RandomInt(9999999)
+	randID := test_helper.RandomInt(9999999)
 	type args struct {
 		id int64
 	}
@@ -44,7 +43,7 @@ func TestGetKey(t *testing.T) {
 		},
 		{
 			name: "NotFound",
-			args: args{id: randId},
+			args: args{id: randID},
 			want: "",
 		},
 	}
@@ -56,7 +55,7 @@ func TestGetKey(t *testing.T) {
 		})
 	}
 	u.TearDown()
-	user_key.DeleteUserKey(randId)
+	user_key.DeleteUserKey(randID)
 }
 
 func TestCheckKey(t *testing.T) {
@@ -81,7 +80,7 @@ func TestCheckKey(t *testing.T) {
 		},
 		{
 			name:  "NotFound",
-			args:  args{id: TestHelper.RandomInt(999)},
+			args:  args{id: test_helper.RandomInt(999)},
 			want1: false,
 		},
 	}
@@ -98,7 +97,7 @@ func TestCheckKey(t *testing.T) {
 
 func TestUpdateKey(t *testing.T) {
 	u := user_key.New().Build()
-	randU := TestHelper.RandomInt(999)
+	randU := test_helper.RandomInt(999)
 	type args struct {
 		id int64
 		s  string
@@ -110,7 +109,7 @@ func TestUpdateKey(t *testing.T) {
 	}{
 		{
 			name: "KeyInvalidLen",
-			args: args{u.GetUserId(), TestHelper.RandomString(39)},
+			args: args{u.GetUserId(), test_helper.RandomString(39)},
 			want: false,
 		},
 		{
@@ -120,12 +119,12 @@ func TestUpdateKey(t *testing.T) {
 		},
 		{
 			name: "UserKeyNotExist",
-			args: args{randU, TestHelper.RandomString(40)},
+			args: args{randU, test_helper.RandomString(40)},
 			want: true,
 		},
 		{
 			name: "UserExistsButKeyNotExist",
-			args: args{u.GetUserId(), TestHelper.RandomString(40)},
+			args: args{u.GetUserId(), test_helper.RandomString(40)},
 			want: true,
 		},
 	}
@@ -142,15 +141,15 @@ func TestUpdateKey(t *testing.T) {
 }
 
 func TestCheckChope(t *testing.T) {
-	m := TestHelper.GetLiveMenuDetails()
+	m := test_helper.GetLiveMenuDetails()
 	u := user_choice.New().SetUserChoice(fmt.Sprint(m[0].GetId())).Build()
 	stopOrder := user_choice.New().SetUserChoice(fmt.Sprint(-1)).Build()
 	notInMenu := user_choice.New().SetUserChoice(fmt.Sprint(999999)).Build()
 	randOrder := user_choice.New().SetUserChoice("RAND").Build()
-	tz, _ := time.LoadLocation(Processors.TimeZone)
+	tz, _ := time.LoadLocation(processors.TimeZone)
 	var expected string = "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu"
-	if time.Now().In(tz).Unix() > Processors.GetLunchTime().Unix() {
-		if Processors.IsNotEOW(time.Now().In(tz)) {
+	if time.Now().In(tz).Unix() > processors.GetLunchTime().Unix() {
+		if processors.IsNotEOW(time.Now().In(tz)) {
 			expected = "Not placing dinner order for you tomorrow 🙅 Changed your mind? You can choose from /menu"
 		} else {
 			expected = "We are done for this week! You can tell me your order again next week 😀"
@@ -224,14 +223,14 @@ func TestCheckChope(t *testing.T) {
 }
 
 func TestGetChope(t *testing.T) {
-	tz, _ := time.LoadLocation(Processors.TimeZone)
-	if !Processors.IsNotEOW(time.Now().In(tz)) {
-		log.Printf("TestGetChope | Skipping")
+	tz, _ := time.LoadLocation(processors.TimeZone)
+	if !processors.IsNotEOW(time.Now().In(tz)) {
+		log.Info(context.TODO(), "TestGetChope | Skipping")
 		return
 	}
 
 	expiry := 60 * time.Second
-	m := TestHelper.GetLiveMenuDetails()
+	m := test_helper.GetLiveMenuDetails()
 	u := user_choice.New().Build()
 	u1 := user_choice.New().SetUserChoice(fmt.Sprint(m[0].GetId())).Build()
 	u5 := user_choice.New().SetUserChoice(fmt.Sprint(m[0].GetId())).Build()
@@ -242,16 +241,16 @@ func TestGetChope(t *testing.T) {
 		user_choice.New().SetUserChoice("-1").Build()}
 
 	for _, uu := range us {
-		key := fmt.Sprint(Common.USER_CHOICE_PREFIX, uu.GetUserId())
-		if err := Processors.RedisClient.Set(key, uu.GetUserChoice(), expiry).Err(); err != nil {
-			log.Printf("TestGetChope | Error while writing to redis: %v", err.Error())
+		key := fmt.Sprint(common.USER_CHOICE_PREFIX, uu.GetUserId())
+		if err := processors.RedisClient.Set(key, uu.GetUserChoice(), expiry).Err(); err != nil {
+			log.Error(context.TODO(), "TestGetChope | Error while writing to redis: %v", err.Error())
 		} else {
-			log.Printf("TestGetChope | Successful | Written %v to redis", key)
+			log.Info(context.TODO(), "TestGetChope | Successful | Written %v to redis", key)
 		}
 	}
 
 	expected := "Okay got it. I will order %v for you today 😙"
-	if time.Now().Unix() > Processors.GetLunchTime().Unix() {
+	if time.Now().Unix() > processors.GetLunchTime().Unix() {
 		expected = "Okay got it. I will order %v for you tomorrow 😙"
 	}
 
@@ -259,11 +258,11 @@ func TestGetChope(t *testing.T) {
 		u.TearDown()
 		u1.TearDown()
 		for _, uu := range us {
-			key := fmt.Sprint(Common.USER_CHOICE_PREFIX, uu.GetUserId())
-			if _, err := Processors.RedisClient.Del(key).Result(); err != nil {
-				log.Printf("TestGetChope | Failed to invalidate cache: %v. %v", key, err)
+			key := fmt.Sprint(common.USER_CHOICE_PREFIX, uu.GetUserId())
+			if _, err := processors.RedisClient.Del(key).Result(); err != nil {
+				log.Error(context.TODO(), "TestGetChope | Failed to invalidate cache: %v. %v", key, err)
 			}
-			log.Printf("TestGetChope | Successfully invalidated cache: %v", key)
+			log.Info(context.TODO(), "TestGetChope | Successfully invalidated cache: %v", key)
 			uu.TearDown()
 		}
 		u5.TearDown()
@@ -493,7 +492,7 @@ func TestUpdateMute(t *testing.T) {
 }
 
 func TestBatchGetUsersChoiceWithKey(t *testing.T) {
-	m := TestHelper.GetLiveMenuDetails()
+	m := test_helper.GetLiveMenuDetails()
 	u := user_choice.New().SetUserChoice(fmt.Sprint(m[0].GetId())).Build()
 	uk := user_key.New().SetUserId(u.GetUserId()).Build()
 
@@ -550,7 +549,7 @@ func TestBatchGetUsersChoiceWithKey(t *testing.T) {
 				t.Errorf("BatchGetUsersChoiceWithKey() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !TestHelper.IsInSlice(tt.want, got) {
+			if !test_helper.IsInSlice(tt.want, got) {
 				t.Errorf("BatchGetUsersChoiceWithKey() = %v, want %v", got, tt.want)
 			}
 		})

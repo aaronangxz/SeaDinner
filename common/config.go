@@ -1,15 +1,17 @@
-package Common
+package common
 
 import (
 	"context"
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/aaronangxz/SeaDinner/Log"
+	"github.com/aaronangxz/SeaDinner/log"
 )
 
 var (
-	Config     tomlConfig
+	//Config toml config object
+	Config tomlConfig
+	//ConfigPath path of config.toml
 	ConfigPath string
 	ctx        = context.TODO()
 )
@@ -30,7 +32,7 @@ type runtimeConfig struct {
 }
 
 type prefixConfig struct {
-	UrlPrefix   string `toml:"url_prefix"`
+	URLPrefix   string `toml:"url_prefix"`
 	TokenPrefix string `toml:"token_prefix"`
 }
 
@@ -42,6 +44,7 @@ type tomlConfig struct {
 	GrayScale grayScaleConfig `toml:"grayscale"`
 }
 
+//LoadConfig Loads config.toml
 func LoadConfig() {
 	ConfigPath = "../config.toml"
 	if os.Getenv("HEROKU_DEPLOY") == "TRUE" || os.Getenv("TEST_DEPLOY") == "TRUE" {
@@ -49,10 +52,8 @@ func LoadConfig() {
 	}
 
 	if _, err := toml.DecodeFile(ConfigPath, &Config); err != nil {
-		Log.Error(ctx, "Reading config failed | %v | %v", err, ConfigPath)
-		// log.Fatalln("Reading config failed | ", err, ConfigPath)
+		log.Error(ctx, "Reading config failed | %v | %v", err, ConfigPath)
 		return
 	}
-	Log.Info(ctx, "Reading config OK | %v", ConfigPath)
-	// log.Println("Reading config OK", ConfigPath)
+	log.Info(ctx, "Reading config OK | %v", ConfigPath)
 }

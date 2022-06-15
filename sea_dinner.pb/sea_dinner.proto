@@ -17,18 +17,18 @@ option go_package = "/;sea_dinner";
 
 enum URLType{
     URL_CURRENT = 0;
-	URL_MENU    = 1;
-	URL_ORDER   = 2;
+	  URL_MENU    = 1;
+	  URL_ORDER   = 2;
 }
 
 enum MuteStatus{
     MUTE_STATUS_NO  = 0;
-	MUTE_STATUS_YES = 1;
+	  MUTE_STATUS_YES = 1;
 }
 
 enum OrderStatus{
     ORDER_STATUS_OK   = 0;
-	ORDER_STATUS_FAIL = 1;
+	  ORDER_STATUS_FAIL = 1;
     ORDER_STATUS_CANCEL = 2;
 }
 

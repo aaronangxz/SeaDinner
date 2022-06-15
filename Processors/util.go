@@ -1,4 +1,4 @@
-package Processors
+package processors
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"github.com/aaronangxz/SeaDinner/common"
 	"io"
 	random "math/rand"
 	"os"
@@ -15,31 +16,28 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/aaronangxz/SeaDinner/Common"
-	"github.com/aaronangxz/SeaDinner/Log"
+	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
 
 //MakeToken Decrypts the encrypted key with AES and appends the token prefix
 func MakeToken(ctx context.Context, key string) string {
 	if key == "" {
-		Log.Error(ctx, "Key is invalid: %v", key)
-		//log.Println("Key is invalid:", key)
+		log.Error(ctx, "Key is invalid: %v", key)
 		return ""
 	}
 
 	decrypt := DecryptKey(key, os.Getenv("AES_KEY"))
 	if len(decrypt) != 40 {
-		Log.Error(ctx, "Key length invalid | length: %v", len(decrypt))
-		// log.Printf("Key length invalid | length: %v", len(decrypt))
+		log.Error(ctx, "Key length invalid | length: %v", len(decrypt))
 		return ""
 	}
-	return fmt.Sprint(Common.Config.Prefix.TokenPrefix, decrypt)
+	return fmt.Sprint(common.Config.Prefix.TokenPrefix, decrypt)
 }
 
 //MakeURL Returns the corresponding API URL appended with Id, if needed
 func MakeURL(opt int, id *int64) string {
-	prefix := Common.Config.Prefix.UrlPrefix
+	prefix := common.Config.Prefix.URLPrefix
 	switch opt {
 	case int(sea_dinner.URLType_URL_CURRENT):
 		return fmt.Sprint(prefix, "/api/current")
@@ -68,18 +66,11 @@ func OutputResults(ctx context.Context, resultMap map[int64]int64, service strin
 		}
 	}
 
-	Log.Info(ctx, fmt.Sprintf("%v\n*************************\nTotal Order: %v\nTotal Success: %v\nTotal Failures: %v\n*************************",
+	log.Info(ctx, fmt.Sprintf("\n%v\n*************************\nTotal Order: %v\nTotal Success: %v\nTotal Failures: %v\n*************************",
 		service,
 		len(resultMap),
 		passed,
 		len(resultMap)-passed))
-
-	// fmt.Println(service)
-	// fmt.Println("*************************")
-	// fmt.Println("Total Order: ", len(resultMap))
-	// fmt.Println("Total Success: ", passed)
-	// fmt.Println("Total Failures: ", len(resultMap)-passed)
-	// fmt.Println("*************************")
 }
 
 //IsNotNumber Verifiy whether a string contains non-numeric characters
@@ -181,7 +172,7 @@ func MakeKey() string {
 
 //RandomFood Returns a random element in the provided menu map, excluding RAND and -1
 func RandomFood(ctx context.Context, m map[string]string) string {
-	s := []string{}
+	var s []string
 	count := 0
 	for k, v := range m {
 		if k == "RAND" ||
@@ -195,8 +186,7 @@ func RandomFood(ctx context.Context, m map[string]string) string {
 	}
 
 	if count >= len(m) {
-		Log.Error(ctx, "RandomFood | Count exceeds Index")
-		// log.Println("RandomFood | Count exceeds Index")
+		log.Error(ctx, "RandomFood | Count exceeds Index")
 		return ""
 	}
 
@@ -204,22 +194,19 @@ func RandomFood(ctx context.Context, m map[string]string) string {
 	gen := int64(r.Intn(len(m) - count))
 
 	if gen >= int64(len(s)) {
-		Log.Error(ctx, "RandomFood | Index exceeds len")
-		// log.Println("RandomFood | Index exceeds len")
+		log.Error(ctx, "RandomFood | Index exceeds len")
 		return ""
 	}
-	Log.Info(ctx, "RandomFood | result: %v", s[gen])
-	// log.Println("RandomFood | result:", s[gen])
+	log.Info(ctx, "RandomFood | result: %v", s[gen])
 	return s[gen]
 }
 
-//CompareStruct Compares two struct slices and outputs the difference.
+//CompareSliceStruct Compares two struct slices and outputs the difference.
 func CompareSliceStruct(ctx context.Context, a interface{}, b interface{}) bool {
 	same := true
 
 	if reflect.TypeOf(a).Kind() != reflect.TypeOf(b).Kind() {
-		Log.Error(ctx, "CompareSliceStruct | Slices must be the same type.")
-		// log.Println("CompareSliceStruct | Slices must be the same type.")
+		log.Error(ctx, "CompareSliceStruct | Slices must be the same type.")
 		return false
 	}
 
@@ -234,14 +221,12 @@ func CompareSliceStruct(ctx context.Context, a interface{}, b interface{}) bool 
 
 		for i, j := 0, 0; i < first.Len() && j < second.Len(); i, j = i+1, j+1 {
 			if !reflect.DeepEqual(first.Index(i).Interface(), second.Index(j).Interface()) {
-				Log.Warn(ctx, "CompareSliceStruct | diff | \nfirst: %v | \nsecond: %v", first.Index(i).Interface(), second.Index(j).Interface())
-				// log.Printf("CompareSliceStruct | diff | \nfirst: %v | \nsecond: %v", first.Index(i).Interface(), second.Index(j).Interface())
+				log.Warn(ctx, "CompareSliceStruct | diff | \nfirst: %v | \nsecond: %v", first.Index(i).Interface(), second.Index(j).Interface())
 				same = false
 			}
 		}
 	default:
-		Log.Error(ctx, "CompareSliceStruct | Only slice is supported.")
-		// log.Println("CompareSliceStruct | Only slice is supported.")
+		log.Error(ctx, "CompareSliceStruct | Only slice is supported.")
 		return false
 	}
 	return same

@@ -1,14 +1,13 @@
-package Processors
+package processors
 
 import (
 	"context"
+	"github.com/aaronangxz/SeaDinner/common"
 	"testing"
-
-	"github.com/aaronangxz/SeaDinner/Common"
 )
 
-func AdHocTestGetDayId(t *testing.T) {
-	Common.Config.Adhoc = true
+func AdHocTestGetDayID(t *testing.T) {
+	common.Config.Adhoc = true
 	Init()
 	tests := []struct {
 		name   string
@@ -21,7 +20,7 @@ func AdHocTestGetDayId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotID := GetDayId(context.TODO()); gotID != tt.wantID {
+			if gotID := GetDayID(context.TODO()); gotID != tt.wantID {
 				t.Errorf("GetDayId() = %v, want %v", gotID, tt.wantID)
 			}
 		})

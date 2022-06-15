@@ -1,41 +1,38 @@
-package Common
+package common
 
 import (
 	"bytes"
 	"context"
 	"image"
 	"io/ioutil"
-	"log"
 	"os"
-
+	//Required for QR decode
 	_ "image/jpeg"
 	_ "image/png"
 
-	"github.com/aaronangxz/SeaDinner/Log"
+	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/liyue201/goqr"
 )
 
-var (
-	Ctx = context.TODO()
-)
-
+//GetTGToken Get default Telegram token
 func GetTGToken(ctx context.Context) string {
 	if os.Getenv("TEST_DEPLOY") == "TRUE" || Config.Adhoc {
-		Log.Info(ctx, "Running Test Telegram Bot Instance")
-		// log.Println("Running Test Telegram Bot Instance")
+		log.Info(ctx, "Running Test Telegram bot Instance")
 		return os.Getenv("TELEGRAM_TEST_APITOKEN")
 	}
 	return os.Getenv("TELEGRAM_APITOKEN")
 }
 
-func IsInGrayScale(userId int64) bool {
-	return userId%100 >= Config.GrayScale.Percentage
+//IsInGrayScale Verify userID is within grayscale percentage
+func IsInGrayScale(userID int64) bool {
+	return userID%100 >= Config.GrayScale.Percentage
 }
 
+//DecodeQR decodes QR image
 func DecodeQR() (string, error) {
-	filepath := "../Common/resource/DinnerQR.jpg"
+	filepath := "../common/resource/DinnerQR.jpg"
 	if os.Getenv("HEROKU_DEPLOY") == "TRUE" || os.Getenv("TEST_DEPLOY") == "TRUE" {
-		filepath = "Common/resource/DinnerQR.jpg"
+		filepath = "common/resource/DinnerQR.jpg"
 	}
 	qr, err := recognizeFile(filepath)
 	if err != nil {
@@ -49,25 +46,22 @@ func DecodeQR() (string, error) {
 	return string(qr[0].Payload), nil
 }
 
+//recognizeFile Recognize QR image
 func recognizeFile(path string) ([]*goqr.QRData, error) {
-	Log.Info(Ctx, "recognize file: %v", path)
-	// log.Printf("recognize file: %v\n", path)
-	imgdata, err := ioutil.ReadFile(path)
+	log.Info(ctx, "recognize file: %v", path)
+	imgData, err := ioutil.ReadFile(path)
 	if err != nil {
-		Log.Error(Ctx, "%v\n", err)
-		log.Printf("%v\n", err)
+		log.Error(ctx, "%v\n", err)
 		return nil, err
 	}
-	img, _, err := image.Decode(bytes.NewReader(imgdata))
+	img, _, err := image.Decode(bytes.NewReader(imgData))
 	if err != nil {
-		Log.Error(Ctx, "image.Decode error: %v", err)
-		// log.Printf("image.Decode error: %v\n", err)
+		log.Error(ctx, "image.Decode error: %v", err)
 		return nil, err
 	}
 	qrCodes, err := goqr.Recognize(img)
 	if err != nil {
-		Log.Error(Ctx, "Recognize failed: %v", err)
-		// log.Printf("Recognize failed: %v\n", err)
+		log.Error(ctx, "Recognize failed: %v", err)
 		return nil, err
 	}
 	return qrCodes, nil

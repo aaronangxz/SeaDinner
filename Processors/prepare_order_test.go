@@ -1,15 +1,15 @@
-package Processors
+package processors
 
 import (
 	"context"
 	"testing"
 )
 
-func TestGetOrderByUserId(t *testing.T) {
+func TestGetOrderByUserID(t *testing.T) {
 	LoadEnv()
 	ConnectTestMySQL()
 	type args struct {
-		user_id int64
+		userID int64
 	}
 	tests := []struct {
 		name  string
@@ -26,7 +26,7 @@ func TestGetOrderByUserId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := GetOrderByUserId(context.TODO(), tt.args.user_id)
+			got, got1 := GetOrderByUserID(context.TODO(), tt.args.userID)
 			if got != tt.want {
 				t.Errorf("GetOrderByUserId() got = %v, want %v", got, tt.want)
 			}

@@ -2,13 +2,13 @@ package user_choice
 
 import (
 	"fmt"
+	"github.com/aaronangxz/SeaDinner/common"
 	"log"
 	"time"
 
-	"github.com/aaronangxz/SeaDinner/Common"
-	"github.com/aaronangxz/SeaDinner/Processors"
-	"github.com/aaronangxz/SeaDinner/TestHelper"
+	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"github.com/aaronangxz/SeaDinner/test_helper"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -22,7 +22,7 @@ type UserChoice struct {
 }
 
 func New() *UserChoice {
-	TestHelper.InitTest()
+	test_helper.InitTest()
 	return &UserChoice{
 		UserChoice: &sea_dinner.UserChoice{
 			UserId:     new(int64),
@@ -35,11 +35,11 @@ func New() *UserChoice {
 
 func (uk *UserChoice) FillDefaults() *UserChoice {
 	if uk.UserChoice.GetUserId() == 0 {
-		uk.SetUserId(TestHelper.RandomInt(99999))
+		uk.SetUserId(test_helper.RandomInt(99999))
 	}
 
 	if uk.UserChoice.GetUserChoice() == "" {
-		uk.SetUserChoice(fmt.Sprint(TestHelper.RandomInt(9999)))
+		uk.SetUserChoice(fmt.Sprint(test_helper.RandomInt(9999)))
 	}
 
 	if uk.UserChoice.GetCtime() == 0 {
@@ -54,7 +54,7 @@ func (uk *UserChoice) FillDefaults() *UserChoice {
 
 func (uc *UserChoice) Build() *UserChoice {
 	uc.FillDefaults()
-	if err := Processors.DB.Table(Common.DB_USER_CHOICE_TAB).Create(&uc).Error; err != nil {
+	if err := processors.DB.Table(common.DB_USER_CHOICE_TAB).Create(&uc).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", uc.GetUserId(), err.Error())
 		return nil
 	}
@@ -83,7 +83,7 @@ func (uc *UserChoice) SetMtime(mtime int64) *UserChoice {
 }
 
 func (uc *UserChoice) TearDown() error {
-	if err := Processors.DB.Exec("DELETE FROM user_choice_tab WHERE user_id = ?", uc.GetUserId()).Error; err != nil {
+	if err := processors.DB.Exec("DELETE FROM user_choice_tab WHERE user_id = ?", uc.GetUserId()).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", uc.GetUserId())
 		return err
 	}
@@ -92,7 +92,7 @@ func (uc *UserChoice) TearDown() error {
 }
 
 func DeleteUserKey(userId int64) error {
-	if err := Processors.DB.Exec("DELETE FROM user_choice_tab WHERE user_id = ?", userId).Error; err != nil {
+	if err := processors.DB.Exec("DELETE FROM user_choice_tab WHERE user_id = ?", userId).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", userId)
 		return err
 	}

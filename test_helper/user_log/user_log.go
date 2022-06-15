@@ -2,13 +2,13 @@ package user_log
 
 import (
 	"fmt"
+	"github.com/aaronangxz/SeaDinner/common"
 	"log"
 	"time"
 
-	"github.com/aaronangxz/SeaDinner/Common"
-	"github.com/aaronangxz/SeaDinner/Processors"
-	"github.com/aaronangxz/SeaDinner/TestHelper"
+	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"github.com/aaronangxz/SeaDinner/test_helper"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,7 +23,7 @@ type UserLog struct {
 }
 
 func New() *UserLog {
-	TestHelper.InitTest()
+	test_helper.InitTest()
 	return &UserLog{
 		OrderRecord: &sea_dinner.OrderRecord{
 			Id:        new(int64),
@@ -38,11 +38,11 @@ func New() *UserLog {
 
 func (ul *UserLog) FillDefaults() *UserLog {
 	if ul.OrderRecord.UserId == nil {
-		ul.SetUserId(TestHelper.RandomInt(99999))
+		ul.SetUserId(test_helper.RandomInt(99999))
 	}
 
 	if ul.OrderRecord.FoodId == nil {
-		ul.SetFoodId(fmt.Sprint(TestHelper.RandomInt(99999)))
+		ul.SetFoodId(fmt.Sprint(test_helper.RandomInt(99999)))
 	}
 
 	if ul.OrderRecord.OrderTime == nil {
@@ -62,7 +62,7 @@ func (ul *UserLog) FillDefaults() *UserLog {
 
 func (ul *UserLog) Build() *UserLog {
 	ul.FillDefaults()
-	if err := Processors.DB.Table(Common.DB_ORDER_LOG_TAB).Create(&ul).Error; err != nil {
+	if err := processors.DB.Table(common.DB_ORDER_LOG_TAB).Create(&ul).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", ul.GetUserId(), err.Error())
 		return nil
 	}
@@ -96,7 +96,7 @@ func (ul *UserLog) SetErrorMsg(errorMsg string) *UserLog {
 }
 
 func (ul *UserLog) TearDown() error {
-	if err := Processors.DB.Exec("DELETE FROM user_log_tab WHERE user_id = ?", ul.GetUserId()).Error; err != nil {
+	if err := processors.DB.Exec("DELETE FROM user_log_tab WHERE user_id = ?", ul.GetUserId()).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", ul.GetUserId())
 		return err
 	}
@@ -105,7 +105,7 @@ func (ul *UserLog) TearDown() error {
 }
 
 func DeleteUserKey(userId int64) error {
-	if err := Processors.DB.Exec("DELETE FROM user_log_tab WHERE user_id = ?", userId).Error; err != nil {
+	if err := processors.DB.Exec("DELETE FROM user_log_tab WHERE user_id = ?", userId).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", userId)
 		return err
 	}

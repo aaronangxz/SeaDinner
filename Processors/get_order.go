@@ -1,9 +1,9 @@
-package Processors
+package processors
 
 import (
 	"context"
 
-	"github.com/aaronangxz/SeaDinner/Log"
+	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"google.golang.org/protobuf/proto"
 )
@@ -17,16 +17,14 @@ func GetSuccessfulOrder(ctx context.Context, key string) bool {
 	_, err := Client.R().
 		SetHeader("Authorization", MakeToken(ctx, key)).
 		SetResult(&order).
-		Get(MakeURL(int(sea_dinner.URLType_URL_ORDER), proto.Int64(GetDayId(ctx))))
+		Get(MakeURL(int(sea_dinner.URLType_URL_ORDER), proto.Int64(GetDayID(ctx))))
 
 	if err != nil {
-		Log.Error(ctx, err.Error())
-		// fmt.Println(err)
+		log.Error(ctx, err.Error())
 	}
 
 	if order.GetStatus() != "success" {
-		Log.Error(ctx, "GetSuccessfulOrder | Error: %v", order.GetStatus())
-		// log.Println("GetSuccessfulOrder | Error:", order.GetStatus())
+		log.Error(ctx, "GetSuccessfulOrder | Error: %v", order.GetStatus())
 		return false
 	}
 	return order.Food != nil

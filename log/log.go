@@ -1,4 +1,4 @@
-package Log
+package log
 
 import (
 	"context"
@@ -10,15 +10,15 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type correlationIdType int
+type correlationIDType int
 
 const (
-	requestIdKey correlationIdType = iota
-	sessionIdKey
+	requestIDKey correlationIDType = iota
 )
 
-var Log *zap.Logger
+var log *zap.Logger
 
+//InitializeLogger Initialize logger
 func InitializeLogger() {
 	pe := zap.NewDevelopmentEncoderConfig()
 	pe.ConsoleSeparator = " | "
@@ -29,38 +29,42 @@ func InitializeLogger() {
 	core := zapcore.NewTee(zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), level))
 
 	//Logs caller file name and skips 1 call stack
-	Log = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
+	log = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 }
 
-// WithRqId returns a context which knows its request ID
-func WithRqId(ctx context.Context, rqId string) context.Context {
-	return context.WithValue(ctx, requestIdKey, rqId)
+// WithRqID returns a context which knows its request ID
+func WithRqID(ctx context.Context, rqID string) context.Context {
+	return context.WithValue(ctx, requestIDKey, rqID)
 }
 
 // Logger returns a zap logger with as much context as possible
 func Logger(ctx context.Context) *zap.Logger {
-	newLogger := Log
+	newLogger := log
 	if ctx != nil {
-		if ctxRqId, ok := ctx.Value(requestIdKey).(string); ok {
-			newLogger = newLogger.With(zap.String("traceId", ctxRqId))
+		if ctxRqID, ok := ctx.Value(requestIDKey).(string); ok {
+			newLogger = newLogger.With(zap.String("traceId", ctxRqID))
 		}
 	}
 	return newLogger
 }
 
+//Info Logs message with Info level
 func Info(ctx context.Context, msg string, value ...interface{}) {
 	Logger(ctx).Sugar().Infof(fmt.Sprintf(msg, value...))
 }
 
+//Warn Logs message with Warn level
 func Warn(ctx context.Context, msg string, value ...interface{}) {
 	Logger(ctx).Sugar().Warnf(fmt.Sprintf(msg, value...))
 }
 
+//Error Logs message with Error level
 func Error(ctx context.Context, msg string, value ...interface{}) {
 	Logger(ctx).Sugar().Errorf(fmt.Sprintf(msg, value...))
 }
 
+//NewCtx Initialize new context with traceID
 func NewCtx() context.Context {
-	rqId, _ := uuid.NewRandom()
-	return WithRqId(context.Background(), rqId.String())
+	rqID, _ := uuid.NewRandom()
+	return WithRqID(context.Background(), rqID.String())
 }

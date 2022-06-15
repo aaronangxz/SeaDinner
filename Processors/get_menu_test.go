@@ -1,25 +1,21 @@
-package Processors
+package processors
 
 import (
 	"context"
+	"github.com/aaronangxz/SeaDinner/common"
 	"os"
 	"reflect"
 	"testing"
-
-	"github.com/aaronangxz/SeaDinner/Common"
-	"github.com/go-resty/resty/v2"
 )
 
 func AdhocTestGetMenuUsingCache(t *testing.T) {
 	LoadEnv()
-	Common.LoadConfig()
+	common.LoadConfig()
 	ConnectTestRedis()
 	ConnectTestMySQL()
-	r := InitClient()
 	key := os.Getenv("TOKEN")
 	type args struct {
-		client resty.Client
-		key    string
+		key string
 	}
 	tests := []struct {
 		name string
@@ -28,13 +24,13 @@ func AdhocTestGetMenuUsingCache(t *testing.T) {
 	}{
 		{
 			name: "HappyCase",
-			args: args{client: r, key: key},
+			args: args{key: key},
 			want: 12,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetMenuUsingCache(context.TODO(), tt.args.client, tt.args.key); !reflect.DeepEqual(len(got.GetFood()), tt.want) {
+			if got := GetMenuUsingCache(context.TODO(), tt.args.key); !reflect.DeepEqual(len(got.GetFood()), tt.want) {
 				t.Errorf("GetMenu() = %v, want %v", len(got.GetFood()), tt.want)
 			}
 		})

@@ -1,17 +1,18 @@
-package Processors
+package processors
 
 import (
 	"context"
 	"fmt"
+	"github.com/aaronangxz/SeaDinner/common"
 	"os"
 	"time"
 
-	"github.com/aaronangxz/SeaDinner/Common"
-	"github.com/aaronangxz/SeaDinner/Log"
+	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 )
 
 const (
+	//TimeZone constant timezone
 	TimeZone = "Asia/Singapore"
 )
 
@@ -24,18 +25,18 @@ func UnixToUTC(timestamp int64) time.Time {
 	return time.Unix(timestamp, 0).Local().UTC()
 }
 
-//GetLunchTime Returns the lunch time of today, defined in Config, as time object
+//GetLunchTime Returns the lunchtime of today, defined in Config, as time object
 func GetLunchTime() time.Time {
 	now := time.Now().In(tz)
 	year, month, day := now.Date()
-	return time.Date(year, month, day, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
+	return time.Date(year, month, day, common.Config.OrderTime.Hour, common.Config.OrderTime.Minutes, common.Config.OrderTime.Seconds, 0, now.Location())
 }
 
-//GetPreviousDayLunchTime Returns the lunch time of yesterday, defined in Config, as time object
+//GetPreviousDayLunchTime Returns the lunchtime of yesterday, defined in Config, as time object
 func GetPreviousDayLunchTime() time.Time {
 	now := time.Now().In(tz)
 	year, month, day := now.Add(time.Duration(-1*24) * time.Hour).Date()
-	return time.Date(year, month, day, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
+	return time.Date(year, month, day, common.Config.OrderTime.Hour, common.Config.OrderTime.Minutes, common.Config.OrderTime.Seconds, 0, now.Location())
 }
 
 //ConvertTimeStamp Converts current unix timestamp to yyyy-mm-dd format
@@ -72,7 +73,7 @@ func IsWeekDay() bool {
 
 //IsActiveDay Checks if today has dinner (If today is a holiday)
 func IsActiveDay() bool {
-	return GetDayId(context.TODO()) != 0
+	return GetDayID(context.TODO()) != 0
 }
 
 //IsNotEOW Checks if today is not friday, saturday, sunday
@@ -104,8 +105,7 @@ func IsPollStart() bool {
 		Get(MakeURL(int(sea_dinner.URLType_URL_CURRENT), nil))
 
 	if err != nil {
-		Log.Error(context.TODO(), err.Error())
-		// fmt.Println(err)
+		log.Error(context.TODO(), err.Error())
 	}
 
 	return status.GetMenu().GetActive()

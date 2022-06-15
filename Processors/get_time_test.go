@@ -1,18 +1,17 @@
-package Processors
+package processors
 
 import (
+	"github.com/aaronangxz/SeaDinner/common"
 	"reflect"
 	"testing"
 	"time"
-
-	"github.com/aaronangxz/SeaDinner/Common"
 )
 
 func TestGetLunchTime(t *testing.T) {
 	tz, _ := time.LoadLocation(TimeZone)
 	now := time.Now().In(tz)
 	year, month, day := now.Date()
-	expectedTime := time.Date(year, month, day, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
+	expectedTime := time.Date(year, month, day, common.Config.OrderTime.Hour, common.Config.OrderTime.Minutes, common.Config.OrderTime.Seconds, 0, now.Location())
 	tests := []struct {
 		name string
 		want time.Time
@@ -34,7 +33,7 @@ func TestGetLunchTime(t *testing.T) {
 func TestConvertTimeStamp(t *testing.T) {
 	timeNow := time.Unix(time.Now().Unix(), 0).Local().UTC()
 	tz, _ := time.LoadLocation(TimeZone)
-	s := (timeNow.In(tz).Format("2006-01-02"))
+	s := timeNow.In(tz).Format("2006-01-02")
 
 	type args struct {
 		timestamp int64
@@ -62,7 +61,7 @@ func TestConvertTimeStamp(t *testing.T) {
 func TestConvertTimeStampTime(t *testing.T) {
 	timeNow := time.Unix(time.Now().Unix(), 0).Local().UTC()
 	tz, _ := time.LoadLocation(TimeZone)
-	s := (timeNow.In(tz).Format("3:04PM"))
+	s := timeNow.In(tz).Format("3:04PM")
 
 	type args struct {
 		timestamp int64
@@ -126,7 +125,7 @@ func TestWeekStartEndDate(t *testing.T) {
 func TestConvertTimeStampMonthDay(t *testing.T) {
 	timeNow := time.Unix(time.Now().Unix(), 0).Local().UTC()
 	tz, _ := time.LoadLocation(TimeZone)
-	s := (timeNow.In(tz).Format("2/1"))
+	s := timeNow.In(tz).Format("2/1")
 
 	type args struct {
 		timestamp int64
@@ -154,7 +153,7 @@ func TestConvertTimeStampMonthDay(t *testing.T) {
 func TestConvertTimeStampDayOfWeek(t *testing.T) {
 	timeNow := time.Unix(time.Now().Unix(), 0).Local().UTC()
 	tz, _ := time.LoadLocation(TimeZone)
-	s := (timeNow.In(tz).Format("Mon 02/01"))
+	s := timeNow.In(tz).Format("Mon 02/01")
 
 	type args struct {
 		timestamp int64
@@ -202,7 +201,7 @@ func TestGetPreviousDayLunchTime(t *testing.T) {
 	tz, _ := time.LoadLocation(TimeZone)
 	now := time.Now().In(tz)
 	year, month, day := now.Date()
-	expectedTime := time.Date(year, month, day-1, Common.Config.OrderTime.Hour, Common.Config.OrderTime.Minutes, Common.Config.OrderTime.Seconds, 0, now.Location())
+	expectedTime := time.Date(year, month, day-1, common.Config.OrderTime.Hour, common.Config.OrderTime.Minutes, common.Config.OrderTime.Seconds, 0, now.Location())
 	tests := []struct {
 		name string
 		want time.Time

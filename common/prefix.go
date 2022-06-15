@@ -1,4 +1,4 @@
-package Common
+package common
 
 const (
 	DB_ORDER_LOG_TAB   = "order_log_tab"
