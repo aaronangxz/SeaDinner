@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/aaronangxz/SeaDinner/common"
-	"os"
-
 	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/go-redis/redis"
 	"github.com/go-resty/resty/v2"
@@ -14,6 +12,10 @@ import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	defaultLog "log"
+	"os"
+	"time"
 )
 
 var (
@@ -27,6 +29,16 @@ var (
 	App *newrelic.Application
 	//Ctx context used for logging
 	Ctx context.Context
+
+	newLogger = logger.New(
+		defaultLog.New(os.Stdout, "\r\n", defaultLog.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logger.Warn, // Log level
+			IgnoreRecordNotFoundError: false,       // Ignore ErrRecordNotFound error for logger
+			Colorful:                  true,        // Disable color
+		},
+	)
 )
 
 //LoadEnv Loads the environment variables from file
@@ -89,7 +101,9 @@ func ConnectMySQL() {
 	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_URL"), os.Getenv("DB_NAME"))
 
 	log.Info(Ctx, "Connecting to %v", URL)
-	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{
+		Logger: newLogger,
+	})
 
 	if err != nil {
 		log.Error(Ctx, "Error while establishing Live DB Connection: %v", err)
@@ -104,8 +118,10 @@ func ConnectTestMySQL() {
 	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_URL"), os.Getenv("TEST_DB_NAME"))
 
 	log.Info(Ctx, "Connecting to %v", URL)
-	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{})
 
+	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
 		log.Error(Ctx, "Error while establishing Test DB Connection: %v", err)
 		panic("Failed to connect to test database!")
