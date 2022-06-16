@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	handlers "github.com/aaronangxz/SeaDinner/bot"
 	"github.com/aaronangxz/SeaDinner/common"
+	handlers "github.com/aaronangxz/SeaDinner/handlers"
 	"os"
 	"strconv"
 	"time"
@@ -137,7 +137,7 @@ func main() {
 			} else if startListenChope {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 				ok := false
-				msg.Text, ok = handlers.GetChope(ctx, update.Message.Chat.ID, update.Message.Text)
+				msg.Text, ok = handlers.UpdateChope(ctx, update.Message.Chat.ID, update.Message.Text)
 				if !ok {
 					if _, err := bot.Send(msg); err != nil {
 						log.Error(ctx, err.Error())

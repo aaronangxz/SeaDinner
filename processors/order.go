@@ -199,7 +199,7 @@ func UpdateOrderLog(ctx context.Context, record *sea_dinner.OrderRecord) {
 	log.Info(ctx, "UpdateOrderLog | Successfully updated record | user_id: %v", record.GetUserId())
 }
 
-//SendInstantNotification Spawns a one-time telegram bot instance and send notification to user
+//SendInstantNotification Spawns a one-time telegram handlers instance and send notification to user
 func SendInstantNotification(ctx context.Context, u *sea_dinner.UserChoiceWithKey, took int64) {
 	var (
 		mk   tgbotapi.InlineKeyboardMarkup

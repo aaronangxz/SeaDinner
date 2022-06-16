@@ -1,7 +1,7 @@
 package main
 
 import (
-	handlers "github.com/aaronangxz/SeaDinner/bot"
+	handlers "github.com/aaronangxz/SeaDinner/handlers"
 	"os"
 	"time"
 
