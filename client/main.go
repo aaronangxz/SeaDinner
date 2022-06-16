@@ -12,7 +12,7 @@ import (
 	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/go-redis/redis"
-	tgbotapi "github.com/go-telegram-handlers-api/telegram-handlers-api/v5"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 var (
@@ -137,7 +137,7 @@ func main() {
 			} else if startListenChope {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 				ok := false
-				msg.Text, ok = handlers.GetChope(ctx, update.Message.Chat.ID, update.Message.Text)
+				msg.Text, ok = handlers.UpdateChope(ctx, update.Message.Chat.ID, update.Message.Text)
 				if !ok {
 					if _, err := bot.Send(msg); err != nil {
 						log.Error(ctx, err.Error())
