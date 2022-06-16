@@ -38,8 +38,8 @@ func SendPotentialUsers(ctx context.Context) {
 		firstLoginTime, _ := strconv.ParseInt(split[1], 10, 64)
 
 		if (time.Now().Unix() - firstLoginTime) < 2629743 {
-			log.Info(ctx, "SendPotentialUsers | First login time is not within range | user_id:%v", userID)
-			break
+			log.Info(ctx, "SendPotentialUsers | Skip | First login time is not within range | user_id:%v", userID)
+			continue
 		}
 
 		bot, err := tgbotapi.NewBotAPI(common.GetTGToken(ctx))
