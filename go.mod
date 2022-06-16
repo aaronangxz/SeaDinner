@@ -9,8 +9,11 @@ require (
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
+	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.4.0
+	github.com/liyue201/goqr v0.0.0-20200803022322-df443203d4ea
 	github.com/newrelic/go-agent/v3 v3.16.1
+	go.uber.org/zap v1.21.0
 	google.golang.org/protobuf v1.28.0
 	gorm.io/gorm v1.23.1
 )
@@ -25,14 +28,12 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
-	github.com/liyue201/goqr v0.0.0-20200803022322-df443203d4ea // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 	google.golang.org/grpc v1.39.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
