@@ -17,7 +17,7 @@ import (
 //GetTGToken Get default Telegram token
 func GetTGToken(ctx context.Context) string {
 	if os.Getenv("TEST_DEPLOY") == "TRUE" || Config.Adhoc {
-		log.Info(ctx, "Running Test Telegram bot Instance")
+		log.Info(ctx, "Running Test Telegram handlers Instance")
 		return os.Getenv("TELEGRAM_TEST_APITOKEN")
 	}
 	return os.Getenv("TELEGRAM_APITOKEN")

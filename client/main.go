@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	handlers "github.com/aaronangxz/SeaDinner/bot"
 	"github.com/aaronangxz/SeaDinner/common"
+	handlers "github.com/aaronangxz/SeaDinner/handlers"
 	"os"
 	"strconv"
 	"time"
@@ -12,7 +12,7 @@ import (
 	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/go-redis/redis"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/go-telegram-handlers-api/telegram-handlers-api/v5"
 )
 
 var (

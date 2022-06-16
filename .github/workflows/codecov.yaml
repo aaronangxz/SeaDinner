@@ -26,8 +26,8 @@ jobs:
           TEST_REDIS_PASSWORD: ${{secrets.TEST_REDIS_PASSWORD}}
           TEST_NEWRELIC_KEY: ${{secrets.TEST_NEWRELIC_KEY}}
         run: go test -coverprofile=coverage.out -covermode=atomic
-      - name: Run coverage in bot
-        working-directory: bot
+      - name: Run coverage in handlers
+        working-directory: handlers
         env:
           TEST_DB_USERNAME: ${{secrets.TEST_DB_USERNAME}}
           TEST_DB_PASSWORD: ${{secrets.TEST_DB_PASSWORD}}
