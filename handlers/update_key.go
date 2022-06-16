@@ -7,6 +7,7 @@ import (
 	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
+	"github.com/go-redis/redis"
 	"google.golang.org/protobuf/proto"
 	"os"
 	"time"
@@ -54,6 +55,25 @@ func UpdateKey(ctx context.Context, id int64, s string) (string, bool) {
 		if err := processors.DB.Table(common.DB_USER_KEY_TAB).Create(&r).Error; err != nil {
 			log.Error(ctx, "UpdateKey | Failed to insert DB | %v", err.Error())
 			return err.Error(), false
+		}
+		//Find key in potential_user Set
+		//We do not have the exact key because we don't know the <user_id>:<time> -> <time> part
+		val, _, redisErr := processors.RedisClient.SScan(common.POTENTIAL_USER_SET, 0, fmt.Sprint("*", id, "*"), 1000).Result()
+		if redisErr != nil {
+			if redisErr == redis.Nil {
+				log.Warn(ctx, "UpdateKey | No result of *%v* pattern in Redis", id)
+			} else {
+				log.Error(ctx, "UpdateKey | Error while reading from redis: %v", redisErr.Error())
+			}
+		} else {
+			//Remove from potential_user Set
+			for _, r := range val {
+				if err := processors.RedisClient.SRem(common.POTENTIAL_USER_SET, r).Err(); err != nil {
+					log.Error(ctx, "UpdateKey | Error while writing to redis: %v", err.Error())
+				} else {
+					log.Info(ctx, "UpdateKey | Successful | Removed %v from potential_user set", r)
+				}
+			}
 		}
 		return "Okay got it. I remember your key now! 😙\n Disclaimer: I will never disclose your key. Your key is safely encrypted.", true
 	}

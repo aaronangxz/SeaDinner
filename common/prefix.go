@@ -10,4 +10,7 @@ const (
 	USER_KEY_PREFIX         = "user_key:"
 	USER_CHOICE_PREFIX      = "user_choice:"
 	USER_MUTE_MSG_ID_PREFIX = "user_mute:"
+
+	POTENTIAL_USER_SET = "potential_user"
+	CHECK_IN_LINK_SET  = "checkin_link"
 )

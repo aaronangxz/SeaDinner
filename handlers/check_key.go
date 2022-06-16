@@ -52,7 +52,13 @@ func CheckKey(ctx context.Context, id int64) (string, bool) {
 
 	//Read from DB
 	if err := processors.DB.Table(common.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
-		//Write into new user set
+		//Write into potential_user set
+		toWrite := fmt.Sprint(id, ":", time.Now().Unix())
+		if err := processors.RedisClient.SAdd(common.POTENTIAL_USER_SET, toWrite).Err(); err != nil {
+			log.Error(ctx, "CheckKey | Error while writing to redis: %v", err.Error())
+		} else {
+			log.Info(ctx, "CheckKey | Successful | Written %v to potential_user set", toWrite)
+		}
 		return "I don't have your key, let me know in /newkey 😊", false
 	}
 	//set back into cache

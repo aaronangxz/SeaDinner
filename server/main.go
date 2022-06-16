@@ -29,6 +29,7 @@ func main() {
 		ctx := log.NewCtx()
 		if processors.IsSendReminderTime() {
 			handlers.SendReminder(ctx)
+			handlers.SendPotentialUsers(ctx)
 		}
 
 		if processors.IsPrepOrderTime() && !donePrep {
