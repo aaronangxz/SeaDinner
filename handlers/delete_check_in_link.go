@@ -16,7 +16,7 @@ func DeleteCheckInLink(ctx context.Context) {
 	defer txn.End()
 
 	//Retrieve the whole set
-	s := processors.RedisClient.SMembers("checkin_link")
+	s := processors.RedisClient.SMembers(common.CHECK_IN_LINK_SET)
 	if s == nil {
 		log.Error(ctx, "DeleteCheckInLink | Set is empty.")
 		return
@@ -39,10 +39,10 @@ func DeleteCheckInLink(ctx context.Context) {
 			log.Error(ctx, err.Error())
 		}
 	}
-	log.Info(ctx, "DeleteCheckInLink | Successfuly deleted check in links.")
+	log.Info(ctx, "DeleteCheckInLink | Successfully deleted check in links.")
 
 	//Clear set
-	if err := processors.RedisClient.Del("checkin_link").Err(); err != nil {
+	if err := processors.RedisClient.Del(common.CHECK_IN_LINK_SET).Err(); err != nil {
 		log.Error(ctx, "DeleteCheckInLink | Error while erasing from redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "DeleteCheckInLink | Successful | Deleted checkin_link set")

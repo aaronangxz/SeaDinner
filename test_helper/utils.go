@@ -31,7 +31,7 @@ func RandomString(length int) string {
 //RandomInt Generates a random int of maximum max
 func RandomInt(max int) int64 {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return int64(r.Intn(max))
+	return int64(r.Int63n(int64(max)))
 }
 
 //LoadEnv Loads env variable from file

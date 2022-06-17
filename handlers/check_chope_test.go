@@ -17,12 +17,23 @@ func TestCheckChope(t *testing.T) {
 	notInMenu := user_choice.New().SetUserChoice(fmt.Sprint(999999)).Build()
 	randOrder := user_choice.New().SetUserChoice("RAND").Build()
 	tz, _ := time.LoadLocation(processors.TimeZone)
-	var expected string = "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu"
+	expectedNotPlacing := "Not placing dinner order for you today 🙅 Changed your mind? You can choose from /menu"
+	expectedPlacing := fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", m[0].GetName())
+	expectedNotInMenu := fmt.Sprintf("Your choice %v is not available this week, so I will not order anything 🥲 Choose a new dish from /menu", notInMenu.GetUserChoice())
+	expectedNoOrder := "I have yet to receive your order 🥲 You can choose from /menu"
+	expectedRandom := "I'm tasked to snatch a random dish for you 😀 Changed your mind? You can choose from /menu"
+	expectedBool := true
+	doneStr := "We are done for this week! You can tell me your order again next week 😀"
 	if time.Now().In(tz).Unix() > processors.GetLunchTime().Unix() {
 		if processors.IsNotEOW(time.Now().In(tz)) {
-			expected = "Not placing dinner order for you tomorrow 🙅 Changed your mind? You can choose from /menu"
+			expectedNotPlacing = "Not placing dinner order for you tomorrow 🙅 Changed your mind? You can choose from /menu"
 		} else {
-			expected = "We are done for this week! You can tell me your order again next week 😀"
+			expectedNotPlacing = doneStr
+			expectedPlacing = doneStr
+			expectedRandom = doneStr
+			expectedNotInMenu = doneStr
+			expectedNoOrder = doneStr
+			expectedBool = false
 		}
 	}
 
@@ -45,8 +56,8 @@ func TestCheckChope(t *testing.T) {
 		{
 			name:  "HappyCase",
 			args:  args{u.GetUserId()},
-			want:  fmt.Sprintf("I'm tasked to snatch %v for you 😀 Changed your mind? You can choose from /menu", m[0].GetName()),
-			want1: true,
+			want:  expectedPlacing,
+			want1: expectedBool,
 		},
 		{
 			name:  "InvalidId",
@@ -57,26 +68,26 @@ func TestCheckChope(t *testing.T) {
 		{
 			name:  "NoOrder",
 			args:  args{id: 1},
-			want:  "I have yet to receive your order 🥲 You can choose from /menu",
-			want1: false,
+			want:  expectedNoOrder,
+			want1: expectedBool,
 		},
 		{
 			name:  "StopOrder",
 			args:  args{id: stopOrder.GetUserId()},
-			want:  expected,
+			want:  expectedNotPlacing,
 			want1: false,
 		},
 		{
 			name:  "OrderNotInMenu",
 			args:  args{id: notInMenu.GetUserId()},
-			want:  fmt.Sprintf("Your choice %v is not available this week, so I will not order anything 🥲 Choose a new dish from /menu", notInMenu.GetUserChoice()),
-			want1: true,
+			want:  expectedNotInMenu,
+			want1: expectedBool,
 		},
 		{
 			name:  "RandomOrder",
 			args:  args{id: randOrder.GetUserId()},
-			want:  "I'm tasked to snatch a random dish for you 😀 Changed your mind? You can choose from /menu",
-			want1: true,
+			want:  expectedRandom,
+			want1: expectedBool,
 		},
 	}
 	for _, tt := range tests {

@@ -48,7 +48,7 @@ func SendCheckInLink(ctx context.Context) {
 		} else {
 			//Save into set as <user_id>:<message_id>
 			toWrite := fmt.Sprint(user, ":", msgTrace.MessageID)
-			if err := processors.RedisClient.SAdd("checkin_link", toWrite).Err(); err != nil {
+			if err := processors.RedisClient.SAdd(common.CHECK_IN_LINK_SET, toWrite).Err(); err != nil {
 				log.Error(ctx, "SendCheckInLink | Error while writing to redis: %v", err.Error())
 			} else {
 				log.Info(ctx, "SendCheckInLink | Successful | Written %v to checkin_link set", toWrite)

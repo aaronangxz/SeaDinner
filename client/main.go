@@ -16,9 +16,19 @@ import (
 )
 
 var (
+	bot              *tgbotapi.BotAPI
+	err              error
 	startListenKey   = false
 	startListenChope = false
 )
+
+func resumeLog() {
+	bot.Debug = true
+}
+
+func skipLog() {
+	bot.Debug = false
+}
 
 func main() {
 	log.InitializeLogger()
@@ -26,7 +36,7 @@ func main() {
 	processors.Init()
 	processors.InitClient()
 
-	bot, err := tgbotapi.NewBotAPI(common.GetTGToken(context.TODO()))
+	bot, err = tgbotapi.NewBotAPI(common.GetTGToken(context.TODO()))
 	if err != nil {
 		log.Error(context.TODO(), err.Error())
 	}
@@ -39,6 +49,7 @@ func main() {
 
 	for update := range updates {
 		ctx := log.NewCtx()
+		resumeLog()
 		if update.CallbackQuery != nil {
 			var muteType bool
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
@@ -58,6 +69,7 @@ func main() {
 					}
 					//Return expired message if not found
 					msg.Text = "Oops this selection had expired. Start over at /mute!"
+					skipLog()
 					if _, err := bot.Send(msg); err != nil {
 						log.Error(ctx, err.Error())
 					}
@@ -80,6 +92,7 @@ func main() {
 					c := tgbotapi.NewEditMessageText(update.CallbackQuery.Message.Chat.ID, intVar, msg.Text)
 					c.ParseMode = "MARKDOWN"
 					c.ReplyMarkup = &out[0]
+					skipLog()
 					if _, err := bot.Send(c); err != nil {
 						log.Error(ctx, err.Error())
 					}
@@ -101,11 +114,13 @@ func main() {
 				out = append(out, rows)
 				mk.InlineKeyboard = out
 				c.ReplyMarkup = mk
+				skipLog()
 				if _, err := bot.Send(c); err != nil {
 					log.Error(ctx, err.Error())
 				}
 				continue
 			}
+			skipLog()
 			if _, err := bot.Send(msg); err != nil {
 				log.Error(ctx, err.Error())
 			}
@@ -129,6 +144,7 @@ func main() {
 			if startListenKey {
 				//Capture key
 				msg, _ := handlers.UpdateKey(ctx, update.Message.Chat.ID, update.Message.Text)
+				skipLog()
 				if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, msg)); err != nil {
 					log.Error(ctx, err.Error())
 				}
@@ -146,6 +162,7 @@ func main() {
 				}
 				//Capture chope
 				msg.ParseMode = "MARKDOWN"
+				skipLog()
 				if _, err := bot.Send(msg); err != nil {
 					log.Error(ctx, err.Error())
 				}
@@ -170,6 +187,7 @@ func main() {
 			if !ok {
 				msg.Text = s
 			} else {
+				skipLog()
 				txt, mp := processors.OutputMenuWithButton(ctx, handlers.GetKey(ctx, update.Message.Chat.ID))
 				for i, r := range txt {
 					msg.Text = r
@@ -183,11 +201,14 @@ func main() {
 				continue
 			}
 		case "help":
+			skipLog()
 			msg.Text = handlers.MakeHelpResponse()
 			msg.ParseMode = "MARKDOWN"
 		case "key":
+			skipLog()
 			msg.Text, _ = handlers.CheckKey(ctx, update.Message.Chat.ID)
 		case "newkey":
+			skipLog()
 			msg.Text = "What's your key? \nGo to https://dinner.sea.com/accounts/token, copy the Key under Generate Auth Token and paste it here:"
 			startListenKey = true
 		case "status":
@@ -195,6 +216,7 @@ func main() {
 			if !ok {
 				msg.Text = s
 			} else {
+				skipLog()
 				msg.Text = handlers.ListWeeklyResultByUserID(ctx, update.Message.Chat.ID)
 				msg.ParseMode = "HTML"
 			}
@@ -205,6 +227,7 @@ func main() {
 			if !ok {
 				msg.Text = s
 			} else {
+				skipLog()
 				msg.Text, _ = handlers.CheckChope(ctx, update.Message.Chat.ID)
 			}
 		case "reminder":
@@ -223,15 +246,16 @@ func main() {
 					msg.ReplyMarkup = kb[0]
 				}
 				msg.ParseMode = "MARKDOWN"
+				skipLog()
 				if msgTrace, err := bot.Send(msg); err != nil {
 					log.Error(ctx, err.Error())
 				} else {
 					//save msg id into cache for msg update
 					cacheKey := fmt.Sprint(common.USER_MUTE_MSG_ID_PREFIX, update.Message.Chat.ID)
 					if err := processors.RedisClient.Set(cacheKey, msgTrace.MessageID, 1800*time.Second).Err(); err != nil {
-						log.Error(ctx, "Mute | Error while writing to redis: %v", err.Error())
+						log.Error(ctx, "CheckMute | Error while writing to redis: %v", err.Error())
 					} else {
-						log.Info(ctx, "Mute | Successful | Written %v to redis", cacheKey)
+						log.Info(ctx, "CheckMute | Successful | Written %v to redis", cacheKey)
 					}
 					continue
 				}
@@ -253,6 +277,7 @@ func main() {
 			if _, err := bot.Send(msg); err != nil {
 				log.Error(ctx, err.Error())
 			}
+			bot.Debug = true
 		}
 	}
 }
