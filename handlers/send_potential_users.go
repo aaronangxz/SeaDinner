@@ -7,6 +7,7 @@ import (
 	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/processors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -38,19 +39,24 @@ func SendPotentialUsers(ctx context.Context) {
 		firstLoginTime, _ := strconv.ParseInt(split[1], 10, 64)
 
 		if (time.Now().Unix() - firstLoginTime) < common.ONE_MONTH {
-			log.Info(ctx, "SendPotentialUsers | Skip | Previous login time is not within range | user_id:%v", userID)
+			log.Info(ctx, "SendPotentialUsers | Skip | Previous login time is not within range, must be < %v | user_id:%v", time.Now().Unix()-common.ONE_MONTH, userID)
 			continue
 		}
 
-		bot, err := tgbotapi.NewBotAPI(common.GetTGToken(ctx))
-		if err != nil {
-			log.Error(ctx, err.Error())
+		if os.Getenv("TEST_DEPLOY") == "TRUE" {
+			log.Info(ctx, "SendPotentialUsers | Test Flow | Skip Bot init")
+		} else {
+			bot, err := tgbotapi.NewBotAPI(common.GetTGToken(ctx))
+			if err != nil {
+				log.Error(ctx, err.Error())
+			}
+			bot.Debug = true
+			log.Info(ctx, "Authorized on account %s", bot.Self.UserName)
+			if _, err := bot.Send(tgbotapi.NewMessage(userID, msgText)); err != nil {
+				log.Error(ctx, err.Error())
+			}
 		}
-		bot.Debug = true
-		log.Info(ctx, "Authorized on account %s", bot.Self.UserName)
-		if _, err := bot.Send(tgbotapi.NewMessage(userID, msgText)); err != nil {
-			log.Error(ctx, err.Error())
-		}
+
 		log.Info(ctx, "SendPotentialUsers | Success | user_id:%v", userID)
 
 		//Remove the old key and update with the new time in Set
