@@ -99,6 +99,9 @@ func IsPollStart() bool {
 	txn := App.StartTransaction("is_poll_start")
 	defer txn.End()
 
+	if common.Config.Adhoc {
+		return true
+	}
 	_, err := Client.R().
 		SetHeader("Authorization", MakeToken(context.TODO(), key)).
 		SetResult(&status).
