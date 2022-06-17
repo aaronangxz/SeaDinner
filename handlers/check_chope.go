@@ -23,8 +23,8 @@ func CheckChope(ctx context.Context, id int64) (string, bool) {
 		log.Error(ctx, "Id must be > 1.")
 		return "", false
 	}
-
-	if !processors.IsWeekDay() {
+	tz, _ := time.LoadLocation(processors.TimeZone)
+	if !processors.IsWeekDay() || !processors.IsNotEOW(time.Now().In(tz)) {
 		return "We are done for this week! You can tell me your order again next week 😀", false
 	}
 
