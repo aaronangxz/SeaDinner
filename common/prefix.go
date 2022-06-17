@@ -1,5 +1,8 @@
 package common
 
+import "time"
+
+//goland:noinspection ALL
 const (
 	DB_ORDER_LOG_TAB   = "order_log_tab"
 	DB_USER_CHOICE_TAB = "user_choice_tab"
@@ -13,4 +16,12 @@ const (
 
 	POTENTIAL_USER_SET = "potential_user"
 	CHECK_IN_LINK_SET  = "checkin_link"
+)
+
+//goland:noinspection ALL
+const (
+	ONE_HOUR  = int64(3600 * time.Second)
+	ONE_DAY   = 24 * ONE_HOUR
+	ONE_WEEK  = 7 * ONE_DAY
+	ONE_MONTH = 30 * ONE_WEEK
 )
