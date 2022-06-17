@@ -37,7 +37,7 @@ func SendPotentialUsers(ctx context.Context) {
 		userID, _ := strconv.ParseInt(split[0], 10, 64)
 		firstLoginTime, _ := strconv.ParseInt(split[1], 10, 64)
 
-		if (time.Now().Unix() - firstLoginTime) < common.ONE_HOUR {
+		if (time.Now().Unix() - firstLoginTime) < common.ONE_MONTH {
 			log.Info(ctx, "SendPotentialUsers | Skip | Previous login time is not within range | user_id:%v", userID)
 			continue
 		}
