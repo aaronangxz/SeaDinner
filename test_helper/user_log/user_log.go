@@ -14,6 +14,7 @@ import (
 
 var (
 	defaultOrderTime    = time.Now().Unix()
+	defaultTimeTaken    = int64(100)
 	defaultStatus       = int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)
 	defaultErrorMessage = "Default Error Message"
 )
@@ -26,10 +27,10 @@ func New() *UserLog {
 	test_helper.InitTest()
 	return &UserLog{
 		OrderRecord: &sea_dinner.OrderRecord{
-			Id:        new(int64),
 			UserId:    new(int64),
 			FoodId:    new(string),
 			OrderTime: new(int64),
+			TimeTaken: new(int64),
 			Status:    new(int64),
 			ErrorMsg:  new(string),
 		},
@@ -37,23 +38,26 @@ func New() *UserLog {
 }
 
 func (ul *UserLog) FillDefaults() *UserLog {
-	if ul.OrderRecord.UserId == nil {
+	if ul.OrderRecord.GetUserId() == 0 {
 		ul.SetUserId(test_helper.RandomInt(99999))
 	}
 
-	if ul.OrderRecord.FoodId == nil {
+	if ul.OrderRecord.GetFoodId() == "" {
 		ul.SetFoodId(fmt.Sprint(test_helper.RandomInt(99999)))
 	}
 
-	if ul.OrderRecord.OrderTime == nil {
+	if ul.OrderRecord.GetOrderTime() == 0 {
 		ul.SetOrderTime(defaultOrderTime)
 	}
 
-	if ul.OrderRecord.Status == nil {
+	if ul.OrderRecord.GetTimeTaken() == 0 {
+		ul.SetTimeTaken(defaultTimeTaken)
+	}
+	if ul.OrderRecord.GetStatus() == 0 {
 		ul.SetStatus(defaultStatus)
 	}
 
-	if ul.OrderRecord.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL) && ul.OrderRecord.ErrorMsg == nil {
+	if ul.OrderRecord.GetStatus() == int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL) && ul.OrderRecord.GetErrorMsg() == "" {
 		ul.SetErrorMsg(defaultErrorMessage)
 	}
 
@@ -67,6 +71,11 @@ func (ul *UserLog) Build() *UserLog {
 		return nil
 	}
 	log.Printf("Sulcessfully inserted to DB | user_id:%v", ul.GetUserId())
+	return ul
+}
+
+func (ul *UserLog) SetId(id int64) *UserLog {
+	ul.OrderRecord.Id = proto.Int64(id)
 	return ul
 }
 
@@ -85,6 +94,11 @@ func (ul *UserLog) SetOrderTime(orderTime int64) *UserLog {
 	return ul
 }
 
+func (ul *UserLog) SetTimeTaken(TimeTaken int64) *UserLog {
+	ul.OrderRecord.TimeTaken = proto.Int64(TimeTaken)
+	return ul
+}
+
 func (ul *UserLog) SetStatus(status int64) *UserLog {
 	ul.OrderRecord.Status = proto.Int64(status)
 	return ul
@@ -96,7 +110,7 @@ func (ul *UserLog) SetErrorMsg(errorMsg string) *UserLog {
 }
 
 func (ul *UserLog) TearDown() error {
-	if err := processors.DB.Exec("DELETE FROM user_log_tab WHERE user_id = ?", ul.GetUserId()).Error; err != nil {
+	if err := processors.DB.Exec("DELETE FROM order_log_tab WHERE user_id = ?", ul.GetUserId()).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", ul.GetUserId())
 		return err
 	}
@@ -105,10 +119,22 @@ func (ul *UserLog) TearDown() error {
 }
 
 func DeleteUserKey(userId int64) error {
-	if err := processors.DB.Exec("DELETE FROM user_log_tab WHERE user_id = ?", userId).Error; err != nil {
+	if err := processors.DB.Exec("DELETE FROM order_log_tab WHERE user_id = ?", userId).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", userId)
 		return err
 	}
 	log.Printf("Sulcessfully deleted from DB | user_id:%v", userId)
 	return nil
+}
+
+func ConvertUserLogToOrderRecord(original *UserLog) *sea_dinner.OrderRecord {
+	return &sea_dinner.OrderRecord{
+		Id:        proto.Int64(original.GetId()),
+		UserId:    proto.Int64(original.GetUserId()),
+		FoodId:    proto.String(original.GetFoodId()),
+		OrderTime: proto.Int64(original.GetOrderTime()),
+		TimeTaken: proto.Int64(original.GetTimeTaken()),
+		Status:    proto.Int64(original.GetStatus()),
+		ErrorMsg:  proto.String(original.GetErrorMsg()),
+	}
 }

@@ -27,14 +27,16 @@ func TestCheckChope(t *testing.T) {
 	if time.Now().In(tz).Unix() > processors.GetLunchTime().Unix() {
 		if processors.IsNotEOW(time.Now().In(tz)) {
 			expectedNotPlacing = "Not placing dinner order for you tomorrow 🙅 Changed your mind? You can choose from /menu"
-		} else {
-			expectedNotPlacing = doneStr
-			expectedPlacing = doneStr
-			expectedRandom = doneStr
-			expectedNotInMenu = doneStr
-			expectedNoOrder = doneStr
-			expectedBool = false
 		}
+	}
+
+	if !processors.IsWeekDay() {
+		expectedNotPlacing = doneStr
+		expectedPlacing = doneStr
+		expectedRandom = doneStr
+		expectedNotInMenu = doneStr
+		expectedNoOrder = doneStr
+		expectedBool = false
 	}
 
 	defer func() {

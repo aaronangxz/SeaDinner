@@ -65,9 +65,10 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 	legend := "\n\n🟢 Success\n🟡 Cancelled\n🔴 Failed"
 	expected := header + table + legend
 
-	if !processors.IsWeekDay() {
-		expected = "We are done for this week! Check again next week 😀"
-	}
+	//Applicable for ListWeeklyResult
+	//if !processors.IsWeekDay() {
+	//	expected = "We are done for this week! Check again next week 😀"
+	//}
 
 	type args struct {
 		ctx    context.Context

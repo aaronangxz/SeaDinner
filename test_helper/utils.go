@@ -114,13 +114,17 @@ func GetLiveMenuDetails() []*sea_dinner.Food {
 	InitClient()
 	LoadConfig()
 	InitTest()
+
+	//Dynamically set unit_test as true
+	//To bypass day_id checks otherwise UT will fail without menu
+	common.Config.UnitTest = true
 	key := os.Getenv("TOKEN")
 	if key == "" {
 		log.Println("GetLiveMenuDetails | unable to fetch TOKEN from env")
 		return nil
 	}
 	log.Println("GetLiveMenuDetails | Success")
-	return processors.GetMenuUsingCache(context.TODO(), key).GetFood()
+	return processors.GetMenu(context.TODO(), processors.Client, key).GetFood()
 }
 
 //IsInSlice Check if element is in slice

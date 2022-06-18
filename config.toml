@@ -1,4 +1,5 @@
 adhoc = false
+unit_test = false
 
 [prefix]
 url_prefix = "https://dinner.sea.com"

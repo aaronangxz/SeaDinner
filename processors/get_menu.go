@@ -140,13 +140,15 @@ func OutputMenuWithButton(ctx context.Context, key string) ([]string, []tgbotapi
 
 //MenuRefresher Periodically refreshes cached menu with the updated live menu
 func MenuRefresher(ctx context.Context) {
-	if !IsActiveDay() {
-		return
-	}
 	ticker := time.NewTicker(time.Duration(common.Config.Runtime.MenuRefreshIntervalSeconds) * time.Second)
 
 	for range ticker.C {
 		func() {
+			if !IsActiveDay() {
+				log.Warn(ctx, "MenuRefresher | Inactive day | Resumes check tomorrow.")
+				time.Sleep(time.Duration(GetEOD().Unix()-time.Now().Unix()) * time.Second)
+				return
+			}
 			key := os.Getenv("TOKEN")
 			log.Info(ctx, "MenuRefresher | Comparing Live and Cached menu.")
 

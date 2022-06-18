@@ -22,16 +22,19 @@ func GetDayID(ctx context.Context) (ID int64) {
 	)
 
 	//check cache
-	redisResp, redisErr := RedisClient.Get(cacheKey).Result()
-	if redisErr != nil {
-		if redisErr == redis.Nil {
-			log.Warn(ctx, "GetDayId | No result of %v in Redis, reading from API", cacheKey)
+	//Not for unit test in case of weekends
+	if !common.Config.UnitTest {
+		redisResp, redisErr := RedisClient.Get(cacheKey).Result()
+		if redisErr != nil {
+			if redisErr == redis.Nil {
+				log.Warn(ctx, "GetDayId | No result of %v in Redis, reading from API", cacheKey)
+			} else {
+				log.Error(ctx, "GetDayId | Error while reading from redis: %v", redisErr.Error())
+			}
 		} else {
-			log.Error(ctx, "GetDayId | Error while reading from redis: %v", redisErr.Error())
+			redisRespInt, _ := strconv.Atoi(redisResp)
+			return int64(redisRespInt)
 		}
-	} else {
-		redisRespInt, _ := strconv.Atoi(redisResp)
-		return int64(redisRespInt)
 	}
 
 	var (
@@ -50,7 +53,7 @@ func GetDayID(ctx context.Context) (ID int64) {
 
 	currentID = currentMenu.GetMenu().GetId()
 
-	if currentMenu.GetMenu().GetPollStart() != fmt.Sprint(ConvertTimeStamp(time.Now().Unix()), "T04:30:00Z") {
+	if !common.Config.UnitTest && currentMenu.GetMenu().GetPollStart() != fmt.Sprint(ConvertTimeStamp(time.Now().Unix()), "T04:30:00Z") {
 		log.Warn(ctx, "GetDayId | Today's ID not found: %v", currentMenu.GetMenu().GetPollStart())
 		currentID = 0
 	}
