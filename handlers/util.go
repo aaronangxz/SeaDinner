@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/aaronangxz/SeaDinner/common"
 	"github.com/aaronangxz/SeaDinner/processors"
 	"os"
 )
@@ -17,6 +18,10 @@ func MakeMenuNameMap(ctx context.Context) map[string]string {
 
 	menuMap := make(map[string]string)
 	menu := processors.GetMenuUsingCache(ctx, key)
+
+	if common.Config.UnitTest {
+		menu = processors.GetMenu(ctx, processors.Client, key)
+	}
 	for _, m := range menu.GetFood() {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetName()
 	}
@@ -36,6 +41,10 @@ func MakeMenuCodeMap(ctx context.Context) map[string]string {
 
 	menuMap := make(map[string]string)
 	menu := processors.GetMenuUsingCache(ctx, key)
+
+	if common.Config.UnitTest {
+		menu = processors.GetMenu(ctx, processors.Client, key)
+	}
 	for _, m := range menu.GetFood() {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetCode()
 	}
