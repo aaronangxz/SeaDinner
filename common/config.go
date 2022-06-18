@@ -38,6 +38,7 @@ type prefixConfig struct {
 
 type tomlConfig struct {
 	Adhoc     bool            `toml:"adhoc"`
+	UnitTest  bool            `toml:"unit_test"`
 	Prefix    prefixConfig    `toml:"prefix"`
 	Runtime   runtimeConfig   `toml:"runtime"`
 	OrderTime orderTimeConfig `toml:"order_time"`

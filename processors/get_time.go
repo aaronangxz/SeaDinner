@@ -151,6 +151,13 @@ func GetOffWorkTime() time.Time {
 	return time.Date(year, month, day, 19, 0, 0, 0, now.Location())
 }
 
+//GetEOD Returns 23:59:59 of today
+func GetEOD() time.Time {
+	now := time.Now().In(tz)
+	year, month, day := now.Date()
+	return time.Date(year, month, day, 23, 59, 59, 0, now.Location())
+}
+
 //IsSendCheckInTime Checks if it is eod
 func IsSendCheckInTime() bool {
 	return ShouldOrder() && time.Now().Unix() == GetOffWorkTime().Unix()
