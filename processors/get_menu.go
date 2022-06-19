@@ -36,11 +36,10 @@ func GetMenu(ctx context.Context, client resty.Client, key string) *sea_dinner.D
 	return currentArr
 }
 
-//GetMenuUsingCache Calls Sea API, retrieves the current day's menu. Supports cache with TTL of 60 mins
+//GetMenuUsingCache Calls Sea API, retrieves the current day's menu. Supports cache
 func GetMenuUsingCache(ctx context.Context, key string) *sea_dinner.DinnerMenuArray {
 	var (
 		cacheKey   = fmt.Sprint(common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
-		expiry     = 7200 * time.Second
 		currentArr *sea_dinner.DinnerMenuArray
 	)
 	txn := App.StartTransaction("get_menu_using_cache")
@@ -73,7 +72,7 @@ func GetMenuUsingCache(ctx context.Context, key string) *sea_dinner.DinnerMenuAr
 		log.Error(ctx, "GetMenuUsingCache | Failed to marshal JSON results: %v\n", err.Error())
 	}
 
-	if err := RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
+	if err := RedisClient.Set(cacheKey, data, 0).Err(); err != nil {
 		log.Error(ctx, "GetMenuUsingCache | Error while writing to redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "GetMenuUsingCache | Successful | Written %v to redis", cacheKey)
@@ -158,7 +157,6 @@ func MenuRefresher(ctx context.Context) {
 			if !CompareSliceStruct(ctx, liveMenu.GetFood(), cacheMenu.GetFood()) {
 				log.Warn(ctx, "MenuRefresher | Live and Cached menu are inconsistent.")
 				cacheKey := fmt.Sprint(common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
-				expiry := 7200 * time.Second
 
 				data, err := json.Marshal(liveMenu)
 				if err != nil {
@@ -166,7 +164,7 @@ func MenuRefresher(ctx context.Context) {
 				}
 
 				//Use live menu as the source of truth
-				if err := RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
+				if err := RedisClient.Set(cacheKey, data, 0).Err(); err != nil {
 					log.Error(ctx, "MenuRefresher | Error while writing to redis: %v", err.Error())
 				} else {
 					log.Info(ctx, "MenuRefresher | Successful | Written %v to redis", cacheKey)

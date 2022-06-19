@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/processors"
+	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -25,6 +26,13 @@ func CallbackQueryHandler(ctx context.Context, id int64, callBack *tgbotapi.Call
 		return CancelOrder(ctx, id)
 	case "SKIP":
 		return "I figured 🤦", true
+	case "WEEKRESULT":
+		return ListResultByUserID(ctx, id, int64(sea_dinner.ResultTimeRange_RESULT_TIME_RANGE_WEEK))
+	case "MONTHRESULT":
+		return ListResultByUserID(ctx, id, int64(sea_dinner.ResultTimeRange_RESULT_TIME_RANGE_MONTH))
+		//Not active for now
+		//case "YEARRESULT":
+		//	return ListResultByUserID(ctx, id, int64(sea_dinner.ResultTimeRange_RESULT_TIME_RANGE_YEAR))
 	}
 	return UpdateChope(ctx, id, callBack.Data)
 }

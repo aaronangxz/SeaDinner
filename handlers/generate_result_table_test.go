@@ -87,8 +87,8 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GenerateWeeklyResultTable(tt.args.ctx, tt.args.record); got != tt.want {
-				t.Errorf("GenerateWeeklyResultTable() = %v, want %v", got, tt.want)
+			if got := GenerateResultTable(tt.args.ctx, tt.args.record, start, end); got != tt.want {
+				t.Errorf("GenerateResultTable() = %v, want %v", got, tt.want)
 			}
 		})
 	}

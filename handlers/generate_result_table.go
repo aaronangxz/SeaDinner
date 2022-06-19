@@ -5,15 +5,13 @@ import (
 	"fmt"
 	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
-	"time"
 )
 
-//GenerateWeeklyResultTable Outputs pre-formatted weekly order status.
-func GenerateWeeklyResultTable(ctx context.Context, record []*sea_dinner.OrderRecord) string {
+//GenerateResultTable Outputs pre-formatted order status.
+func GenerateResultTable(ctx context.Context, record []*sea_dinner.OrderRecord, start int64, end int64) string {
 	txn := processors.App.StartTransaction("generate_weekly_result_table")
 	defer txn.End()
 
-	start, end := processors.WeekStartEndDate(time.Now().Unix())
 	m := MakeMenuCodeMap(ctx)
 
 	status := map[int64]string{
