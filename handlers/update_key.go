@@ -47,6 +47,11 @@ func UpdateKey(ctx context.Context, id int64, s string) (string, bool) {
 		return "Are you sure this is a valid key? 😟", false
 	}
 
+	if IsContainsSpecialChar(s) || IsContainsSpace(s) {
+		log.Error(ctx, "UpdateKey | Key format is invalid | key: %v", s)
+		return "Are you sure this is a valid key? 😟", false
+	}
+
 	if err := processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		log.Error(ctx, "UpdateKey | %v", err.Error())
 		return err.Error(), false
