@@ -56,4 +56,5 @@ func TestSendPotentialUsers(t *testing.T) {
 	} else {
 		log.Info(ctx, "TestSendPotentialUsers | Successful | Deleted potential_user set")
 	}
+	os.Setenv("TEST_DEPLOY", "FALSE")
 }

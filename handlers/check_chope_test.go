@@ -71,7 +71,7 @@ func TestCheckChope(t *testing.T) {
 			name:  "NoOrder",
 			args:  args{id: 1},
 			want:  expectedNoOrder,
-			want1: expectedBool,
+			want1: false,
 		},
 		{
 			name:  "StopOrder",
