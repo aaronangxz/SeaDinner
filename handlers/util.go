@@ -21,7 +21,7 @@ func MakeMenuNameMap(ctx context.Context) map[string]string {
 	menu := processors.GetMenuUsingCache(ctx, key)
 
 	if common.Config.UnitTest {
-		menu = processors.GetMenu(ctx, processors.Client, key)
+		menu = processors.GetMenu(ctx, key)
 	}
 	for _, m := range menu.GetFood() {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetName()
@@ -44,7 +44,7 @@ func MakeMenuCodeMap(ctx context.Context) map[string]string {
 	menu := processors.GetMenuUsingCache(ctx, key)
 
 	if common.Config.UnitTest {
-		menu = processors.GetMenu(ctx, processors.Client, key)
+		menu = processors.GetMenu(ctx, key)
 	}
 	for _, m := range menu.GetFood() {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetCode()

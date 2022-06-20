@@ -56,9 +56,11 @@ func GetDayID(ctx context.Context) (ID int64) {
 	if !common.Config.UnitTest && currentMenu.GetMenu().GetPollStart() != fmt.Sprint(ConvertTimeStamp(time.Now().Unix()), "T04:30:00Z") {
 		log.Warn(ctx, "GetDayId | Today's ID not found: %v", currentMenu.GetMenu().GetPollStart())
 		currentID = 0
+		expiry = 1800 * time.Second
 	}
 
-	//set back into cache
+	//Short TTL if day is invalid
+	//Might due to late menu update, so we have some room to get the correct data
 	if err := RedisClient.Set(cacheKey, currentID, expiry).Err(); err != nil {
 		log.Error(ctx, "GetDayId | Error while writing to redis: %v", err.Error())
 	} else {

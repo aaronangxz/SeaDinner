@@ -11,20 +11,19 @@ import (
 	"github.com/aaronangxz/SeaDinner/log"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-redis/redis"
-	"github.com/go-resty/resty/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"google.golang.org/protobuf/proto"
 )
 
 //GetMenu Calls Sea API, retrieves the current day's menu in realtime
-func GetMenu(ctx context.Context, client resty.Client, key string) *sea_dinner.DinnerMenuArray {
+func GetMenu(ctx context.Context, key string) *sea_dinner.DinnerMenuArray {
 	var (
 		currentArr *sea_dinner.DinnerMenuArray
 	)
 	txn := App.StartTransaction("get_menu")
 	defer txn.End()
 
-	_, err := client.R().
+	_, err := Client.R().
 		SetHeader("Authorization", MakeToken(ctx, key)).
 		SetResult(&currentArr).
 		Get(MakeURL(int(sea_dinner.URLType_URL_MENU), proto.Int64(GetDayID(ctx))))
@@ -65,7 +64,7 @@ func GetMenuUsingCache(ctx context.Context, key string) *sea_dinner.DinnerMenuAr
 		}
 	}
 
-	currentArr = GetMenu(ctx, Client, key)
+	currentArr = GetMenu(ctx, key)
 
 	//set back into cache
 	data, err := json.Marshal(currentArr)
@@ -157,7 +156,7 @@ func MenuRefresher(ctx context.Context) {
 			key := os.Getenv("TOKEN")
 			log.Info(ctx, "MenuRefresher | Comparing Live and Cached menu.")
 
-			liveMenu := GetMenu(ctx, Client, key)
+			liveMenu := GetMenu(ctx, key)
 			cacheMenu := GetMenuUsingCache(ctx, key)
 
 			if !CompareSliceStruct(ctx, liveMenu.GetFood(), cacheMenu.GetFood()) {

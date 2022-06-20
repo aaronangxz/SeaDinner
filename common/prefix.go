@@ -2,9 +2,10 @@ package common
 
 //goland:noinspection ALL
 const (
-	DB_ORDER_LOG_TAB   = "order_log_tab"
-	DB_USER_CHOICE_TAB = "user_choice_tab"
-	DB_USER_KEY_TAB    = "user_key_tab"
+	DB_ORDER_LOG_TAB    = "order_log_tab"
+	DB_USER_CHOICE_TAB  = "user_choice_tab"
+	DB_USER_KEY_TAB     = "user_key_tab"
+	DB_FOOD_MAPPING_TAB = "food_mapping_tab"
 
 	MENU_CACHE_KEY_PREFIX   = "current_menu:"
 	DAY_ID_KEY_PREFIX       = "day_id:"

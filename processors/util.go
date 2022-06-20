@@ -231,3 +231,20 @@ func CompareSliceStruct(ctx context.Context, a interface{}, b interface{}) bool 
 	}
 	return same
 }
+
+func ConvertFoodToFoodMapping(ctx context.Context, food []*sea_dinner.Food) []*sea_dinner.FoodMapping {
+	var (
+		mappings []*sea_dinner.FoodMapping
+	)
+
+	for _, f := range food {
+		mappings = append(mappings, &sea_dinner.FoodMapping{
+			FoodId:    f.Id,
+			FoodCode:  f.Code,
+			FoodName:  f.Name,
+			FoodImage: f.ImageUrl,
+		})
+	}
+	log.Error(ctx, "ConvertFoodToFoodMapping | Success | size:%v", len(mappings))
+	return mappings
+}
