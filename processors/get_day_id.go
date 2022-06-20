@@ -16,9 +16,10 @@ import (
 //GetDayID Calls Sea API, retrieves the current day's id
 func GetDayID(ctx context.Context) (ID int64) {
 	var (
-		key      = os.Getenv("TOKEN")
-		cacheKey = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
-		expiry   = 86400 * time.Second
+		key = os.Getenv("TOKEN")
+		//8 hours offset, so we don't try to check between 0000 ~ 0800 when day id isn't updated yet
+		cacheKey = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()-28800))
+		expiry   = 172800 * time.Second
 	)
 
 	//check cache
