@@ -145,8 +145,13 @@ func MenuRefresher(ctx context.Context) {
 	for range ticker.C {
 		func() {
 			if !IsActiveDay() {
-				log.Warn(ctx, "MenuRefresher | Inactive day | Resumes check tomorrow.")
-				time.Sleep(time.Duration(GetEOD().Unix()-time.Now().Unix()) * time.Second)
+				if IsWeekDay() {
+					log.Warn(ctx, "MenuRefresher | Inactive day | Resumes check later.")
+					time.Sleep(3600 * time.Second)
+				} else {
+					log.Warn(ctx, "MenuRefresher | Inactive day | Resumes check tomorrow.")
+					time.Sleep(time.Duration(GetEOD().Unix()-time.Now().Unix()) * time.Second)
+				}
 				return
 			}
 			key := os.Getenv("TOKEN")
