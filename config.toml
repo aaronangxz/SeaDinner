@@ -1,4 +1,4 @@
-adhoc = true
+adhoc = false
 unit_test = false
 
 [prefix]
@@ -10,8 +10,8 @@ retry_times = 5
 menu_refresh_interval_seconds = 600
 
 [order_time]
-hour = 4
-minutes = 36
+hour = 12
+minutes = 30
 seconds = 0
 
 [grayscale]
