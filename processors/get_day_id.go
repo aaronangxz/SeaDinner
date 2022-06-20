@@ -16,9 +16,10 @@ import (
 //GetDayID Calls Sea API, retrieves the current day's id
 func GetDayID(ctx context.Context) (ID int64) {
 	var (
-		key      = os.Getenv("TOKEN")
-		cacheKey = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
-		expiry   = 86400 * time.Second
+		key = os.Getenv("TOKEN")
+		//8 hours offset, so we don't try to check between 0000 ~ 0800 when day id isn't updated yet
+		cacheKey = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()-28800))
+		expiry   = 172800 * time.Second
 	)
 
 	//check cache
@@ -56,9 +57,11 @@ func GetDayID(ctx context.Context) (ID int64) {
 	if !common.Config.UnitTest && currentMenu.GetMenu().GetPollStart() != fmt.Sprint(ConvertTimeStamp(time.Now().Unix()), "T04:30:00Z") {
 		log.Warn(ctx, "GetDayId | Today's ID not found: %v", currentMenu.GetMenu().GetPollStart())
 		currentID = 0
+		expiry = 1800 * time.Second
 	}
 
-	//set back into cache
+	//Short TTL if day is invalid
+	//Might due to late menu update, so we have some room to get the correct data
 	if err := RedisClient.Set(cacheKey, currentID, expiry).Err(); err != nil {
 		log.Error(ctx, "GetDayId | Error while writing to redis: %v", err.Error())
 	} else {

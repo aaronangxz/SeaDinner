@@ -124,7 +124,7 @@ func GetLiveMenuDetails() []*sea_dinner.Food {
 		return nil
 	}
 	log.Println("GetLiveMenuDetails | Success")
-	return processors.GetMenu(context.TODO(), processors.Client, key).GetFood()
+	return processors.GetMenu(context.TODO(), key).GetFood()
 }
 
 //IsInSlice Check if element is in slice
