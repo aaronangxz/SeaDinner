@@ -28,6 +28,7 @@ func main() {
 	for {
 		ctx := log.NewCtx()
 		if processors.IsSendReminderTime() {
+			processors.StoreFoodMappings(ctx)
 			handlers.SendReminder(ctx)
 			handlers.SendPotentialUsers(ctx)
 		}

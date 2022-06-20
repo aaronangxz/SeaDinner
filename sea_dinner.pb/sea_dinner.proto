@@ -109,3 +109,10 @@ message OrderRecord{
     optional int64 status = 6;
     optional string error_msg = 7;
 }
+
+message FoodMapping{
+    optional int64 food_id = 1;
+    optional string food_code = 2;
+    optional string food_name = 3;
+    optional string food_image = 4;
+}
