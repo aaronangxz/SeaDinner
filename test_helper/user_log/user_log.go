@@ -138,3 +138,16 @@ func ConvertUserLogToOrderRecord(original *UserLog) *sea_dinner.OrderRecord {
 		ErrorMsg:  proto.String(original.GetErrorMsg()),
 	}
 }
+
+func CheckOrderLog(userId int64) *sea_dinner.OrderRecord {
+	var (
+		row *sea_dinner.OrderRecord
+	)
+	if err := processors.DB.Raw("SELECT * FROM user_log_tab WHERE user_id = ?", userId).Scan(&row).Error; err != nil {
+		log.Printf("Failed to read from DB | user_id:%v", userId)
+		return nil
+	}
+
+	log.Printf("Successfully read from DB | user_id:%v", userId)
+	return row
+}
