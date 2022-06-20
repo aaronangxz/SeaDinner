@@ -47,6 +47,12 @@ func CancelOrder(ctx context.Context, id int64) (string, bool) {
 		log.Error(ctx, "CancelOrder | failed to cancel order")
 		return "It seems like you ordered something else 😥 Try to cancel from SeaTalk instead!", false
 	}
+
+	if err := processors.UpdateOrderLog(ctx, id, int64(sea_dinner.OrderStatus_ORDER_STATUS_CANCEL)); err != nil {
+		log.Error(ctx, "CancelOrder | error: %v", err.Error())
+		return "There were some issues 😥 Kindly verify on SeaTalk!", false
+	}
+
 	log.Info(ctx, "CancelOrder | Success | user_id:%v", id)
 	return "I have cancelled your order!😀", true
 }

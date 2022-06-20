@@ -183,20 +183,16 @@ func BatchInsertOrderLogs(ctx context.Context, records []*sea_dinner.OrderRecord
 }
 
 //UpdateOrderLog Update a single record in order_log_tab
-func UpdateOrderLog(ctx context.Context, record *sea_dinner.OrderRecord) {
+func UpdateOrderLog(ctx context.Context, id int64, status int64) error {
 	txn := App.StartTransaction("update_order_log")
 	defer txn.End()
 
-	if record == nil {
-		log.Warn(ctx, "UpdateOrderLog | No record to update.")
-		return
+	if err := DB.Exec("UPDATE user_log_tab SET status = ? WHERE user_id = ?", status, id).Error; err != nil {
+		log.Error(ctx, "UpdateOrderLog | Failed to update record | %v", err.Error())
+		return err
 	}
-
-	if err := DB.Exec("UPDATE user_log_tab SET status = ? WHERE user_id = ?", sea_dinner.OrderStatus_ORDER_STATUS_CANCEL, record.GetUserId()).Error; err != nil {
-		log.Error(ctx, "UpdateOrderLog | Failed to update records | %v", err.Error())
-		return
-	}
-	log.Info(ctx, "UpdateOrderLog | Successfully updated record | user_id: %v", record.GetUserId())
+	log.Info(ctx, "UpdateOrderLog | Successfully updated record | user_id: %v", id)
+	return nil
 }
 
 //SendInstantNotification Spawns a one-time telegram handlers instance and send notification to user
