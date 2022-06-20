@@ -73,6 +73,7 @@ func main() {
 					if _, err := bot.Send(msg); err != nil {
 						log.Error(ctx, err.Error())
 					}
+					resumeLog()
 					continue
 				} else {
 					var out []tgbotapi.InlineKeyboardMarkup
@@ -96,6 +97,7 @@ func main() {
 					if _, err := bot.Send(c); err != nil {
 						log.Error(ctx, err.Error())
 					}
+					resumeLog()
 					continue
 				}
 			} else if update.CallbackQuery.Data == "ATTEMPTCANCEL" {
@@ -118,12 +120,14 @@ func main() {
 				if _, err := bot.Send(c); err != nil {
 					log.Error(ctx, err.Error())
 				}
+				resumeLog()
 				continue
 			}
 			skipLog()
 			if _, err := bot.Send(msg); err != nil {
 				log.Error(ctx, err.Error())
 			}
+			resumeLog()
 			continue
 		}
 
@@ -148,6 +152,7 @@ func main() {
 				if _, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, msg)); err != nil {
 					log.Error(ctx, err.Error())
 				}
+				resumeLog()
 				startListenKey = false
 				continue
 			} else if startListenChope {
@@ -166,6 +171,7 @@ func main() {
 				if _, err := bot.Send(msg); err != nil {
 					log.Error(ctx, err.Error())
 				}
+				resumeLog()
 				startListenChope = false
 				continue
 			} else {
@@ -198,6 +204,7 @@ func main() {
 						log.Error(ctx, err.Error())
 					}
 				}
+				resumeLog()
 				continue
 			}
 		case "help":
@@ -257,6 +264,7 @@ func main() {
 					} else {
 						log.Info(ctx, "CheckMute | Successful | Written %v to redis", cacheKey)
 					}
+					resumeLog()
 					continue
 				}
 			}
@@ -277,7 +285,7 @@ func main() {
 			if _, err := bot.Send(msg); err != nil {
 				log.Error(ctx, err.Error())
 			}
-			bot.Debug = true
 		}
+		resumeLog()
 	}
 }
