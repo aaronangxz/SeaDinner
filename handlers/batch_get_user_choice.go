@@ -27,7 +27,7 @@ func BatchGetUsersChoice(ctx context.Context) []*sea_dinner.UserChoice {
 	//Save into cache
 	//For Morning Reminder callback
 	for _, r := range res {
-		//Not neccesary to cache -1 orders because we never send reminder for those
+		//Not necessary to cache -1 orders because we never send reminder for those
 		if r.GetUserChoice() != "-1" {
 			key := fmt.Sprint(common.USER_CHOICE_PREFIX, r.GetUserId())
 			if err := processors.CacheInstance().Set(key, r.GetUserChoice(), expiry).Err(); err != nil {
