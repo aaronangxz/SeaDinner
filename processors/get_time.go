@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aaronangxz/SeaDinner/common"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/aaronangxz/SeaDinner/log"
@@ -129,7 +130,8 @@ func WeekStartEndDate(timestamp int64) (int64, int64) {
 
 //IsSendReminderTime Checks if it is 2 hours prior to the pre-defined lunch time
 func IsSendReminderTime() bool {
-	return ShouldOrder() && time.Now().Unix() == GetLunchTime().Add(time.Duration(-7200)*time.Second).Unix()
+	offset, _ := strconv.ParseInt(os.Getenv("SEND_REMINDER_OFFSET_SECONDS"), 10, 64)
+	return ShouldOrder() && time.Now().Unix() == GetLunchTime().Add(time.Duration(-offset)*time.Second).Unix()
 }
 
 //IsPrepOrderTime Checks if it is within 1 minute before and 15 seconds before the pre-defined lunch time
