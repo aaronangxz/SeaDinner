@@ -53,7 +53,7 @@ func main() {
 		if update.CallbackQuery != nil {
 			var muteType bool
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
-			msg.ParseMode = "MARKDOWN"
+			msg.ParseMode = "HTML"
 			msg.Text, muteType = handlers.CallbackQueryHandler(ctx, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
 
 			//Handle MUTE related callback separately
@@ -224,8 +224,9 @@ func main() {
 				msg.Text = s
 			} else {
 				skipLog()
-				msg.Text = handlers.ListWeeklyResultByUserID(ctx, update.Message.Chat.ID)
-				msg.ParseMode = "HTML"
+				txt, mp := handlers.GetResultSelection()
+				msg.Text = txt
+				msg.ReplyMarkup = mp[0]
 			}
 		case "chope":
 			msg.Text = "This command is deprecated. Choose from /menu instead!😋"

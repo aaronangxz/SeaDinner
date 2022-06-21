@@ -17,8 +17,8 @@ import (
 func GetDayID(ctx context.Context) (ID int64) {
 	var (
 		key = os.Getenv("TOKEN")
-		//8 hours offset, so we don't try to check between 0000 ~ 0800 when day id isn't updated yet
-		cacheKey = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()-28800))
+		//12 hours offset, so we don't try to check between 0000 ~ 1200 when day id isn't updated yet
+		cacheKey = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()-43200))
 		expiry   = 172800 * time.Second
 	)
 

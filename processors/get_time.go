@@ -134,6 +134,22 @@ func WeekStartEndDate(timestamp int64) (int64, int64) {
 	return time.Date(startYear, startMonth, startDay, 0, 0, 0, 0, tz).Unix(), time.Date(endYear, endMonth, endDay, 23, 59, 59, 59, tz).Unix()
 }
 
+//MonthStartEndDate Returns the start and end day of the current month in SGT unix time
+func MonthStartEndDate(timestamp int64) (int64, int64) {
+	date := UnixToUTC(timestamp).In(tz)
+	currentYear, currentMonth, _ := date.Date()
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, tz)
+	lastOfMonth := time.Date(currentYear, currentMonth+1, 0, 23, 59, 59, 59, tz)
+	return firstOfMonth.Unix(), lastOfMonth.Unix()
+}
+
+//YearStartEndDate Returns the start and end day of the current year in SGT unix time
+func YearStartEndDate(timestamp int64) (int64, int64) {
+	date := UnixToUTC(timestamp).In(tz)
+	currentYear, _, _ := date.Date()
+	return time.Date(currentYear, time.January, 1, 0, 0, 0, 0, tz).Unix(), time.Date(currentYear, time.December, 31, 23, 59, 59, 59, tz).Unix()
+}
+
 //IsSendReminderTime Checks if it is 2 hours prior to the pre-defined lunch time
 func IsSendReminderTime() bool {
 	offset, _ := strconv.ParseInt(os.Getenv("SEND_REMINDER_OFFSET_SECONDS"), 10, 64)

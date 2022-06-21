@@ -269,3 +269,22 @@ func ConvertFoodToFoodMappingByMenu(ctx context.Context, food []*sea_dinner.Food
 		FoodMapping: foodBytes,
 	}
 }
+
+//MakeMenuMap Returns food_id:food_name mapping of current menu
+func MakeMenuMap(ctx context.Context) map[string]string {
+	var (
+		key = os.Getenv("TOKEN")
+	)
+	txn := App.StartTransaction("make_menu_map")
+	defer txn.End()
+
+	menuMap := make(map[string]string)
+	menu := GetMenuUsingCache(ctx, key)
+	for _, m := range menu.GetFood() {
+		menuMap[fmt.Sprint(m.GetId())] = m.GetName()
+	}
+	// Store -1 hash to menuMap
+	menuMap["-1"] = "*NOTHING*" // to be renamed
+	menuMap["RAND"] = "RAND"
+	return menuMap
+}

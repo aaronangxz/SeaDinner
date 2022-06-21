@@ -30,7 +30,7 @@ func MakeMenuNameMap(ctx context.Context) map[string]string {
 		menuMap[fmt.Sprint(m.GetId())] = m.GetName()
 	}
 	// Store -1 hash to menuMap
-	menuMap["-1"] = "*NOTHING*" // to be renamed
+	menuMap["-1"] = "<b>NOTHING</b>" // to be renamed
 	menuMap["RAND"] = "Random"
 	return menuMap
 }
@@ -88,6 +88,7 @@ func MakeFoodMapping(ctx context.Context) map[int64]map[int64]map[string]string 
 			mapped[m.GetYear()][m.GetWeek()][fmt.Sprint(f.GetFoodId())] = f.GetFoodCode()
 		}
 	}
+	log.Info(ctx, "MakeFoodMapping | Success")
 	return mapped
 }
 

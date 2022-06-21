@@ -177,6 +177,55 @@ func (OrderStatus) EnumDescriptor() ([]byte, []int) {
 	return file_sea_dinner_proto_rawDescGZIP(), []int{2}
 }
 
+type ResultTimeRange int32
+
+const (
+	ResultTimeRange_RESULT_TIME_RANGE_WEEK  ResultTimeRange = 0
+	ResultTimeRange_RESULT_TIME_RANGE_MONTH ResultTimeRange = 1
+	ResultTimeRange_RESULT_TIME_RANGE_YEAR  ResultTimeRange = 2
+)
+
+// Enum value maps for ResultTimeRange.
+var (
+	ResultTimeRange_name = map[int32]string{
+		0: "RESULT_TIME_RANGE_WEEK",
+		1: "RESULT_TIME_RANGE_MONTH",
+		2: "RESULT_TIME_RANGE_YEAR",
+	}
+	ResultTimeRange_value = map[string]int32{
+		"RESULT_TIME_RANGE_WEEK":  0,
+		"RESULT_TIME_RANGE_MONTH": 1,
+		"RESULT_TIME_RANGE_YEAR":  2,
+	}
+)
+
+func (x ResultTimeRange) Enum() *ResultTimeRange {
+	p := new(ResultTimeRange)
+	*p = x
+	return p
+}
+
+func (x ResultTimeRange) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ResultTimeRange) Descriptor() protoreflect.EnumDescriptor {
+	return file_sea_dinner_proto_enumTypes[3].Descriptor()
+}
+
+func (ResultTimeRange) Type() protoreflect.EnumType {
+	return &file_sea_dinner_proto_enumTypes[3]
+}
+
+func (x ResultTimeRange) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ResultTimeRange.Descriptor instead.
+func (ResultTimeRange) EnumDescriptor() ([]byte, []int) {
+	return file_sea_dinner_proto_rawDescGZIP(), []int{3}
+}
+
 type OrderResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1313,9 +1362,15 @@ var file_sea_dinner_proto_rawDesc = []byte{
 	0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x4f, 0x4b, 0x10, 0x00, 0x12, 0x15, 0x0a, 0x11, 0x4f, 0x52,
 	0x44, 0x45, 0x52, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x46, 0x41, 0x49, 0x4c, 0x10,
 	0x01, 0x12, 0x17, 0x0a, 0x13, 0x4f, 0x52, 0x44, 0x45, 0x52, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55,
-	0x53, 0x5f, 0x43, 0x41, 0x4e, 0x43, 0x45, 0x4c, 0x10, 0x02, 0x42, 0x0e, 0x5a, 0x0c, 0x2f, 0x3b,
-	0x73, 0x65, 0x61, 0x5f, 0x64, 0x69, 0x6e, 0x6e, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x53, 0x5f, 0x43, 0x41, 0x4e, 0x43, 0x45, 0x4c, 0x10, 0x02, 0x2a, 0x66, 0x0a, 0x0f, 0x52, 0x65,
+	0x73, 0x75, 0x6c, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x12, 0x1a, 0x0a,
+	0x16, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f, 0x54, 0x49, 0x4d, 0x45, 0x5f, 0x52, 0x41, 0x4e,
+	0x47, 0x45, 0x5f, 0x57, 0x45, 0x45, 0x4b, 0x10, 0x00, 0x12, 0x1b, 0x0a, 0x17, 0x52, 0x45, 0x53,
+	0x55, 0x4c, 0x54, 0x5f, 0x54, 0x49, 0x4d, 0x45, 0x5f, 0x52, 0x41, 0x4e, 0x47, 0x45, 0x5f, 0x4d,
+	0x4f, 0x4e, 0x54, 0x48, 0x10, 0x01, 0x12, 0x1a, 0x0a, 0x16, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54,
+	0x5f, 0x54, 0x49, 0x4d, 0x45, 0x5f, 0x52, 0x41, 0x4e, 0x47, 0x45, 0x5f, 0x59, 0x45, 0x41, 0x52,
+	0x10, 0x02, 0x42, 0x0e, 0x5a, 0x0c, 0x2f, 0x3b, 0x73, 0x65, 0x61, 0x5f, 0x64, 0x69, 0x6e, 0x6e,
+	0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1330,31 +1385,32 @@ func file_sea_dinner_proto_rawDescGZIP() []byte {
 	return file_sea_dinner_proto_rawDescData
 }
 
-var file_sea_dinner_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_sea_dinner_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_sea_dinner_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_sea_dinner_proto_goTypes = []interface{}{
 	(URLType)(0),                     // 0: sea_dinner.URLType
 	(MuteStatus)(0),                  // 1: sea_dinner.MuteStatus
 	(OrderStatus)(0),                 // 2: sea_dinner.OrderStatus
-	(*OrderResponse)(nil),            // 3: sea_dinner.OrderResponse
-	(*DinnerMenu)(nil),               // 4: sea_dinner.DinnerMenu
-	(*DinnerMenuArray)(nil),          // 5: sea_dinner.DinnerMenuArray
-	(*Current)(nil),                  // 6: sea_dinner.Current
-	(*Food)(nil),                     // 7: sea_dinner.Food
-	(*Details)(nil),                  // 8: sea_dinner.Details
-	(*UserKey)(nil),                  // 9: sea_dinner.UserKey
-	(*UserChoice)(nil),               // 10: sea_dinner.UserChoice
-	(*UserChoiceWithKey)(nil),        // 11: sea_dinner.UserChoiceWithKey
-	(*OrderRecord)(nil),              // 12: sea_dinner.OrderRecord
-	(*FoodMapping)(nil),              // 13: sea_dinner.FoodMapping
-	(*FoodMappings)(nil),             // 14: sea_dinner.FoodMappings
-	(*FoodMappingByYearAndWeek)(nil), // 15: sea_dinner.FoodMappingByYearAndWeek
+	(ResultTimeRange)(0),             // 3: sea_dinner.ResultTimeRange
+	(*OrderResponse)(nil),            // 4: sea_dinner.OrderResponse
+	(*DinnerMenu)(nil),               // 5: sea_dinner.DinnerMenu
+	(*DinnerMenuArray)(nil),          // 6: sea_dinner.DinnerMenuArray
+	(*Current)(nil),                  // 7: sea_dinner.Current
+	(*Food)(nil),                     // 8: sea_dinner.Food
+	(*Details)(nil),                  // 9: sea_dinner.Details
+	(*UserKey)(nil),                  // 10: sea_dinner.UserKey
+	(*UserChoice)(nil),               // 11: sea_dinner.UserChoice
+	(*UserChoiceWithKey)(nil),        // 12: sea_dinner.UserChoiceWithKey
+	(*OrderRecord)(nil),              // 13: sea_dinner.OrderRecord
+	(*FoodMapping)(nil),              // 14: sea_dinner.FoodMapping
+	(*FoodMappings)(nil),             // 15: sea_dinner.FoodMappings
+	(*FoodMappingByYearAndWeek)(nil), // 16: sea_dinner.FoodMappingByYearAndWeek
 }
 var file_sea_dinner_proto_depIdxs = []int32{
-	7,  // 0: sea_dinner.DinnerMenu.food:type_name -> sea_dinner.Food
-	7,  // 1: sea_dinner.DinnerMenuArray.food:type_name -> sea_dinner.Food
-	8,  // 2: sea_dinner.Current.menu:type_name -> sea_dinner.Details
-	13, // 3: sea_dinner.FoodMappings.food_mapping:type_name -> sea_dinner.FoodMapping
+	8,  // 0: sea_dinner.DinnerMenu.food:type_name -> sea_dinner.Food
+	8,  // 1: sea_dinner.DinnerMenuArray.food:type_name -> sea_dinner.Food
+	9,  // 2: sea_dinner.Current.menu:type_name -> sea_dinner.Details
+	14, // 3: sea_dinner.FoodMappings.food_mapping:type_name -> sea_dinner.FoodMapping
 	4,  // [4:4] is the sub-list for method output_type
 	4,  // [4:4] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
@@ -1542,7 +1598,7 @@ func file_sea_dinner_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_sea_dinner_proto_rawDesc,
-			NumEnums:      3,
+			NumEnums:      4,
 			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,

@@ -107,7 +107,7 @@ func TestUpdateChope(t *testing.T) {
 		{
 			name:  "StopOrder",
 			args:  args{id: u.GetUserId(), s: fmt.Sprint(-1)},
-			want:  "Okay got it. I will order *NOTHING* for you and stop sending reminders in the morning for the rest of the week.😀",
+			want:  "Okay got it. I will order <b>NOTHING</b> for you and stop sending reminders in the morning for the rest of the week.😀",
 			want1: true,
 		},
 		{
@@ -149,7 +149,7 @@ func TestUpdateChope(t *testing.T) {
 		{
 			name:  "OrderWith-1",
 			args:  args{id: u5.GetUserId(), s: "-1"},
-			want:  "Okay got it. I will order *NOTHING* for you and stop sending reminders in the morning for the rest of the week.😀",
+			want:  "Okay got it. I will order <b>NOTHING</b> for you and stop sending reminders in the morning for the rest of the week.😀",
 			want1: true,
 		},
 	}

@@ -32,6 +32,12 @@ enum OrderStatus{
     ORDER_STATUS_CANCEL = 2;
 }
 
+enum ResultTimeRange{
+    RESULT_TIME_RANGE_WEEK   = 0;
+    RESULT_TIME_RANGE_MONTH = 1;
+    RESULT_TIME_RANGE_YEAR = 2;
+}
+
 message OrderResponse{
     optional string status = 1;
     optional int64 status_code = 2;
