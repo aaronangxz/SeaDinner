@@ -28,7 +28,7 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 		{
 			Id:        proto.Int64(2),
 			UserId:    proto.Int64(12345),
-			FoodId:    proto.String(fmt.Sprint(m[1].GetId())),
+			FoodId:    proto.String(fmt.Sprint(m[0].GetId())),
 			OrderTime: proto.Int64(time.Now().Unix()),
 			TimeTaken: proto.Int64(100),
 			Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_CANCEL)),
@@ -37,7 +37,7 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 		{
 			Id:        proto.Int64(2),
 			UserId:    proto.Int64(12345),
-			FoodId:    proto.String(fmt.Sprint(m[2].GetId())),
+			FoodId:    proto.String(fmt.Sprint(m[0].GetId())),
 			OrderTime: proto.Int64(time.Now().Unix()),
 			TimeTaken: proto.Int64(100),
 			Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL)),

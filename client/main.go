@@ -209,7 +209,11 @@ func main() {
 			}
 		case "help":
 			skipLog()
-			msg.Text = handlers.MakeHelpResponse()
+			txt, kb := handlers.MakeHelpResponse()
+			msg.Text = txt
+			if kb != nil {
+				msg.ReplyMarkup = kb[0]
+			}
 			msg.ParseMode = "MARKDOWN"
 		case "key":
 			skipLog()
