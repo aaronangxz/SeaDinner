@@ -32,7 +32,7 @@ func TestUpdateChope(t *testing.T) {
 
 	for _, uu := range us {
 		key := fmt.Sprint(common.USER_CHOICE_PREFIX, uu.GetUserId())
-		if err := processors.RedisClient.Set(key, uu.GetUserChoice(), expiry).Err(); err != nil {
+		if err := processors.CacheInstance().Set(key, uu.GetUserChoice(), expiry).Err(); err != nil {
 			log.Error(context.TODO(), "TestGetChope | Error while writing to redis: %v", err.Error())
 		} else {
 			log.Info(context.TODO(), "TestGetChope | Successful | Written %v to redis", key)
@@ -49,7 +49,7 @@ func TestUpdateChope(t *testing.T) {
 		u1.TearDown()
 		for _, uu := range us {
 			key := fmt.Sprint(common.USER_CHOICE_PREFIX, uu.GetUserId())
-			if _, err := processors.RedisClient.Del(key).Result(); err != nil {
+			if _, err := processors.CacheInstance().Del(key).Result(); err != nil {
 				log.Error(context.TODO(), "TestGetChope | Failed to invalidate cache: %v. %v", key, err)
 			}
 			log.Info(context.TODO(), "TestGetChope | Successfully invalidated cache: %v", key)
@@ -107,7 +107,7 @@ func TestUpdateChope(t *testing.T) {
 		{
 			name:  "StopOrder",
 			args:  args{id: u.GetUserId(), s: fmt.Sprint(-1)},
-			want:  "Okay got it. I will order *NOTHING* for you and stop sending reminders in the morning for the rest of the week.😀",
+			want:  "Okay got it. I will order <b>NOTHING</b> for you and stop sending reminders in the morning for the rest of the week.😀",
 			want1: true,
 		},
 		{
@@ -149,7 +149,7 @@ func TestUpdateChope(t *testing.T) {
 		{
 			name:  "OrderWith-1",
 			args:  args{id: u5.GetUserId(), s: "-1"},
-			want:  "Okay got it. I will order *NOTHING* for you and stop sending reminders in the morning for the rest of the week.😀",
+			want:  "Okay got it. I will order <b>NOTHING</b> for you and stop sending reminders in the morning for the rest of the week.😀",
 			want1: true,
 		},
 	}

@@ -35,7 +35,7 @@ func BatchGetUsersChoiceWithKey(ctx context.Context) ([]*sea_dinner.UserChoiceWi
 	query := fmt.Sprintf("SELECT c.*, k.user_key FROM user_choice_tab c, user_key_tab k WHERE user_choice IN %v AND c.user_id = k.user_id", inQuery)
 	log.Info(ctx, query)
 	//check whole db
-	if err := processors.DB.Raw(query).Scan(&record).Error; err != nil {
+	if err := processors.DbInstance().Raw(query).Scan(&record).Error; err != nil {
 		log.Error(ctx, err.Error())
 		return nil, err
 	}

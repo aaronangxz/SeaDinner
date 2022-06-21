@@ -53,14 +53,14 @@ func main() {
 		if update.CallbackQuery != nil {
 			var muteType bool
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
-			msg.ParseMode = "MARKDOWN"
+			msg.ParseMode = "HTML"
 			msg.Text, muteType = handlers.CallbackQueryHandler(ctx, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery)
 
 			//Handle MUTE related callback separately
 			if update.CallbackQuery.Data == "MUTE" || update.CallbackQuery.Data == "UNMUTE" {
 				//Retrieve the previous chat ID after user calls /mute
 				cacheKey := fmt.Sprint(common.USER_MUTE_MSG_ID_PREFIX, update.CallbackQuery.Message.Chat.ID)
-				val, redisErr := processors.RedisClient.Get(cacheKey).Result()
+				val, redisErr := processors.CacheInstance().Get(cacheKey).Result()
 				if redisErr != nil {
 					if redisErr == redis.Nil {
 						log.Warn(ctx, "Callback Mute | No result of %v in Redis", cacheKey)
@@ -224,8 +224,9 @@ func main() {
 				msg.Text = s
 			} else {
 				skipLog()
-				msg.Text = handlers.ListWeeklyResultByUserID(ctx, update.Message.Chat.ID)
-				msg.ParseMode = "HTML"
+				txt, mp := handlers.GetResultSelection()
+				msg.Text = txt
+				msg.ReplyMarkup = mp[0]
 			}
 		case "chope":
 			msg.Text = "This command is deprecated. Choose from /menu instead!😋"
@@ -259,7 +260,7 @@ func main() {
 				} else {
 					//save msg id into cache for msg update
 					cacheKey := fmt.Sprint(common.USER_MUTE_MSG_ID_PREFIX, update.Message.Chat.ID)
-					if err := processors.RedisClient.Set(cacheKey, msgTrace.MessageID, 1800*time.Second).Err(); err != nil {
+					if err := processors.CacheInstance().Set(cacheKey, msgTrace.MessageID, 1800*time.Second).Err(); err != nil {
 						log.Error(ctx, "CheckMute | Error while writing to redis: %v", err.Error())
 					} else {
 						log.Info(ctx, "CheckMute | Successful | Written %v to redis", cacheKey)

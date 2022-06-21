@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"github.com/aaronangxz/SeaDinner/common"
 	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/aaronangxz/SeaDinner/test_helper"
@@ -30,7 +29,7 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 			Id:        proto.Int64(2),
 			UserId:    proto.Int64(12345),
 			FoodId:    proto.String(fmt.Sprint(m[1].GetId())),
-			OrderTime: proto.Int64(time.Now().Unix() - 1*common.ONE_DAY),
+			OrderTime: proto.Int64(time.Now().Unix()),
 			TimeTaken: proto.Int64(100),
 			Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_CANCEL)),
 			ErrorMsg:  nil,
@@ -39,18 +38,9 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 			Id:        proto.Int64(2),
 			UserId:    proto.Int64(12345),
 			FoodId:    proto.String(fmt.Sprint(m[2].GetId())),
-			OrderTime: proto.Int64(time.Now().Unix() - 2*common.ONE_DAY),
+			OrderTime: proto.Int64(time.Now().Unix()),
 			TimeTaken: proto.Int64(100),
 			Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_FAIL)),
-			ErrorMsg:  nil,
-		},
-		{
-			Id:        proto.Int64(3),
-			UserId:    proto.Int64(12345),
-			FoodId:    proto.String("696969"),
-			OrderTime: proto.Int64(time.Now().Unix() - 3*common.ONE_DAY),
-			TimeTaken: proto.Int64(100),
-			Status:    proto.Int64(int64(sea_dinner.OrderStatus_ORDER_STATUS_OK)),
 			ErrorMsg:  nil,
 		},
 	}
@@ -60,9 +50,8 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[0].GetOrderTime()), mC[r[0].GetFoodId()], "🟢")
 	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[1].GetOrderTime()), mC[r[1].GetFoodId()], "🟡")
 	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[2].GetOrderTime()), mC[r[2].GetFoodId()], "🔴")
-	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[3].GetOrderTime()), "??", "🟢")
 	table += "</pre>"
-	legend := "\n\n🟢 Success\n🟡 Cancelled\n🔴 Failed"
+	legend := "\n\n🟢 Successful\n🟡 Cancelled\n🔴 Failed\n ?? Dish removed"
 	expected := header + table + legend
 
 	//Applicable for ListWeeklyResult
@@ -87,8 +76,8 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GenerateWeeklyResultTable(tt.args.ctx, tt.args.record); got != tt.want {
-				t.Errorf("GenerateWeeklyResultTable() = %v, want %v", got, tt.want)
+			if got := GenerateResultTable(tt.args.ctx, tt.args.record, start, end); got != tt.want {
+				t.Errorf("GenerateResultTable() = %v, want %v", got, tt.want)
 			}
 		})
 	}

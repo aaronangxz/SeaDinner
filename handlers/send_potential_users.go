@@ -22,7 +22,7 @@ func SendPotentialUsers(ctx context.Context) {
 	defer txn.End()
 
 	//Retrieve the whole set
-	s, err := processors.RedisClient.SMembers(common.POTENTIAL_USER_SET).Result()
+	s, err := processors.CacheInstance().SMembers(common.POTENTIAL_USER_SET).Result()
 	if err != nil {
 		log.Error(ctx, "SendPotentialUsers | Error while reading from redis: %v", err.Error())
 		return
@@ -62,14 +62,14 @@ func SendPotentialUsers(ctx context.Context) {
 		//Remove the old key and update with the new time in Set
 		//As long as users do not give us the key, they will always be in the pool
 		//We continuously update the time after each cold message to avoid annoyance
-		if err := processors.RedisClient.SRem(common.POTENTIAL_USER_SET, pair).Err(); err != nil {
+		if err := processors.CacheInstance().SRem(common.POTENTIAL_USER_SET, pair).Err(); err != nil {
 			log.Error(ctx, "SendPotentialUsers | Error while writing to redis: %v", err.Error())
 		} else {
 			log.Info(ctx, "SendPotentialUsers | Successful | Removed %v from potential_user set", pair)
 		}
 
 		toWrite := fmt.Sprint(userID, ":", time.Now().Unix())
-		if err := processors.RedisClient.SAdd(common.POTENTIAL_USER_SET, toWrite).Err(); err != nil {
+		if err := processors.CacheInstance().SAdd(common.POTENTIAL_USER_SET, toWrite).Err(); err != nil {
 			log.Error(ctx, "SendPotentialUsers | Error while writing to redis: %v", err.Error())
 		} else {
 			log.Info(ctx, "SendPotentialUsers | Successful | Written %v to potential_user set", toWrite)

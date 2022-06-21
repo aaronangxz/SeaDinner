@@ -56,6 +56,12 @@ func ConvertTimeStampDayOfWeek(timestamp int64) string {
 	return fmt.Sprint(UnixToUTC(timestamp).In(tz).Format("Mon 02/01"))
 }
 
+//ConvertTimeStampWeekOfYear Converts current unix timestamp to the week number of year
+func ConvertTimeStampWeekOfYear(timestamp int64) (int64, int64) {
+	year, week := UnixToUTC(timestamp).In(tz).ISOWeek()
+	return int64(year), int64(week)
+}
+
 //ConvertTimeStampTime Converts current unix timestamp to m:ss format
 func ConvertTimeStampTime(timestamp int64) string {
 	return fmt.Sprint(UnixToUTC(timestamp).In(tz).Format("3:04PM"))
@@ -126,6 +132,22 @@ func WeekStartEndDate(timestamp int64) (int64, int64) {
 	startYear, startMonth, startDay := startResult.Date()
 	endYear, endMonth, endDay := endResult.Date()
 	return time.Date(startYear, startMonth, startDay, 0, 0, 0, 0, tz).Unix(), time.Date(endYear, endMonth, endDay, 23, 59, 59, 59, tz).Unix()
+}
+
+//MonthStartEndDate Returns the start and end day of the current month in SGT unix time
+func MonthStartEndDate(timestamp int64) (int64, int64) {
+	date := UnixToUTC(timestamp).In(tz)
+	currentYear, currentMonth, _ := date.Date()
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, tz)
+	lastOfMonth := time.Date(currentYear, currentMonth+1, 0, 23, 59, 59, 59, tz)
+	return firstOfMonth.Unix(), lastOfMonth.Unix()
+}
+
+//YearStartEndDate Returns the start and end day of the current year in SGT unix time
+func YearStartEndDate(timestamp int64) (int64, int64) {
+	date := UnixToUTC(timestamp).In(tz)
+	currentYear, _, _ := date.Date()
+	return time.Date(currentYear, time.January, 1, 0, 0, 0, 0, tz).Unix(), time.Date(currentYear, time.December, 31, 23, 59, 59, 59, tz).Unix()
 }
 
 //IsSendReminderTime Checks if it is 2 hours prior to the pre-defined lunch time

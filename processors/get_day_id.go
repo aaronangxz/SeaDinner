@@ -17,15 +17,15 @@ import (
 func GetDayID(ctx context.Context) (ID int64) {
 	var (
 		key = os.Getenv("TOKEN")
-		//8 hours offset, so we don't try to check between 0000 ~ 0800 when day id isn't updated yet
-		cacheKey = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()-28800))
+		//12 hours offset, so we don't try to check between 0000 ~ 1200 when day id isn't updated yet
+		cacheKey = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()-43200))
 		expiry   = 172800 * time.Second
 	)
 
 	//check cache
 	//Not for unit test in case of weekends
 	if !common.Config.UnitTest {
-		redisResp, redisErr := RedisClient.Get(cacheKey).Result()
+		redisResp, redisErr := CacheInstance().Get(cacheKey).Result()
 		if redisErr != nil {
 			if redisErr == redis.Nil {
 				log.Warn(ctx, "GetDayId | No result of %v in Redis, reading from API", cacheKey)
@@ -62,7 +62,7 @@ func GetDayID(ctx context.Context) (ID int64) {
 
 	//Short TTL if day is invalid
 	//Might due to late menu update, so we have some room to get the correct data
-	if err := RedisClient.Set(cacheKey, currentID, expiry).Err(); err != nil {
+	if err := CacheInstance().Set(cacheKey, currentID, expiry).Err(); err != nil {
 		log.Error(ctx, "GetDayId | Error while writing to redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "GetDayId | Successful | Written %v to redis", cacheKey)

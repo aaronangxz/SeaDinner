@@ -242,3 +242,69 @@ func TestGetOffWorkTime(t *testing.T) {
 		})
 	}
 }
+
+func TestMonthStartEndDate(t *testing.T) {
+	now := int64(1655658904) //20/6/2022
+	expected := int64(1654012800)
+	expected1 := int64(1656604799)
+	type args struct {
+		timestamp int64
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  int64
+		want1 int64
+	}{
+		{
+			"HappyCase",
+			args{now},
+			expected,
+			expected1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := MonthStartEndDate(tt.args.timestamp)
+			if got != tt.want {
+				t.Errorf("MonthStartEndDate() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("MonthStartEndDate() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestYearStartEndDate(t *testing.T) {
+	now := int64(1655658904) //20/6/2022
+	expected := int64(1640966400)
+	expected1 := int64(1672502399)
+	type args struct {
+		timestamp int64
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  int64
+		want1 int64
+	}{
+		{
+			"HappyCase",
+			args{now},
+			expected,
+			expected1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := YearStartEndDate(tt.args.timestamp)
+			if got != tt.want {
+				t.Errorf("YearStartEndDate() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("YearStartEndDate() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}

@@ -30,7 +30,7 @@ func CheckKey(ctx context.Context, id int64) (string, bool) {
 	}
 
 	//Read from cache
-	val, redisErr := processors.RedisClient.Get(cacheKey).Result()
+	val, redisErr := processors.CacheInstance().Get(cacheKey).Result()
 	if redisErr != nil {
 		if redisErr == redis.Nil {
 			log.Warn(ctx, "CheckKey | No result of %v in Redis, reading from DB", cacheKey)
@@ -51,10 +51,10 @@ func CheckKey(ctx context.Context, id int64) (string, bool) {
 	}
 
 	//Read from DB
-	if err := processors.DB.Table(common.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
+	if err := processors.DbInstance().Table(common.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		//Write into potential_user set
 		toWrite := fmt.Sprint(id, ":", time.Now().Unix())
-		if err := processors.RedisClient.SAdd(common.POTENTIAL_USER_SET, toWrite).Err(); err != nil {
+		if err := processors.CacheInstance().SAdd(common.POTENTIAL_USER_SET, toWrite).Err(); err != nil {
 			log.Error(ctx, "CheckKey | Error while writing to redis: %v", err.Error())
 		} else {
 			log.Info(ctx, "CheckKey | Successful | Written %v to potential_user set", toWrite)
@@ -67,7 +67,7 @@ func CheckKey(ctx context.Context, id int64) (string, bool) {
 		log.Error(ctx, "CheckKey | Failed to marshal JSON results: %v\n", err.Error())
 	}
 
-	if err := processors.RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
+	if err := processors.CacheInstance().Set(cacheKey, data, expiry).Err(); err != nil {
 		log.Error(ctx, "CheckKey | Error while writing to redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "CheckKey | Successful | Written %v to redis", cacheKey)

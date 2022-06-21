@@ -54,7 +54,7 @@ func (uk *UserChoice) FillDefaults() *UserChoice {
 
 func (uc *UserChoice) Build() *UserChoice {
 	uc.FillDefaults()
-	if err := processors.DB.Table(common.DB_USER_CHOICE_TAB).Create(&uc).Error; err != nil {
+	if err := processors.DbInstance().Table(common.DB_USER_CHOICE_TAB).Create(&uc).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", uc.GetUserId(), err.Error())
 		return nil
 	}
@@ -83,7 +83,7 @@ func (uc *UserChoice) SetMtime(mtime int64) *UserChoice {
 }
 
 func (uc *UserChoice) TearDown() error {
-	if err := processors.DB.Exec("DELETE FROM user_choice_tab WHERE user_id = ?", uc.GetUserId()).Error; err != nil {
+	if err := processors.DbInstance().Exec("DELETE FROM user_choice_tab WHERE user_id = ?", uc.GetUserId()).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", uc.GetUserId())
 		return err
 	}
@@ -92,7 +92,7 @@ func (uc *UserChoice) TearDown() error {
 }
 
 func DeleteUserKey(userId int64) error {
-	if err := processors.DB.Exec("DELETE FROM user_choice_tab WHERE user_id = ?", userId).Error; err != nil {
+	if err := processors.DbInstance().Exec("DELETE FROM user_choice_tab WHERE user_id = ?", userId).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", userId)
 		return err
 	}

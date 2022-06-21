@@ -59,14 +59,15 @@ func LoadConfig() {
 //InitTest Initialize test environment
 func InitTest() {
 	LoadEnv()
-
-	if processors.DB == nil {
+	common.Config.Adhoc = true
+	if processors.DbInstance() == nil {
 		ConnectTestMySQL()
 	}
 
-	if processors.RedisClient == nil {
+	if processors.CacheInstance() == nil {
 		ConnectTestRedis()
 	}
+	common.Config.Adhoc = false
 }
 
 //InitClient Initialize resty client
@@ -88,7 +89,7 @@ func ConnectTestMySQL() {
 	}
 
 	log.Println("NewMySQL: Test Database connection established")
-	processors.DB = db
+	processors.SetDbInstance(db)
 }
 
 //ConnectTestRedis Establish connection fo test redis
@@ -106,7 +107,7 @@ func ConnectTestRedis() {
 		log.Printf("Error while establishing Test Redis client: %v", err)
 	}
 	log.Println("ConnectTestRedis: Redis connection established")
-	processors.RedisClient = rdb
+	processors.SetCacheInstance(rdb)
 }
 
 //GetLiveMenuDetails Retrieves live menu details from Sea API
