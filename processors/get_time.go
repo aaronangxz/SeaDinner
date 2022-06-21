@@ -56,6 +56,12 @@ func ConvertTimeStampDayOfWeek(timestamp int64) string {
 	return fmt.Sprint(UnixToUTC(timestamp).In(tz).Format("Mon 02/01"))
 }
 
+//ConvertTimeStampWeekOfYear Converts current unix timestamp to the week number of year
+func ConvertTimeStampWeekOfYear(timestamp int64) (int64, int64) {
+	year, week := UnixToUTC(timestamp).In(tz).ISOWeek()
+	return int64(year), int64(week)
+}
+
 //ConvertTimeStampTime Converts current unix timestamp to m:ss format
 func ConvertTimeStampTime(timestamp int64) string {
 	return fmt.Sprint(UnixToUTC(timestamp).In(tz).Format("3:04PM"))

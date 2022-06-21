@@ -9,6 +9,7 @@ import (
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/go-redis/redis"
 	"google.golang.org/protobuf/proto"
+	"math"
 	"time"
 )
 
@@ -132,7 +133,9 @@ func UpdateChope(ctx context.Context, id int64, s string) (string, bool) {
 	//Orders placed before lunch time
 	if time.Now().Unix() < processors.GetLunchTime().Unix() {
 		//Set into cache for Morning reminder callback. TTL is always until 12.30
-		if err := processors.RedisClient.Set(key, s, time.Duration(processors.GetLunchTime().UnixMilli()-time.Now().UnixMilli())).Err(); err != nil {
+		//Minimum TTL is 1 second
+		expiry := time.Duration(math.Max(1, float64(processors.GetLunchTime().Unix()-time.Now().Unix())))
+		if err := processors.RedisClient.Set(key, s, expiry).Err(); err != nil {
 			log.Error(ctx, "GetChope | Error while writing to redis: %v", err.Error())
 		} else {
 			log.Info(ctx, "GetChope | Successful | Written %v to redis", key)

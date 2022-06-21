@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/aaronangxz/SeaDinner/common"
+	"google.golang.org/protobuf/proto"
 	"io"
 	random "math/rand"
 	"os"
@@ -247,4 +248,24 @@ func ConvertFoodToFoodMapping(ctx context.Context, food []*sea_dinner.Food) []*s
 	}
 	log.Error(ctx, "ConvertFoodToFoodMapping | Success | size:%v", len(mappings))
 	return mappings
+}
+
+func ConvertFoodToFoodMappings(ctx context.Context, food []*sea_dinner.Food) *sea_dinner.FoodMappings {
+	return &sea_dinner.FoodMappings{FoodMapping: ConvertFoodToFoodMapping(ctx, food)}
+}
+
+func ConvertFoodToFoodMappingByMenu(ctx context.Context, food []*sea_dinner.Food) *sea_dinner.FoodMappingByYearAndWeek {
+	year, week := ConvertTimeStampWeekOfYear(time.Now().Unix())
+	mapping := ConvertFoodToFoodMappings(ctx, food)
+	foodBytes, err := proto.Marshal(mapping)
+	if err != nil {
+		log.Error(ctx, "ConvertFoodToFoodMapping | Failed | %v", err.Error())
+		return nil
+	}
+	log.Info(ctx, "ConvertFoodToFoodMapping | Success")
+	return &sea_dinner.FoodMappingByYearAndWeek{
+		Year:        proto.Int64(year),
+		Week:        proto.Int64(week),
+		FoodMapping: foodBytes,
+	}
 }

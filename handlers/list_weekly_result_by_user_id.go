@@ -37,5 +37,5 @@ func ListWeeklyResultByUserID(ctx context.Context, id int64) string {
 		return "You have not ordered anything this week. 😕"
 	}
 	log.Info(ctx, "ListWeeklyResultByUserId | Success | user_id:%v", id)
-	return GenerateWeeklyResultTable(ctx, res)
+	return GenerateWeeklyResultTableWithFoodMapping(ctx, res)
 }

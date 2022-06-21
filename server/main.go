@@ -21,6 +21,7 @@ func main() {
 	processors.Init()
 	processors.InitClient()
 	go processors.MenuRefresher(log.NewCtx())
+	processors.StoreFoodMappings(log.NewCtx())
 
 	//For adhoc use only
 	//processors.SendAdHocNotification(0,"")
@@ -28,7 +29,7 @@ func main() {
 	for {
 		ctx := log.NewCtx()
 		if processors.IsSendReminderTime() {
-			processors.StoreFoodMappings(ctx)
+			//processors.StoreFoodMappings(ctx)
 			handlers.SendReminder(ctx)
 			handlers.SendPotentialUsers(ctx)
 		}
