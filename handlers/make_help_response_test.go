@@ -39,7 +39,7 @@ func TestMakeHelpResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MakeHelpResponse(); got != tt.want {
+			if got, _ := MakeHelpResponse(); got != tt.want {
 				t.Errorf("MakeHelpResponse() = %v, want %v", got, tt.want)
 			}
 		})
