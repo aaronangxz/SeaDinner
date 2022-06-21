@@ -51,7 +51,7 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[1].GetOrderTime()), mC[r[1].GetFoodId()], "🟡")
 	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[2].GetOrderTime()), mC[r[2].GetFoodId()], "🔴")
 	table += "</pre>"
-	legend := "\n\n🟢 Success\n🟡 Cancelled\n🔴 Failed"
+	legend := "\n\n🟢 Successful\n🟡 Cancelled\n🔴 Failed\n ?? Dish removed"
 	expected := header + table + legend
 
 	//Applicable for ListWeeklyResult
