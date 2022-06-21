@@ -23,7 +23,7 @@ func UpdateMute(ctx context.Context, id int64, callback string) (string, bool) {
 		returnBool = false
 	}
 
-	if err := processors.DB.Exec("UPDATE user_key_tab SET is_mute = ? WHERE user_id = ?", toUdate, id).Error; err != nil {
+	if err := processors.DbInstance().Exec("UPDATE user_key_tab SET is_mute = ? WHERE user_id = ?", toUdate, id).Error; err != nil {
 		log.Error(ctx, "Failed to update DB")
 		return err.Error(), false
 	}

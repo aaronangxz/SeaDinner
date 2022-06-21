@@ -32,6 +32,12 @@ enum OrderStatus{
     ORDER_STATUS_CANCEL = 2;
 }
 
+enum ResultTimeRange{
+    RESULT_TIME_RANGE_WEEK   = 0;
+    RESULT_TIME_RANGE_MONTH = 1;
+    RESULT_TIME_RANGE_YEAR = 2;
+}
+
 message OrderResponse{
     optional string status = 1;
     optional int64 status_code = 2;
@@ -115,4 +121,14 @@ message FoodMapping{
     optional string food_code = 2;
     optional string food_name = 3;
     optional string food_image = 4;
+}
+
+message FoodMappings{
+    repeated FoodMapping food_mapping = 1;
+}
+
+message FoodMappingByYearAndWeek{
+    optional int64 year = 1;
+    optional int64 week = 2;
+    optional bytes food_mapping = 3;
 }

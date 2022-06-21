@@ -61,7 +61,7 @@ func (uk *UserKey) FillDefaults() *UserKey {
 
 func (uk *UserKey) Build() *UserKey {
 	uk.FillDefaults()
-	if err := processors.DB.Table(common.DB_USER_KEY_TAB).Create(&uk).Error; err != nil {
+	if err := processors.DbInstance().Table(common.DB_USER_KEY_TAB).Create(&uk).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", uk.GetUserId(), err.Error())
 		return nil
 	}
@@ -95,7 +95,7 @@ func (uk *UserKey) SetIsMute(mute int64) *UserKey {
 }
 
 func (uk *UserKey) TearDown() error {
-	if err := processors.DB.Exec("DELETE FROM user_key_tab WHERE user_id = ?", uk.GetUserId()).Error; err != nil {
+	if err := processors.DbInstance().Exec("DELETE FROM user_key_tab WHERE user_id = ?", uk.GetUserId()).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", uk.GetUserId())
 		return err
 	}
@@ -104,7 +104,7 @@ func (uk *UserKey) TearDown() error {
 }
 
 func DeleteUserKey(userId int64) error {
-	if err := processors.DB.Exec("DELETE FROM user_key_tab WHERE user_id = ?", userId).Error; err != nil {
+	if err := processors.DbInstance().Exec("DELETE FROM user_key_tab WHERE user_id = ?", userId).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", userId)
 		return err
 	}
@@ -117,7 +117,7 @@ func CheckUserKey(userId int64) *sea_dinner.UserKey {
 	var (
 		row *sea_dinner.UserKey
 	)
-	if err := processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", userId).Scan(&row).Error; err != nil {
+	if err := processors.DbInstance().Raw("SELECT * FROM user_key_tab WHERE user_id = ?", userId).Scan(&row).Error; err != nil {
 		log.Printf("Failed to read from DB | user_id:%v", userId)
 		return nil
 	}

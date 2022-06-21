@@ -66,7 +66,7 @@ func (ul *UserLog) FillDefaults() *UserLog {
 
 func (ul *UserLog) Build() *UserLog {
 	ul.FillDefaults()
-	if err := processors.DB.Table(common.DB_ORDER_LOG_TAB).Create(&ul).Error; err != nil {
+	if err := processors.DbInstance().Table(common.DB_ORDER_LOG_TAB).Create(&ul).Error; err != nil {
 		log.Printf("Failed to insert to DB | user_id:%v | %v", ul.GetUserId(), err.Error())
 		return nil
 	}
@@ -110,7 +110,7 @@ func (ul *UserLog) SetErrorMsg(errorMsg string) *UserLog {
 }
 
 func (ul *UserLog) TearDown() error {
-	if err := processors.DB.Exec("DELETE FROM order_log_tab WHERE user_id = ?", ul.GetUserId()).Error; err != nil {
+	if err := processors.DbInstance().Exec("DELETE FROM order_log_tab WHERE user_id = ?", ul.GetUserId()).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", ul.GetUserId())
 		return err
 	}
@@ -119,7 +119,7 @@ func (ul *UserLog) TearDown() error {
 }
 
 func DeleteUserKey(userId int64) error {
-	if err := processors.DB.Exec("DELETE FROM order_log_tab WHERE user_id = ?", userId).Error; err != nil {
+	if err := processors.DbInstance().Exec("DELETE FROM order_log_tab WHERE user_id = ?", userId).Error; err != nil {
 		log.Printf("Failed to delete from DB | user_id:%v", userId)
 		return err
 	}
@@ -143,7 +143,7 @@ func CheckOrderLog(userId int64) *sea_dinner.OrderRecord {
 	var (
 		row *sea_dinner.OrderRecord
 	)
-	if err := processors.DB.Raw("SELECT * FROM user_log_tab WHERE user_id = ?", userId).Scan(&row).Error; err != nil {
+	if err := processors.DbInstance().Raw("SELECT * FROM user_log_tab WHERE user_id = ?", userId).Scan(&row).Error; err != nil {
 		log.Printf("Failed to read from DB | user_id:%v", userId)
 		return nil
 	}
