@@ -1,11 +1,23 @@
 package handlers
 
-import "github.com/aaronangxz/SeaDinner/processors"
+import (
+	"github.com/aaronangxz/SeaDinner/processors"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
 
 //MakeHelpResponse Prints out Introduction
-func MakeHelpResponse() string {
+func MakeHelpResponse() (string, []tgbotapi.InlineKeyboardMarkup) {
 	txn := processors.App.StartTransaction("make_help_response")
 	defer txn.End()
+
+	var (
+		out  []tgbotapi.InlineKeyboardMarkup
+		rows []tgbotapi.InlineKeyboardButton
+	)
+	unmuteButton := tgbotapi.NewInlineKeyboardButtonURL("️Donate ❤️", "https://github.com/sponsors/aaronangxz")
+	rows = append(rows, unmuteButton)
+	out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
+
 	return "*Welcome to SeaHungerGamesBot!*\n\n" +
 		"The goal of my existence is to help you snatch that dinner in milliseconds. And also we all know that you are too lazy to open up SeaTalk.\n\n" +
 		"*Important*\n" +
@@ -30,5 +42,5 @@ func MakeHelpResponse() string {
 		"By using my services, you agree to let me store your API key. However, not to worry! Your key is encrypted with AES-256, it's very unlikely that it will be stolen.\n\n" +
 		"*Contribute*\n" +
 		"If you see or encounter any bugs, or if there's any feature / improvement that you have in mind, feel free to open an Issue / Pull Request at https://github.com/aaronangxz/SeaDinner\n\n" +
-		"Thank you and happy eating!😋"
+		"Thank you and happy eating!😋", out
 }
