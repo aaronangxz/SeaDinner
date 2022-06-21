@@ -42,7 +42,7 @@ func MenuRefresher(ctx context.Context) {
 				}
 
 				//Use live menu as the source of truth
-				if err := RedisClient.Set(cacheKey, data, 0).Err(); err != nil {
+				if err := CacheInstance().Set(cacheKey, data, 0).Err(); err != nil {
 					log.Error(ctx, "MenuRefresher | Error while writing to redis: %v", err.Error())
 				} else {
 					log.Info(ctx, "MenuRefresher | Successful | Written %v to redis", cacheKey)

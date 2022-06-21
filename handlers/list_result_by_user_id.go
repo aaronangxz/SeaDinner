@@ -36,7 +36,7 @@ func ListResultByUserID(ctx context.Context, id int64, timeRange int64) (string,
 		keyword = "year"
 	}
 
-	if err := processors.DB.Raw("SELECT * FROM order_log_tab WHERE user_id = ? AND order_time BETWEEN ? AND ?", id, start, end).Scan(&res).Error; err != nil {
+	if err := processors.DbInstance().Raw("SELECT * FROM order_log_tab WHERE user_id = ? AND order_time BETWEEN ? AND ?", id, start, end).Scan(&res).Error; err != nil {
 		log.Error(ctx, "id : %v | Failed to retrieve record.", id)
 		return fmt.Sprintf("You have not ordered anything this %v. 😕", keyword), true
 	}

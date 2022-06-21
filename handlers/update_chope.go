@@ -53,7 +53,7 @@ func UpdateChope(ctx context.Context, id int64, s string) (string, bool) {
 	if s == "SAME" {
 		//Set back to DB using cache data (user_choice:<id>)
 		//To handle Morning Reminder callback
-		val, redisErr := processors.RedisClient.Get(key).Result()
+		val, redisErr := processors.CacheInstance().Get(key).Result()
 		if redisErr != nil {
 			if redisErr == redis.Nil {
 				log.Info(ctx, "GetChope | No result of %v in Redis, reading from API", key)
@@ -68,7 +68,7 @@ func UpdateChope(ctx context.Context, id int64, s string) (string, bool) {
 			return "The selection has expired, you can choose from /menu again 😀", true
 		}
 
-		if err := processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", val, time.Now().Unix(), id).Error; err != nil {
+		if err := processors.DbInstance().Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", val, time.Now().Unix(), id).Error; err != nil {
 			log.Error(ctx, "Failed to update DB | %v", err.Error())
 			return err.Error(), false
 		}
@@ -89,12 +89,12 @@ func UpdateChope(ctx context.Context, id int64, s string) (string, bool) {
 		return "This dish is not available today. Tell me another one.😟", false
 	}
 
-	if err := processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
+	if err := processors.DbInstance().Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		log.Error(ctx, "GetChope | %v", err.Error())
 		return err.Error(), false
 	}
 	if existingRecord.UserId == nil {
-		if err := processors.DB.Table(common.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
+		if err := processors.DbInstance().Table(common.DB_USER_CHOICE_TAB).Create(&r).Error; err != nil {
 			log.Error(ctx, "Failed to update DB | %v", err.Error())
 			return err.Error(), false
 		}
@@ -116,7 +116,7 @@ func UpdateChope(ctx context.Context, id int64, s string) (string, bool) {
 		return fmt.Sprintf("Okay got it. I will order %v for you tomorrow 😙", menu[s]), true
 	}
 	//Update key if user_id exists
-	if err := processors.DB.Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
+	if err := processors.DbInstance().Exec("UPDATE user_choice_tab SET user_choice = ?, mtime = ? WHERE user_id = ?", s, time.Now().Unix(), id).Error; err != nil {
 		log.Error(ctx, "Failed to update DB | %v", err.Error())
 		return err.Error(), false
 	}
@@ -135,7 +135,7 @@ func UpdateChope(ctx context.Context, id int64, s string) (string, bool) {
 		//Set into cache for Morning reminder callback. TTL is always until 12.30
 		//Minimum TTL is 1 second
 		expiry := time.Duration(math.Max(1, float64(processors.GetLunchTime().Unix()-time.Now().Unix())))
-		if err := processors.RedisClient.Set(key, s, expiry).Err(); err != nil {
+		if err := processors.CacheInstance().Set(key, s, expiry).Err(); err != nil {
 			log.Error(ctx, "GetChope | Error while writing to redis: %v", err.Error())
 		} else {
 			log.Info(ctx, "GetChope | Successful | Written %v to redis", key)

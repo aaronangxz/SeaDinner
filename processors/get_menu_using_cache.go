@@ -21,7 +21,7 @@ func GetMenuUsingCache(ctx context.Context, key string) *sea_dinner.DinnerMenuAr
 	defer txn.End()
 
 	//check cache
-	val, redisErr := RedisClient.Get(cacheKey).Result()
+	val, redisErr := CacheInstance().Get(cacheKey).Result()
 	if redisErr != nil {
 		if redisErr == redis.Nil {
 			log.Warn(ctx, "GetMenuUsingCache | No result of %v in Redis, reading from API", cacheKey)
@@ -47,7 +47,7 @@ func GetMenuUsingCache(ctx context.Context, key string) *sea_dinner.DinnerMenuAr
 		log.Error(ctx, "GetMenuUsingCache | Failed to marshal JSON results: %v\n", err.Error())
 	}
 
-	if err := RedisClient.Set(cacheKey, data, 0).Err(); err != nil {
+	if err := CacheInstance().Set(cacheKey, data, 0).Err(); err != nil {
 		log.Error(ctx, "GetMenuUsingCache | Error while writing to redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "GetMenuUsingCache | Successful | Written %v to redis", cacheKey)

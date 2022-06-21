@@ -246,7 +246,7 @@ func ConvertFoodToFoodMapping(ctx context.Context, food []*sea_dinner.Food) []*s
 			FoodImage: f.ImageUrl,
 		})
 	}
-	log.Error(ctx, "ConvertFoodToFoodMapping | Success | size:%v", len(mappings))
+	log.Info(ctx, "ConvertFoodToFoodMapping | Success | size:%v", len(mappings))
 	return mappings
 }
 
@@ -254,7 +254,7 @@ func ConvertFoodToFoodMappings(ctx context.Context, food []*sea_dinner.Food) *se
 	return &sea_dinner.FoodMappings{FoodMapping: ConvertFoodToFoodMapping(ctx, food)}
 }
 
-func ConvertFoodToFoodMappingByMenu(ctx context.Context, food []*sea_dinner.Food) *sea_dinner.FoodMappingByYearAndWeek {
+func ConvertFoodToFoodMappingByYearAndWeek(ctx context.Context, food []*sea_dinner.Food) *sea_dinner.FoodMappingByYearAndWeek {
 	year, week := ConvertTimeStampWeekOfYear(time.Now().Unix())
 	mapping := ConvertFoodToFoodMappings(ctx, food)
 	foodBytes, err := proto.Marshal(mapping)

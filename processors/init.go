@@ -22,9 +22,9 @@ var (
 	//Client resty client object
 	Client resty.Client
 	//DB gorm database object
-	DB *gorm.DB
+	db *gorm.DB
 	//RedisClient redis client object
-	RedisClient *redis.Client
+	cache *redis.Client
 	//App New Relic object
 	App *newrelic.Application
 	//Ctx context used for logging
@@ -101,7 +101,7 @@ func ConnectMySQL() {
 	URL := fmt.Sprintf("%v:%v@tcp(%v)/%v", os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_URL"), os.Getenv("DB_NAME"))
 
 	log.Info(Ctx, "Connecting to %v", URL)
-	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{
+	openDb, err := gorm.Open(mysql.Open(URL), &gorm.Config{
 		Logger: newLogger,
 	})
 
@@ -110,7 +110,7 @@ func ConnectMySQL() {
 		panic("Failed to connect to live database!")
 	}
 	log.Info(Ctx, "Live Database connection established")
-	DB = db
+	db = openDb
 }
 
 //ConnectTestMySQL Establish connection to test DB
@@ -119,7 +119,7 @@ func ConnectTestMySQL() {
 
 	log.Info(Ctx, "Connecting to %v", URL)
 
-	db, err := gorm.Open(mysql.Open(URL), &gorm.Config{
+	openDb, err := gorm.Open(mysql.Open(URL), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
@@ -127,7 +127,22 @@ func ConnectTestMySQL() {
 		panic("Failed to connect to test database!")
 	}
 	log.Info(Ctx, "Test Database connection established")
-	DB = db
+	db = openDb
+}
+
+func DbInstance() *gorm.DB {
+	if db == nil {
+		if os.Getenv("TEST_DEPLOY") == "TRUE" || common.Config.Adhoc {
+			ConnectTestMySQL()
+		} else {
+			ConnectMySQL()
+		}
+	}
+	return db
+}
+
+func SetDbInstance(testInstance *gorm.DB) {
+	db = testInstance
 }
 
 //ConnectRedis Establish connection to redis
@@ -145,7 +160,7 @@ func ConnectRedis() {
 		log.Error(Ctx, "Error while establishing Live Redis client: %v", err)
 	}
 	log.Info(Ctx, "Live Redis connection established")
-	RedisClient = rdb
+	cache = rdb
 }
 
 //ConnectTestRedis Establish connection to test redis
@@ -163,5 +178,20 @@ func ConnectTestRedis() {
 		log.Error(Ctx, "Error while establishing Test Redis client: %v", err)
 	}
 	log.Info(Ctx, "Test Redis connection established")
-	RedisClient = rdb
+	cache = rdb
+}
+
+func CacheInstance() *redis.Client {
+	if cache == nil {
+		if os.Getenv("TEST_DEPLOY") == "TRUE" || common.Config.Adhoc {
+			ConnectTestRedis()
+		} else {
+			ConnectRedis()
+		}
+	}
+	return cache
+}
+
+func SetCacheInstance(testInstance *redis.Client) {
+	cache = testInstance
 }

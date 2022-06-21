@@ -37,7 +37,7 @@ func PrepOrder(ctx context.Context) ([]*sea_dinner.UserChoiceWithKey, bool) {
 	log.Info(ctx, query)
 
 	//check whole db
-	if err := DB.Raw(query).Scan(&record).Error; err != nil {
+	if err := DbInstance().Raw(query).Scan(&record).Error; err != nil {
 		log.Error(ctx, err.Error())
 		return nil, false
 	}

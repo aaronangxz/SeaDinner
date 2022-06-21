@@ -29,7 +29,7 @@ func GetKey(ctx context.Context, id int64) string {
 	}
 
 	//Read from cache
-	val, redisErr := processors.RedisClient.Get(cacheKey).Result()
+	val, redisErr := processors.CacheInstance().Get(cacheKey).Result()
 	if redisErr != nil {
 		if redisErr == redis.Nil {
 			log.Warn(ctx, "GetKey | No result of %v in Redis, reading from DB", cacheKey)
@@ -48,7 +48,7 @@ func GetKey(ctx context.Context, id int64) string {
 	}
 
 	//Read from DB
-	if err := processors.DB.Table(common.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
+	if err := processors.DbInstance().Table(common.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
 		log.Error(ctx, "GetKey | Failed to find record | %v", err.Error())
 		return ""
 	}
@@ -59,7 +59,7 @@ func GetKey(ctx context.Context, id int64) string {
 		log.Error(ctx, "GetKey | Failed to marshal JSON results: %v\n", err.Error())
 	}
 
-	if err := processors.RedisClient.Set(cacheKey, data, expiry).Err(); err != nil {
+	if err := processors.CacheInstance().Set(cacheKey, data, expiry).Err(); err != nil {
 		log.Error(ctx, "GetKey | Error while writing to redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "GetKey | Successful | Written %v to redis", cacheKey)

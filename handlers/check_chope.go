@@ -28,7 +28,7 @@ func CheckChope(ctx context.Context, id int64) (string, bool) {
 		return "We are done for this week! You can tell me your order again next week 😀", false
 	}
 
-	if err := processors.DB.Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
+	if err := processors.DbInstance().Raw("SELECT * FROM user_choice_tab WHERE user_id = ?", id).Scan(&existingRecord).Error; err != nil {
 		return "I have yet to receive your order 🥲 You can choose from /menu", false
 	}
 	if existingRecord.UserChoice == nil {

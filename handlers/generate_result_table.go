@@ -23,9 +23,13 @@ func GenerateResultTable(ctx context.Context, record []*sea_dinner.OrderRecord, 
 	table := "<pre>\n    Day     Code  Status\n-------------------------\n"
 	for _, r := range record {
 		year, week := processors.ConvertTimeStampWeekOfYear(r.GetOrderTime())
-		table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), m[year][week][r.GetFoodId()], status[r.GetStatus()])
+		code, ok := m[year][week][r.GetFoodId()]
+		if !ok {
+			code = "??"
+		}
+		table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r.GetOrderTime()), code, status[r.GetStatus()])
 	}
 	table += "</pre>"
-	legend := "\n\n🟢 Success\n🟡 Cancelled\n🔴 Failed"
+	legend := "\n\n🟢 Successful\n🟡 Cancelled\n🔴 Failed\n ?? Dish removed"
 	return fmt.Sprint(header, table, legend)
 }

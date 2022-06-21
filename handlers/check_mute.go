@@ -17,7 +17,7 @@ func CheckMute(ctx context.Context, id int64) (string, []tgbotapi.InlineKeyboard
 	txn := processors.App.StartTransaction("check_mute")
 	defer txn.End()
 
-	if err := processors.DB.Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&res).Error; err != nil {
+	if err := processors.DbInstance().Raw("SELECT * FROM user_key_tab WHERE user_id = ?", id).Scan(&res).Error; err != nil {
 		log.Error(ctx, "CheckMute | Failed to retrieve record: %v", err.Error())
 		return "", nil
 	}

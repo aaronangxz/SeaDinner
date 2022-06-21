@@ -65,7 +65,7 @@ func MakeFoodMapping(ctx context.Context) map[int64]map[int64]map[string]string 
 	txn := processors.App.StartTransaction("make_menu_code_map")
 	defer txn.End()
 	mapped := make(map[int64]map[int64]map[string]string)
-	if err := processors.DB.Raw("SELECT * FROM food_mapping_tab").Scan(&mappings).Error; err != nil {
+	if err := processors.DbInstance().Raw("SELECT * FROM food_mapping_tab").Scan(&mappings).Error; err != nil {
 		log.Error(ctx, err.Error())
 		return nil
 	}

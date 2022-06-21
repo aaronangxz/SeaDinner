@@ -17,7 +17,7 @@ func BatchInsertOrderLogs(ctx context.Context, records []*sea_dinner.OrderRecord
 		log.Warn(ctx, "BatchInsertOrderLogs | No record to update.")
 		return
 	}
-	if err := DB.Table(common.DB_ORDER_LOG_TAB).Create(&records).Error; err != nil {
+	if err := DbInstance().Table(common.DB_ORDER_LOG_TAB).Create(&records).Error; err != nil {
 		log.Error(ctx, fmt.Sprintf("BatchInsertOrderLogs | Failed to update records | %v", err.Error()))
 		return
 	}

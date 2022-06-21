@@ -21,13 +21,13 @@ func TestSendPotentialUsers(t *testing.T) {
 	toWrite := fmt.Sprint(u, ":", time.Now().Unix()-common.ONE_MONTH-common.ONE_DAY)
 	toWrite1 := fmt.Sprint(u1, ":", time.Now().Unix()-common.ONE_DAY)
 
-	if err := processors.RedisClient.SAdd(common.POTENTIAL_USER_SET, toWrite).Err(); err != nil {
+	if err := processors.CacheInstance().SAdd(common.POTENTIAL_USER_SET, toWrite).Err(); err != nil {
 		log.Error(ctx, "TestSendPotentialUsers | Error while writing to redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "TestSendPotentialUsers | Successful | Written %v to potential_user set", toWrite)
 	}
 
-	if err := processors.RedisClient.SAdd(common.POTENTIAL_USER_SET, toWrite1).Err(); err != nil {
+	if err := processors.CacheInstance().SAdd(common.POTENTIAL_USER_SET, toWrite1).Err(); err != nil {
 		log.Error(ctx, "TestSendPotentialUsers | Error while writing to redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "TestSendPotentialUsers | Successful | Written %v to potential_user set", toWrite1)
@@ -51,7 +51,7 @@ func TestSendPotentialUsers(t *testing.T) {
 		})
 	}
 
-	if err := processors.RedisClient.Del(common.POTENTIAL_USER_SET).Err(); err != nil {
+	if err := processors.CacheInstance().Del(common.POTENTIAL_USER_SET).Err(); err != nil {
 		log.Error(ctx, "TestSendPotentialUsers | Error while erasing from redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "TestSendPotentialUsers | Successful | Deleted potential_user set")
