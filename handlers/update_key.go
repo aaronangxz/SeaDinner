@@ -68,13 +68,13 @@ func UpdateKey(ctx context.Context, id int64, s string) (string, bool) {
 			if redisErr == redis.Nil {
 				log.Warn(ctx, "UpdateKey | No result of *%v* pattern in Redis", id)
 			} else {
-				log.Error(ctx, "UpdateKey | Error while reading from redis: %v", redisErr.Error())
+				log.Error(ctx, "UpdateKey | Error while reading potential_user set from redis: %v", redisErr.Error())
 			}
 		} else {
 			//Remove from potential_user Set
 			for _, r := range val {
 				if err := processors.CacheInstance().SRem(common.POTENTIAL_USER_SET, r).Err(); err != nil {
-					log.Error(ctx, "UpdateKey | Error while writing to redis: %v", err.Error())
+					log.Error(ctx, "UpdateKey | Error while deleting potential_user set from redis: %v", err.Error())
 				} else {
 					log.Info(ctx, "UpdateKey | Successful | Removed %v from potential_user set", r)
 				}
