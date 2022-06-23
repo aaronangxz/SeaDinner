@@ -5,20 +5,12 @@ import (
 )
 
 func GetResultSelection() (string, []tgbotapi.InlineKeyboardMarkup) {
-	var (
-		out []tgbotapi.InlineKeyboardMarkup
-	)
-
-	var rows []tgbotapi.InlineKeyboardButton
-	text := "Pick a time range:"
-	weekButton := tgbotapi.NewInlineKeyboardButtonData("Week", "WEEKRESULT")
-	rows = append(rows, weekButton)
-	monthButton := tgbotapi.NewInlineKeyboardButtonData("Month", "MONTHRESULT")
-	rows = append(rows, monthButton)
-	//Yearly result will be too long to send via TG. Need to figure out how to paginate it.
-	//yearButton := tgbotapi.NewInlineKeyboardButtonData("Year", "YEARRESULT")
-	//rows = append(rows, yearButton)
-	out = append(out, tgbotapi.NewInlineKeyboardMarkup(rows))
-
-	return text, out
+	return "Pick a time range:", []tgbotapi.InlineKeyboardMarkup{
+		tgbotapi.NewInlineKeyboardMarkup(
+			[]tgbotapi.InlineKeyboardButton{
+				tgbotapi.NewInlineKeyboardButtonData("Week", "WEEKRESULT"),
+				tgbotapi.NewInlineKeyboardButtonData("Month", "MONTHRESULT"),
+				//Yearly result will be too long to send via TG. Need to figure out how to paginate it.
+			}),
+	}
 }

@@ -52,10 +52,29 @@ func CheckKey(ctx context.Context, id int64) (string, bool) {
 
 	//Read from DB
 	if err := processors.DbInstance().Table(common.DB_USER_KEY_TAB).Where("user_id = ?", id).First(&existingRecord).Error; err != nil {
-		//Write into potential_user set
+		//Remove the previous record of this user
+		val, _, redisErr := processors.CacheInstance().SScan(common.POTENTIAL_USER_SET, 0, fmt.Sprint("*", id, "*"), 1000).Result()
+		if redisErr != nil {
+			if redisErr == redis.Nil {
+				log.Warn(ctx, "CheckKey | No result of *%v* pattern in Redis", id)
+			} else {
+				log.Error(ctx, "CheckKey | Error while reading previous potential_user set from redis: %v", redisErr.Error())
+			}
+		} else {
+			//Remove from potential_user Set
+			for _, r := range val {
+				if err := processors.CacheInstance().SRem(common.POTENTIAL_USER_SET, r).Err(); err != nil {
+					log.Error(ctx, "CheckKey | Error while deleting previous potential_user set from redis: %v", err.Error())
+				} else {
+					log.Info(ctx, "CheckKey | Successful | Removed %v from potential_user set", r)
+				}
+			}
+		}
+
+		//Write the new record into potential_user set
 		toWrite := fmt.Sprint(id, ":", time.Now().Unix())
 		if err := processors.CacheInstance().SAdd(common.POTENTIAL_USER_SET, toWrite).Err(); err != nil {
-			log.Error(ctx, "CheckKey | Error while writing to redis: %v", err.Error())
+			log.Error(ctx, "CheckKey | Error while writing potential_user set to redis: %v", err.Error())
 		} else {
 			log.Info(ctx, "CheckKey | Successful | Written %v to potential_user set", toWrite)
 		}
