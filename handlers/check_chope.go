@@ -24,7 +24,7 @@ func CheckChope(ctx context.Context, id int64) (string, bool) {
 		return "", false
 	}
 	tz, _ := time.LoadLocation(processors.TimeZone)
-	if !processors.IsWeekDay() || !processors.IsNotEOW(time.Now().In(tz)) {
+	if !processors.IsWeekDay() || (!processors.IsNotEOW(time.Now().In(tz)) && time.Now().Unix() > processors.GetLunchTime().Unix()) {
 		return "We are done for this week! You can tell me your order again next week 😀", false
 	}
 
