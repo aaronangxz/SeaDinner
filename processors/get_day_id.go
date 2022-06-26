@@ -17,9 +17,10 @@ import (
 func GetDayID(ctx context.Context) (ID int64) {
 	var (
 		key = os.Getenv("TOKEN")
-		//12 hours offset, so we don't try to check between 0000 ~ 1200 when day id isn't updated yet
-		cacheKey = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()-43200))
-		expiry   = 172800 * time.Second
+		//x hours offset, so we don't try to check between 0000 ~ 0x00 when day id isn't updated yet
+		offset, _ = strconv.ParseInt(os.Getenv("DAY_ID_OFFSET_SECONDS"), 10, 64)
+		cacheKey  = fmt.Sprint(common.DAY_ID_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()-offset))
+		expiry    = 172800 * time.Second
 	)
 
 	//check cache
