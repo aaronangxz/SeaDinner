@@ -53,6 +53,7 @@ func main() {
 			log.Info(ctx, "Finished run | %v at %v in %vms",
 				processors.ConvertTimeStamp(time.Now().Unix()),
 				processors.ConvertTimeStampTime(time.Now().Unix()), elapsed)
+			donePrep = false
 		}
 
 		if os.Getenv("SEND_CHECKIN") == "TRUE" {
