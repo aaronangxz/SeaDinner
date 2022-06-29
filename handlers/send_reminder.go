@@ -79,10 +79,10 @@ func SendReminder(ctx context.Context) {
 						rows = append(rows, randomBotton)
 					}
 
-					ignoreBotton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v is good!", code[r.GetUserChoice()]), "SAME")
-					rows = append(rows, ignoreBotton)
-					skipBotton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
-					rows = append(rows, skipBotton)
+					ignoreButton := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%v is good!", code[r.GetUserChoice()]), "SAME")
+					rows = append(rows, ignoreButton)
+					skipButton := tgbotapi.NewInlineKeyboardButtonData("🙅", "-1")
+					rows = append(rows, skipButton)
 					out = append(out, rows)
 					mk.InlineKeyboard = out
 					msg.ReplyMarkup = mk
@@ -94,5 +94,6 @@ func SendReminder(ctx context.Context) {
 			log.Error(ctx, err.Error())
 		}
 	}
+	time.Sleep(time.Second)
 	log.Info(ctx, "SendReminder | Success")
 }
