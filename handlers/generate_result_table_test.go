@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/aaronangxz/SeaDinner/common"
 	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/aaronangxz/SeaDinner/test_helper"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestGenerateWeeklyResultTable(t *testing.T) {
+	common.Config.UnitTest = true
 	ctx := context.TODO()
 	m := test_helper.GetLiveMenuDetails()
 	mC := MakeMenuCodeMap(ctx)
@@ -81,4 +83,5 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 			}
 		})
 	}
+	common.Config.UnitTest = false
 }

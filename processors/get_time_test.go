@@ -308,3 +308,41 @@ func TestYearStartEndDate(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertTimeStampWeekOfYear(t *testing.T) {
+	ts := int64(1656649800)  //1/7/2022
+	ts1 := int64(1656563400) //30/6/2022
+	type args struct {
+		timestamp int64
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  int64
+		want1 int64
+	}{
+		{
+			"HappyCase",
+			args{timestamp: ts},
+			2022,
+			26,
+		},
+		{
+			"HappyCase1",
+			args{timestamp: ts1},
+			2022,
+			26,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := ConvertTimeStampWeekOfYear(tt.args.timestamp)
+			if got != tt.want {
+				t.Errorf("ConvertTimeStampWeekOfYear() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("ConvertTimeStampWeekOfYear() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
