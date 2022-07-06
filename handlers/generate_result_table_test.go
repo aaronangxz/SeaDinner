@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/aaronangxz/SeaDinner/common"
 	"github.com/aaronangxz/SeaDinner/processors"
 	"github.com/aaronangxz/SeaDinner/sea_dinner.pb"
 	"github.com/aaronangxz/SeaDinner/test_helper"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestGenerateWeeklyResultTable(t *testing.T) {
+	common.Config.UnitTest = true
 	ctx := context.TODO()
 	m := test_helper.GetLiveMenuDetails()
 	mC := MakeMenuCodeMap(ctx)
@@ -48,8 +50,8 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 	header := fmt.Sprintf("Your orders from %v to %v\n", processors.ConvertTimeStampMonthDay(start), processors.ConvertTimeStampMonthDay(end))
 	table := "<pre>\n    Day     Code  Status\n-------------------------\n"
 	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[0].GetOrderTime()), mC[r[0].GetFoodId()], "🟢")
-	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[1].GetOrderTime()), mC[r[1].GetFoodId()], "🟡")
-	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[2].GetOrderTime()), mC[r[2].GetFoodId()], "🔴")
+	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[1].GetOrderTime()), mC[r[0].GetFoodId()], "🟡")
+	table += fmt.Sprintf(" %v   %v     %v\n", processors.ConvertTimeStampDayOfWeek(r[2].GetOrderTime()), mC[r[0].GetFoodId()], "🔴")
 	table += "</pre>"
 	legend := "\n\n🟢 Successful\n🟡 Cancelled\n🔴 Failed\n ?? Dish removed"
 	expected := header + table + legend
@@ -81,4 +83,5 @@ func TestGenerateWeeklyResultTable(t *testing.T) {
 			}
 		})
 	}
+	common.Config.UnitTest = false
 }
