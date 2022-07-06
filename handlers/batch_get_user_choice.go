@@ -19,7 +19,7 @@ func BatchGetUsersChoice(ctx context.Context) []*sea_dinner.UserChoice {
 	txn := processors.App.StartTransaction("batch_get_user_choice")
 	defer txn.End()
 
-	if err := processors.DbInstance().Raw("SELECT uc.* FROM user_choice_tab uc, user_key_tab uk WHERE uc.user_id = uk.user_id AND uk.is_mute <> ?", sea_dinner.MuteStatus_MUTE_STATUS_YES).Scan(&res).Error; err != nil {
+	if err := processors.DbInstance().Raw("SELECT uc.* FROM user_choice_tab uc, user_key_tab uk WHERE uc.user_id = uk.user_id AND uk.is_mute <> ? AND uk.status = ?", sea_dinner.MuteStatus_MUTE_STATUS_YES, sea_dinner.UserStatus_USER_STATUS_ACTIVE).Scan(&res).Error; err != nil {
 		log.Error(ctx, "BatchGetUsersChoice | Failed to retrieve record: %v", err.Error())
 		return nil
 	}

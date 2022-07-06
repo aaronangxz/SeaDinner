@@ -33,7 +33,7 @@ func PrepOrder(ctx context.Context) ([]*sea_dinner.UserChoiceWithKey, bool) {
 	}
 	inQuery += ")"
 	inQuery = strings.ReplaceAll(inQuery, ", )", ")")
-	query := fmt.Sprintf("SELECT c.*, k.user_key FROM user_choice_tab c, user_key_tab k WHERE user_choice IN %v AND c.user_id = k.user_id", inQuery)
+	query := fmt.Sprintf("SELECT c.*, k.user_key FROM user_choice_tab c, user_key_tab k WHERE user_choice IN %v AND c.user_id = k.user_id AND k,status = %v", inQuery, sea_dinner.UserStatus_USER_STATUS_ACTIVE)
 	log.Info(ctx, query)
 
 	//check whole db
