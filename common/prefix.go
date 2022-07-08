@@ -1,5 +1,7 @@
 package common
 
+import "fmt"
+
 //goland:noinspection ALL
 const (
 	DB_ORDER_LOG_TAB    = "order_log_tab"
@@ -17,3 +19,7 @@ const (
 	POTENTIAL_USER_SET = "potential_user"
 	CHECK_IN_LINK_SET  = "checkin_link"
 )
+
+func MakeCacheKeyWithPrefix(prefix string, suffix int64) string {
+	return fmt.Sprint(prefix, suffix)
+}
