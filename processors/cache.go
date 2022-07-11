@@ -1,9 +1,8 @@
-package common
+package processors
 
 import (
 	"context"
 	"github.com/aaronangxz/SeaDinner/log"
-	"github.com/aaronangxz/SeaDinner/processors"
 )
 
 type CachePurger struct {
@@ -19,7 +18,7 @@ func NewCachePurger(ctx context.Context, cacheKey string) *CachePurger {
 }
 
 func (c *CachePurger) Purge() {
-	if err := processors.CacheInstance().Del(c.Key).Err(); err != nil {
+	if err := CacheInstance().Del(c.Key).Err(); err != nil {
 		log.Error(c.Ctx, "PurgeCache | key: %v | Error while deleting from redis: %v", c.Key, err.Error())
 	}
 }
