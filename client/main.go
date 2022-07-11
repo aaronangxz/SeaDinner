@@ -122,6 +122,50 @@ func main() {
 				}
 				resumeLog()
 				continue
+			} else if update.CallbackQuery.Data == "ATTEMPTOPTOUT" {
+				var mk tgbotapi.InlineKeyboardMarkup
+				var out [][]tgbotapi.InlineKeyboardButton
+				var rows []tgbotapi.InlineKeyboardButton
+
+				cancelButton := tgbotapi.NewInlineKeyboardButtonData("Yes ByeBye", "OPTOUT")
+				rows = append(rows, cancelButton)
+				skipButton := tgbotapi.NewInlineKeyboardButtonData("I'm staying", "SKIP")
+				rows = append(rows, skipButton)
+
+				c := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+				c.Text = "Are you sure you want to opt out? 😦 You will not receive anything from me anymore. Hopefully I can see you again soon!"
+				c.ParseMode = "MARKDOWN"
+				out = append(out, rows)
+				mk.InlineKeyboard = out
+				c.ReplyMarkup = mk
+				skipLog()
+				if _, err := bot.Send(c); err != nil {
+					log.Error(ctx, err.Error())
+				}
+				resumeLog()
+				continue
+			} else if update.CallbackQuery.Data == "ATTEMPTRESIGN" {
+				var mk tgbotapi.InlineKeyboardMarkup
+				var out [][]tgbotapi.InlineKeyboardButton
+				var rows []tgbotapi.InlineKeyboardButton
+
+				cancelButton := tgbotapi.NewInlineKeyboardButtonData("Yes ByeBye", "RESIGN")
+				rows = append(rows, cancelButton)
+				skipButton := tgbotapi.NewInlineKeyboardButtonData("I'm staying", "SKIP")
+				rows = append(rows, skipButton)
+
+				c := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+				c.Text = "Oh no 😥 Are you sure you have finished serving your notice period and don't need me anymore?"
+				c.ParseMode = "MARKDOWN"
+				out = append(out, rows)
+				mk.InlineKeyboard = out
+				c.ReplyMarkup = mk
+				skipLog()
+				if _, err := bot.Send(c); err != nil {
+					log.Error(ctx, err.Error())
+				}
+				resumeLog()
+				continue
 			}
 			skipLog()
 			if _, err := bot.Send(msg); err != nil {
@@ -282,6 +326,16 @@ func main() {
 			//Backdoor for test env
 			if os.Getenv("TEST_DEPLOY") == "TRUE" || common.Config.Adhoc {
 				handlers.DeleteCheckInLink(ctx)
+			}
+		case "bye":
+			s, ok := handlers.CheckKey(ctx, update.Message.Chat.ID)
+			if !ok {
+				msg.Text = s
+			} else {
+				skipLog()
+				txt, mp := handlers.GetExitSelection()
+				msg.Text = txt
+				msg.ReplyMarkup = mp[0]
 			}
 		default:
 			msg.Text = "I don't understand this command :("

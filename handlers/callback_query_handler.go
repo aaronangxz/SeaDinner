@@ -22,10 +22,18 @@ func CallbackQueryHandler(ctx context.Context, id int64, callBack *tgbotapi.Call
 		return UpdateMute(ctx, id, callBack.Data)
 	case "ATTEMPTCANCEL":
 		return "", true
+	case "ATTEMPTOPTOUT":
+		return "", true
+	case "ATTEMPTRESIGN":
+		return "", true
 	case "CANCEL":
 		return CancelOrder(ctx, id)
+	case "OPTOUT":
+		return UserOptsOut(ctx, id)
+	case "RESIGN":
+		return UserResigns(ctx, id)
 	case "SKIP":
-		return "I figured 🤦", true
+		return "Alright 😗", true
 	case "WEEKRESULT":
 		return ListResultByUserID(ctx, id, int64(sea_dinner.ResultTimeRange_RESULT_TIME_RANGE_WEEK))
 	case "MONTHRESULT":

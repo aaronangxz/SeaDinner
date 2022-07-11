@@ -16,6 +16,7 @@ func GetMenuUsingCache(ctx context.Context, key string) *sea_dinner.DinnerMenuAr
 	var (
 		cacheKey   = fmt.Sprint(common.MENU_CACHE_KEY_PREFIX, ConvertTimeStamp(time.Now().Unix()))
 		currentArr *sea_dinner.DinnerMenuArray
+		expiry     = 172800 * time.Second
 	)
 	txn := App.StartTransaction("get_menu_using_cache")
 	defer txn.End()
@@ -47,7 +48,7 @@ func GetMenuUsingCache(ctx context.Context, key string) *sea_dinner.DinnerMenuAr
 		log.Error(ctx, "GetMenuUsingCache | Failed to marshal JSON results: %v\n", err.Error())
 	}
 
-	if err := CacheInstance().Set(cacheKey, data, 0).Err(); err != nil {
+	if err := CacheInstance().Set(cacheKey, data, expiry).Err(); err != nil {
 		log.Error(ctx, "GetMenuUsingCache | Error while writing to redis: %v", err.Error())
 	} else {
 		log.Info(ctx, "GetMenuUsingCache | Successful | Written %v to redis", cacheKey)

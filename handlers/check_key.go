@@ -80,6 +80,21 @@ func CheckKey(ctx context.Context, id int64) (string, bool) {
 		}
 		return "I don't have your key, let me know in /newkey 😊", false
 	}
+
+	//user status check
+	switch existingRecord.GetStatus() {
+	case int64(sea_dinner.UserStatus_USER_STATUS_INACTIVE):
+		if err := UpdateUserStatus(ctx, existingRecord.GetUserId(), int64(sea_dinner.UserStatus_USER_STATUS_ACTIVE)); err != nil {
+			return "Unexpected Error. Try again!", false
+		}
+		return "Welcome back! It's good to see you here again 😊", false
+	case int64(sea_dinner.UserStatus_USER_STATUS_RESIGNED):
+		if err := UpdateUserStatus(ctx, existingRecord.GetUserId(), int64(sea_dinner.UserStatus_USER_STATUS_ACTIVE)); err != nil {
+			return "Unexpected Error. Try again!", false
+		}
+		return "Welcome back! 😊 Double check your key /key in case it doesn't match our previous records.", false
+	}
+
 	//set back into cache
 	data, err := json.Marshal(existingRecord)
 	if err != nil {

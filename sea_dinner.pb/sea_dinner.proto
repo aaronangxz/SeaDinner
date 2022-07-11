@@ -38,6 +38,12 @@ enum ResultTimeRange{
     RESULT_TIME_RANGE_YEAR = 2;
 }
 
+enum UserStatus{
+    USER_STATUS_ACTIVE  = 0;
+    USER_STATUS_INACTIVE = 1;
+    USER_STATUS_RESIGNED = 2;
+}
+
 message OrderResponse{
     optional string status = 1;
     optional int64 status_code = 2;
@@ -89,6 +95,7 @@ message UserKey{
     optional int64 ctime = 3;
     optional int64 mtime = 4;
     optional int64 is_mute = 5;
+    optional int64 status = 6;
 }
 
 message UserChoice{
