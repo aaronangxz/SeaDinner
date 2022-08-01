@@ -1,3 +1,8 @@
+> **Notice**
+> 
+> Sea Dinner API is no longer available publicly, hence SeaHungerGamesBot is dead now :( 
+> R.I.P March ~ July 2022
+
 <h1 align = "center"> SeaHungerGames </h1>
 <p align="center"><img src = "static/banner.gif"></p>
 
@@ -31,3 +36,12 @@
 4. The bot will not entertain anymore requests 1 minute before `12.30pm`, and proceed to order for you.
 5. It will tell you if the order is successful.
 6. Remember to collect and eat it. Yumm.
+
+```sequenceDiagram
+   Consumer-->API: Book something
+   API-->BookingService: Start booking process
+   break when the booking process fails
+   API-->Consumer: show failure
+   end
+   API-->BillingService: Start billing process
+```
