@@ -38,9 +38,32 @@
 5. It will tell you if the order is successful.
 6. Remember to collect and eat it. Yumm.
 
+<h1> Flow </h1>
+<h2> Client Facing </h2>
+
 ```mermaid
    sequenceDiagram
-   Consumer-->API: Book something
-   API-->BookingService: Start booking process
-   API-->BillingService: Start billing process
+   Client->>Service: Start conversation
+   Service->>Key: Provide Sea API key
+   Service->>Key: Update Sea API key
+   Service->>Menu: Check current Menu
+   Menu->>Sea API: Retrieve current Menu
+   Service->>Selection: Indicate booking selection
+   Service->>Selection: Check booking selection
+   Service->>Selection: Check historical bookings
+   Service->>Client: Replies conversation
+```
+
+<h2> Scheduled </h2>
+
+```mermaid
+sequenceDiagram
+    loop In the morning
+        Service->>Client: Sends reminders
+    end
+    loop At lunch time
+        Service->>Sea API: Place Order
+        Service->>DB: Update result
+        Service->>Client: Sends notifications
+    end
 ```
