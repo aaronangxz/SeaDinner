@@ -23,7 +23,8 @@ func main() {
 	go processors.MenuRefresher(log.NewCtx())
 
 	//For adhoc use only
-	//processors.SendAdHocNotification(0,"")
+	//processors.SendAdHocNotification(0, "")
+	//processors.SendAdHocNotificationToAll(log.NewCtx(), "Due to unexpected changes on the SeaDinner side, I have lost the ability to order dinner, at least for now 🥺 Remember to order on SeaTalk if you are coming to office!")
 
 	for {
 		ctx := log.NewCtx()
