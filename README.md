@@ -38,7 +38,8 @@
 5. It will tell you if the order is successful.
 6. Remember to collect and eat it. Yumm.
 
-```sequenceDiagram
+```mermaid
+   sequenceDiagram
    Consumer-->API: Book something
    API-->BookingService: Start booking process
    break when the booking process fails
