@@ -42,6 +42,5 @@
    sequenceDiagram
    Consumer-->API: Book something
    API-->BookingService: Start booking process
-   end
    API-->BillingService: Start billing process
 ```
