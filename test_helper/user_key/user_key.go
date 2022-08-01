@@ -17,6 +17,7 @@ var (
 	defaultCtime  = time.Now().Unix()
 	defaultMtime  = time.Now().Unix()
 	defaultIsMute = int64(sea_dinner.MuteStatus_MUTE_STATUS_NO)
+	defaultStatus = int64(sea_dinner.UserStatus_USER_STATUS_ACTIVE)
 )
 
 type UserKey struct {
@@ -32,6 +33,7 @@ func New() *UserKey {
 			Ctime:   new(int64),
 			Mtime:   new(int64),
 			IsMute:  new(int64),
+			Status:  new(int64),
 		},
 	}
 }
@@ -55,6 +57,10 @@ func (uk *UserKey) FillDefaults() *UserKey {
 
 	if uk.UserKey.GetIsMute() == 0 {
 		uk.SetIsMute(defaultIsMute)
+	}
+
+	if uk.UserKey.GetStatus() == 0 {
+		uk.SetStatus(defaultStatus)
 	}
 	return uk
 }
@@ -91,6 +97,11 @@ func (uk *UserKey) SetMtime(mtime int64) *UserKey {
 
 func (uk *UserKey) SetIsMute(mute int64) *UserKey {
 	uk.UserKey.IsMute = proto.Int64(mute)
+	return uk
+}
+
+func (uk *UserKey) SetStatus(status int64) *UserKey {
+	uk.UserKey.Status = proto.Int64(status)
 	return uk
 }
 
