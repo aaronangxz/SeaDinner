@@ -1,5 +1,7 @@
 > **Warning**
+> 
 > Sea Dinner API is no longer available publicly, hence SeaHungerGamesBot is dead now :( 
+> 
 > R.I.P March ~ July 2022
 
 <h1 align = "center"> SeaHungerGames </h1>
